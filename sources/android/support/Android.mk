@@ -12,6 +12,7 @@ android_support_sources := \
     src/locale/newlocale.c \
     src/locale/uselocale.c \
     src/stdio/fvwrite.c \
+    src/stdio/strtod.c \
     src/stdio/vfprintf.c \
     src/stdio/vfwprintf.c \
     src/msun/e_log2.c \
