@@ -11,13 +11,21 @@ android_support_sources := \
     src/locale/localeconv.c \
     src/locale/newlocale.c \
     src/locale/uselocale.c \
+    src/stdio/fprintf.c \
     src/stdio/fvwrite.c \
+    src/stdio/printf.c \
+    src/stdio/snprintf.c \
+    src/stdio/sprintf.c \
     src/stdio/strtod.c \
+    src/stdio/vasprintf.c \
     src/stdio/vfprintf.c \
     src/stdio/vfwprintf.c \
     src/msun/e_log2.c \
     src/msun/e_log2f.c \
     src/msun/s_logb.c \
+    src/stdio/vprintf.c \
+    src/stdio/vsnprintf.c \
+    src/stdio/vsprintf.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
     src/musl-multibyte/mblen.c \

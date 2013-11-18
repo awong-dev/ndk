@@ -37,6 +37,8 @@
  * This code is large and complicated...
  */
 
+extern int __isthreaded;
+
 #include <sys/types.h>
 #include <sys/mman.h>
 
@@ -158,6 +160,7 @@ static  int  _my_isnan(double);
 int
 vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 {
+fprintf(stderr, "hahahahahahahahah\n");
 	int ret;
 
 	FLOCKFILE(fp);
