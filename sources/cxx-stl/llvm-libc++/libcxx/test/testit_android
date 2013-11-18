@@ -383,9 +383,9 @@ IMPLEMENTED_PASS=0
 afunc() {
 	fail=0
 	pass=0
-	if (ls *.fail.cpp > /dev/null 2>&1)
+	if (ls ${TEST_PREFIX}*.fail.cpp > /dev/null 2>&1)
 	then
-		for FILE in $(ls *.fail.cpp | tr ' ' '\n' | grep -v EQ | sort); do
+		for FILE in $(ls ${TEST_PREFIX}*.fail.cpp | tr ' ' '\n' | grep -v EQ | sort); do
 			if run $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o $TEST_EXE > /dev/null 2>&1
 			then
 				rm $TEST_EXE
@@ -397,7 +397,7 @@ afunc() {
 		done
 	fi
 
-	if (ls *.pass.cpp > /dev/null 2>&1)
+	if (ls ${TEST_PREFIX}*.pass.cpp > /dev/null 2>&1)
 	then
 		if (ls *.dat > /dev/null 2>&1)
 		then
@@ -412,7 +412,7 @@ afunc() {
 	                      fi
 			done
 		fi
-		for FILE in $(ls *.pass.cpp | tr ' ' '\n' | grep -v EQ | sort); do
+		for FILE in $(ls ${TEST_PREFIX}*.pass.cpp | tr ' ' '\n' | grep -v EQ | sort); do
                       if [ "$VERBOSE" -gt 1 ]; then
                           echo "Running test: " $FILE
                       fi
