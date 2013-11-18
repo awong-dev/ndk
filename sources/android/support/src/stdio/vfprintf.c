@@ -162,6 +162,7 @@ static  int  _my_isnan(double);
 int
 vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 {
+fprintf(stderr, "hahahahahahahahah\n");
 	int ret;
 
 	FLOCKFILE(fp);
