@@ -47,6 +47,8 @@ int sprintf_l(char*, locale_t, const char*, ...);
 int snprintf_l(char*, size_t, locale_t, const char*, ...);
 int sscanf_l(const char*, locale_t, const char*, ...);
 
+int vfprintf(FILE* __restrict__, const char* __restrict__, va_list);
+
 int vfwscanf(FILE* __restrict__, const wchar_t* __restrict__, va_list);
 int vswscanf(const wchar_t *__restrict__, const wchar_t * __restrict__, va_list);
 int vwscanf(const wchar_t *__restrict__, va_list);
