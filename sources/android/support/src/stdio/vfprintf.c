@@ -208,6 +208,8 @@ __vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 	size_t argtablesiz;
 	int nextarg;		/* 1-based argument index */
 	va_list orgap;		/* original argument pointer */
+	static const char xdigs_lower[16] = "0123456789abcdef";
+	static const char xdigs_upper[16] = "0123456789ABCDEF";
 	/*
 	 * Choose PADSIZE to trade efficiency vs. size.  If larger printf
 	 * fields occur frequently, increase PADSIZE and make the initialisers
@@ -496,6 +498,37 @@ reswitch:	switch (ch) {
 			base = DEC;
 			goto number;
 #ifdef FLOATING_POINT
+		/*case 'a':
+		case 'A':
+			if (ch == 'a') {
+				ox[1] = 'x';
+				xdigs = xdigs_lower;
+				expchar = 'p';
+			} else {
+				ox[1] = 'X';
+				xdigs = xdigs_upper;
+				expchar = 'P';
+			}
+			if (prec >= 0)
+				prec++;
+			if (dtoaresult != NULL)
+				freedtoa(dtoaresult);
+			if (flags & LONGDBL) {
+				fparg.ldbl = GETARG(long double);
+				dtoaresult = cp =
+				    __hldtoa(fparg.ldbl, xdigs, prec,
+				    &expt, &signflag, &dtoaend);
+			} else {
+				fparg.dbl = GETARG(double);
+				dtoaresult = cp =
+				    __hdtoa(fparg.dbl, xdigs, prec,
+				    &expt, &signflag, &dtoaend);
+			}
+			if (prec < 0)
+				prec = dtoaend - cp;
+			if (expt == INT_MAX)
+				ox[1] = '\0';
+			goto fp_common;*/
 		case 'e':
 		case 'E':
 		case 'f':
