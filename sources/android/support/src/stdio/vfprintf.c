@@ -674,7 +674,7 @@ fp_begin:
 			base = DEC;
 			goto nosign;
 		case 'X':
-			xdigs = xdigs_upper;
+			xdigs = "0123456789ABCDEF";
 			goto hex;
 		case 'x':
 			xdigs = xdigs_lower;
@@ -785,6 +785,7 @@ number:			if ((dprec = prec) >= 0)
 		}
 		if (flags & HEXPREFIX) {
 			ox[0] = '0';
+			ox[1] = ch;
 			PRINT(ox, 2);
 		}
 
