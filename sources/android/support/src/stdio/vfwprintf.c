@@ -37,12 +37,12 @@
 /* Convenient bit representation for modifier flags, which all fall
  * within 31 codepoints of the space character. */
 
-#define ALT_FORM   (1U<<'#'-' ')
-#define ZERO_PAD   (1U<<'0'-' ')
-#define LEFT_ADJ   (1U<<'-'-' ')
-#define PAD_POS    (1U<<' '-' ')
-#define MARK_POS   (1U<<'+'-' ')
-#define GROUPED    (1U<<'\''-' ')
+#define ALT_FORM   (1U<<('#'-' '))
+#define ZERO_PAD   (1U<<('0'-' '))
+#define LEFT_ADJ   (1U<<('-'-' '))
+#define PAD_POS    (1U<<(' '-' '))
+#define MARK_POS   (1U<<('+'-' '))
+#define GROUPED    (1U<<('\''-' '))
 
 #define FLAGMASK (ALT_FORM|ZERO_PAD|LEFT_ADJ|PAD_POS|MARK_POS|GROUPED)
 
@@ -240,8 +240,8 @@ static int wprintf_core(FILE *f, const wchar_t *fmt, va_list *ap, union arg *nl_
 		}
 
 		/* Read modifier flags */
-		for (fl=0; (unsigned)*s-' '<32 && (FLAGMASK&(1U<<*s-' ')); s++)
-			fl |= 1U<<*s-' ';
+		for (fl=0; (unsigned)*s-' '<32 && (FLAGMASK&(1U<<(*s-' '))); s++)
+			fl |= 1U<<(*s-' ');
 
 		/* Read field width */
 		if (*s=='*') {
@@ -349,11 +349,11 @@ static int wprintf_core(FILE *f, const wchar_t *fmt, va_list *ap, union arg *nl_
 		}
 
 		snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.*%c%c",
-			"#"+!(fl & ALT_FORM),
-			"+"+!(fl & MARK_POS),
-			"-"+!(fl & LEFT_ADJ),
-			" "+!(fl & PAD_POS),
-			"0"+!(fl & ZERO_PAD),
+			&"#"[!(fl & ALT_FORM)],
+			&"+"[!(fl & MARK_POS)],
+			&"-"[!(fl & LEFT_ADJ)],
+			&" "[!(fl & PAD_POS)],
+			&"0"[!(fl & ZERO_PAD)],
 			sizeprefix[(t|32)-'a'], t);
 
 		switch (t|32) {
