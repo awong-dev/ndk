@@ -172,7 +172,7 @@ get_new_handler() _NOEXCEPT
 
 #endif // !__GLIBCXX__
 
-#ifndef LIBCXXRT
+#if !defined(LIBCXXRT) || defined(GABIXX_LIBCXX)
 
 bad_alloc::bad_alloc() _NOEXCEPT
 {
@@ -190,9 +190,7 @@ bad_alloc::what() const _NOEXCEPT
     return "std::bad_alloc";
 }
 
-#endif // !__GLIBCXX__
-
-#endif //LIBCXXRT
+#endif // !LIBCXXRT || GABIXX_LIBCXX
 
 bad_array_new_length::bad_array_new_length() _NOEXCEPT
 {
@@ -222,9 +220,7 @@ bad_array_new_length::what() const _NOEXCEPT
     return "bad_array_new_length";
 }
 
-#endif // _LIBCPPABI_VERSION
-
-#ifndef LIBSTDCXX
+#endif // !_LIBCPPABI_VERSION
 
 void
 __throw_bad_alloc()

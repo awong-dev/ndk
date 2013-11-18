@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <new>
 
+#if !defined(GABIXX_LIBCXX)
+
 using std::new_handler;
 namespace {
   new_handler cur_handler;
@@ -37,9 +39,7 @@ namespace {
 
 namespace std {
 
-#if !defined(LIBCXXABI)
   const nothrow_t nothrow = {};
-#endif
 
   bad_alloc::bad_alloc() _GABIXX_NOEXCEPT {
   }
@@ -131,4 +131,4 @@ void* operator new[](std::size_t size, const std::nothrow_t& no)
   return ::operator new(size, no);
 }
 
-#endif  // !defined(LIBCXXABI)
+#endif // !defined(GABIXX_LIBCXX)
