@@ -425,7 +425,7 @@ libcxx/src/support/android/locale_android.cpp \
 # -j$NUM_JOBS to build stuff in parallel.
 #
 if [ -z "$NO_MAKEFILE" ]; then
-    MAKEFILE=$BUILD_DIR/Makefile
+    MAKEFILE=$BUILD_DIR/build.ninja
 else
     MAKEFILE=
 fi
