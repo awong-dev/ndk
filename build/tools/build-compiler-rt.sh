@@ -65,6 +65,7 @@ register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 register_jobs_option
 
 extract_parameters "$@"
+TRY64=yes
 
 ABIS=$(commas_to_spaces $ABIS)
 
