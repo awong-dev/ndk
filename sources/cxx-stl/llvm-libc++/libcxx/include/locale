@@ -1640,7 +1640,6 @@ public:
     iter_type put(iter_type __s, ios_base& __iob, char_type __fl,
                   double __v) const
     {
-fprintf(stderr, "herro??\n");
         return do_put(__s, __iob, __fl, __v);
     }
 
@@ -1909,26 +1908,19 @@ num_put<_CharT, _OutputIterator>::do_put(iter_type __s, ios_base& __iob,
     char __nar[__nbuf];
     char* __nb = __nar;
     int __nc;
-fprintf(stderr, "whaaa??: %s\n", __fmt);
-// FIXME here I think?
     if (__specify_precision)
 #ifdef _LIBCPP_LOCALE__L_EXTENSIONS
         __nc = snprintf_l(__nb, __nbuf, _LIBCPP_GET_C_LOCALE, __fmt,
                                    (int)__iob.precision(), __v);
 #else
-{fprintf(stderr, "format string: %s\n", __fmt);
-// here?
         __nc = __snprintf_l(__nb, __nbuf, __cloc(), __fmt,
                             (int)__iob.precision(), __v);
-}
 #endif
     else
 #ifdef _LIBCPP_LOCALE__L_EXTENSIONS
         __nc = snprintf_l(__nb, __nbuf, _LIBCPP_GET_C_LOCALE, __fmt, __v);
 #else
-{fprintf(stderr, "format string2: %s\n", __fmt);
         __nc = __snprintf_l(__nb, __nbuf, __cloc(), __fmt, __v);
-}
 #endif
     unique_ptr<char, void(*)(void*)> __nbh(0, free);
     if (__nc > static_cast<int>(__nbuf-1))
