@@ -75,8 +75,8 @@ extern int __isthreaded;
 #define	DPTOK		0x08000	/* (float) decimal point is still legal */
 #define	EXPOK		0x10000	/* (float) exponent (e+3, etc) still legal */
 
-#define	PFXOK		0x08000	/* 0x prefix is (still) legal */
-#define	NZDIGITS	0x10000	/* no zero digits detected */
+#define	PFXOK		0x20000	/* 0x prefix is (still) legal */
+#define	NZDIGITS	0x40000	/* no zero digits detected */
 
 /*
  * Conversion types.
