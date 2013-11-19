@@ -234,7 +234,7 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -O2 -g"
+  OPTIONS="-std=c++11 -g"
   # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
   # unless we specify -UNDEBUG to bring assert() back.
   # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
