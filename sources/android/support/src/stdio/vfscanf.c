@@ -247,8 +247,10 @@ literal:
 			break;
 
 #ifdef FLOATING_POINT
+		case 'A':
 		case 'E':
 		case 'G':
+		case 'a':
 		case 'e': 
 		case 'f': 
 		case 'g':
@@ -608,6 +610,7 @@ literal:
 #ifdef FLOATING_POINT
 		case CT_FLOAT:
 			/* scan a floating point number as if by strtod */
+			// FIXME: Support INFINITY, NaN(...)?
 #ifdef hardway
 			if (width == 0 || width > sizeof(buf) - 1)
 				width = sizeof(buf) - 1;
@@ -617,7 +620,7 @@ literal:
 				width = sizeof(buf) - 2;
 			width++;
 #endif
-			flags |= SIGNOK | NDIGITS | DPTOK | EXPOK;
+			flags |= SIGNOK | NDIGITS | DPTOK | EXPOK | NZDIGITS;
 			for (p = buf; width; width--) {
 				c = *fp->_p;
 				/*
@@ -625,30 +628,58 @@ literal:
 				 * code, but is much simpler.
 				 */
 				switch (c) {
-
-				case '0': case '1': case '2': case '3':
+				case '0':
+					if (flags & NZDIGITS) {
+						flags &= ~(SIGNOK|NZDIGITS|NDIGITS);
+						flags |= PFXOK;
+					} else {
+						flags &= ~(SIGNOK|PFXOK|NDIGITS);
+					}
+					goto fok;
+				case '1': case '2': case '3':
 				case '4': case '5': case '6': case '7':
 				case '8': case '9':
-					flags &= ~(SIGNOK | NDIGITS);
+					flags &= ~(SIGNOK | NDIGITS | PFXOK);
 					goto fok;
-
 				case '+': case '-':
 					if (flags & SIGNOK) {
 						flags &= ~SIGNOK;
+						flags |= HAVESIGN;
+						goto fok;
+					}
+					break;
+				/*
+				 * x ok iff flag still set and 2nd char (or
+				 * 3rd char if we have a sign).
+				 */
+				case 'x': case 'X':
+					if ((flags & PFXOK) && p ==
+					    buf + 1 + !!(flags & HAVESIGN)) {
+						base = 16;
+						flags &= ~PFXOK;
 						goto fok;
 					}
 					break;
 				case '.':
 					if (flags & DPTOK) {
-						flags &= ~(SIGNOK | DPTOK);
+						flags &= ~(SIGNOK | DPTOK | PFXOK);
 						goto fok;
 					}
 					break;
 				case 'e': case 'E':
 					/* no exponent without some digits */
-					if ((flags&(NDIGITS|EXPOK)) == EXPOK) {
+					if ((flags&(NDIGITS|EXPOK)) == EXPOK && base != 16) {
 						flags =
-						    (flags & ~(EXPOK|DPTOK)) |
+						    (flags & ~(EXPOK|DPTOK|PFXOK)) |
+						    SIGNOK | NDIGITS;
+						goto fok;
+					}
+					break;
+				case 'p': case 'P':
+					/* no exponent without some digits */
+					if ((flags&(NDIGITS|EXPOK)) == EXPOK && base == 16) {
+						flags =
+						    (flags & ~(EXPOK|DPTOK|PFXOK)) |
 						    SIGNOK | NDIGITS;
 						goto fok;
 					}
