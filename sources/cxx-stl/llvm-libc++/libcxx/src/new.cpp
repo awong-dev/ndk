@@ -150,7 +150,6 @@ const nothrow_t nothrow = {};
 
 #if !defined(_LIBCPPABI_VERSION)
 
-#if !defined(GABIXX_LIBCXX)
 new_handler
 set_new_handler(new_handler handler) _NOEXCEPT
 {
@@ -162,9 +161,8 @@ get_new_handler() _NOEXCEPT
 {
     return __sync_fetch_and_add(&__new_handler, (new_handler)0);
 }
-#endif
 
-#if !defined(LIBCXXRT)
+#if !defined(LIBCXXRT) || defined(GABIXX_LIBCXX)
 
 bad_alloc::bad_alloc() _NOEXCEPT
 {
@@ -180,7 +178,7 @@ bad_alloc::what() const _NOEXCEPT
     return "std::bad_alloc";
 }
 
-#endif // !LIBCXXRT
+#endif // !LIBCXXRT || GABIXX_LIBCXX
 
 bad_array_new_length::bad_array_new_length() _NOEXCEPT
 {
@@ -196,7 +194,7 @@ bad_array_new_length::what() const _NOEXCEPT
     return "bad_array_new_length";
 }
 
-#endif // !_LIBCPPABI_VERSION && !GABIXX_LIBCXX
+#endif // !_LIBCPPABI_VERSION
 
 void
 __throw_bad_alloc()
