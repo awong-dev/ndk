@@ -11,7 +11,6 @@ android_support_sources := \
     src/locale/localeconv.c \
     src/locale/newlocale.c \
     src/locale/uselocale.c \
-    src/stdio/_hdtoa.c \
     src/stdio/fprintf.c \
     src/stdio/fvwrite.c \
     src/stdio/printf.c \

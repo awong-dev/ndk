@@ -246,7 +246,6 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/locale/localeconv.c \
 ../../android/support/src/locale/newlocale.c \
 ../../android/support/src/locale/uselocale.c \
-../../android/support/src/stdio/_hdtoa.c \
 ../../android/support/src/stdio/fprintf.c \
 ../../android/support/src/stdio/fvwrite.c \
 ../../android/support/src/stdio/printf.c \
