@@ -160,7 +160,6 @@ static  int  _my_isnan(double);
 int
 vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 {
-fprintf(stderr, "hahahahahahahahah\n");
 	int ret;
 
 	FLOCKFILE(fp);
@@ -190,6 +189,7 @@ __vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 	char softsign;		/* temporary negative sign for floats */
 	double _double = 0.;	/* double precision arguments %[eEfgG] */
 	int expt;		/* integer value of exponent */
+	char expchar;		/* exponent character: [eEpP\0] */
 	int expsize = 0;	/* character count for expstr */
 	int ndig;		/* actual number of digits returned by cvt */
 	char expstr[7];		/* buffer for exponent string */
@@ -200,7 +200,7 @@ __vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 	int dprec;		/* a copy of prec if [diouxX], 0 otherwise */
 	int realsz;		/* field size expanded by dprec */
 	int size;		/* size of converted field or string */
-	char* xdigs = NULL;		/* digits for [xX] conversion */
+	const char* xdigs = NULL;		/* digits for [xX] conversion */
 #define NIOV 8
 	struct __suio uio;	/* output information: summary */
 	struct __siov iov[NIOV];/* ... and individual io vectors */
@@ -503,15 +503,6 @@ reswitch:	switch (ch) {
 #ifdef FLOATING_POINT
 		/*case 'a':
 		case 'A':
-			if (ch == 'a') {
-				ox[1] = 'x';
-				xdigs = xdigs_lower;
-				expchar = 'p';
-			} else {
-				ox[1] = 'X';
-				xdigs = xdigs_upper;
-				expchar = 'P';
-			}
 			if (prec >= 0)
 				prec++;
 			if (dtoaresult != NULL)
@@ -532,16 +523,35 @@ reswitch:	switch (ch) {
 			if (expt == INT_MAX)
 				ox[1] = '\0';
 			goto fp_common;*/
+		case 'a':
+		case 'A':
+			if (ch == 'a') {
+				ox[1] = 'x';
+				xdigs = xdigs_lower;
+				expchar = 'p';
+			} else {
+				ox[1] = 'X';
+				xdigs = xdigs_upper;
+				expchar = 'P';
+			}
+			goto fp_common;
+// FIXME: here!
+fprintf(stderr, "handle %%a!\n");
 		case 'e':
 		case 'E':
+			expchar = ch;
+			goto fp_begin;
 		case 'f':
+			expchar = '\0';
+			goto fp_begin;
 		case 'g':
 		case 'G':
-			if (prec == -1) {
-				prec = DEFPREC;
-			} else if ((ch == 'g' || ch == 'G') && prec == 0) {
+			expchar = ch - ('g' - 'e');
+			if (prec == 0)
 				prec = 1;
-			}
+fp_begin:
+			if (prec == -1)
+				prec = DEFPREC;
 
 			if (flags & LONGDBL) {
 				_double = (double) GETARG(long double);
@@ -549,6 +559,7 @@ reswitch:	switch (ch) {
 				_double = GETARG(double);
 			}
 
+fp_common:
 			/* do this before tricky precision changes */
 			if (_my_isinf(_double)) {
 				if (_double < 0)
@@ -566,16 +577,15 @@ reswitch:	switch (ch) {
 			flags |= FPT;
 			cp = cvt(_double, prec, flags, &softsign,
 				&expt, ch, &ndig);
-		    cp_free = cp;
+				cp_free = cp;
 			if (ch == 'g' || ch == 'G') {
-				if (expt <= -4 || expt > prec)
-					ch = (ch == 'g') ? 'e' : 'E';
-				else
-					ch = 'g';
+				if (expt > -4 && expt <= prec) {
+					expchar = '\0';
+				}
 			}
-			if (ch <= 'e') {	/* 'e' or 'E' fmt */
+			if (expchar) {	/* 'e', 'E', 'a', 'A', scientific 'g', 'G' fmt */
 				--expt;
-				expsize = exponent(expstr, expt, ch);
+				expsize = exponent(expstr, expt, expchar);
 				size = expsize + ndig;
 				if (ndig > 1 || flags & ALT)
 					++size;
@@ -641,7 +651,7 @@ reswitch:	switch (ch) {
 			/* NOSTRICT */
 			_umax = (u_long)GETARG(void *);
 			base = HEX;
-			xdigs = "0123456789abcdef";
+			xdigs = xdigs_lower;
 			flags |= HEXPREFIX;
 			ch = 'x';
 			goto nosign;
@@ -674,10 +684,10 @@ reswitch:	switch (ch) {
 			base = DEC;
 			goto nosign;
 		case 'X':
-			xdigs = "0123456789ABCDEF";
+			xdigs = xdigs_upper;
 			goto hex;
 		case 'x':
-			xdigs = "0123456789abcdef";
+			xdigs = xdigs_lower;
 hex:			_umax = UARG();
 			base = HEX;
 			/* leading 0x/X only if non-zero */
@@ -836,6 +846,7 @@ number:			if ((dprec = prec) >= 0)
 					PRINT(cp, 1);
 				PRINT(expstr, expsize);
 			}
+// FIXME: here?
 		}
 #else
 		PRINT(cp, size);
@@ -1083,6 +1094,8 @@ reswitch:	switch (ch) {
 			ADDSARG();
 			break;
 #ifdef FLOATING_POINT
+		case 'a':
+		case 'A':
 		case 'e':
 		case 'E':
 		case 'f':
@@ -1273,6 +1286,7 @@ cvt(double value, int ndigits, int flags, char *sign, int *decpt, int ch,
 	int mode, dsgn;
 	char *digits, *bp, *rve;
 
+// FIXME: here?
 	if (ch == 'f') {
 		mode = 3;		/* ndigits after the decimal point */
 	} else {
@@ -1331,7 +1345,14 @@ exponent(char *p0, int exp, int fmtch)
 		for (; t < expbuf + MAXEXP; *p++ = *t++);
 	}
 	else {
-		*p++ = '0';
+		/*
+		 * Exponents for decimal floating point conversions
+		 * (%[eEgG]) must be at least two characters long,
+		 * whereas exponents for hexadecimal conversions can
+		 * be only one character long.
+		 */
+		if (fmtch == 'e' || fmtch == 'E')
+			*p++ = '0';
 		*p++ = to_char(exp);
 	}
 	return (p - p0);
