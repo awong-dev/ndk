@@ -119,7 +119,9 @@ __sbprintf(FILE *fp, const char *fmt, va_list ap)
 #define	BUF		(MAXEXP+MAXFRACT+1)	/* + decimal point */
 #define	DEFPREC		6
 
+extern char *__hdtoa(double, const char *, int, int *, int *, char **);
 static char *cvt(double, int, int, char *, int *, int, int *);
+static char *hcvt(double, const char *, int, char *, int *, int *);
 static int exponent(char *, int, int);
 #else /* no FLOATING_POINT */
 #define	BUF		40
@@ -501,30 +503,9 @@ reswitch:	switch (ch) {
 			base = DEC;
 			goto number;
 #ifdef FLOATING_POINT
-		/*case 'a':
-		case 'A':
-			if (prec >= 0)
-				prec++;
-			if (dtoaresult != NULL)
-				freedtoa(dtoaresult);
-			if (flags & LONGDBL) {
-				fparg.ldbl = GETARG(long double);
-				dtoaresult = cp =
-				    __hldtoa(fparg.ldbl, xdigs, prec,
-				    &expt, &signflag, &dtoaend);
-			} else {
-				fparg.dbl = GETARG(double);
-				dtoaresult = cp =
-				    __hdtoa(fparg.dbl, xdigs, prec,
-				    &expt, &signflag, &dtoaend);
-			}
-			if (prec < 0)
-				prec = dtoaend - cp;
-			if (expt == INT_MAX)
-				ox[1] = '\0';
-			goto fp_common;*/
 		case 'a':
 		case 'A':
+			flags |= HEXPREFIX;
 			if (ch == 'a') {
 				ox[1] = 'x';
 				xdigs = xdigs_lower;
@@ -534,9 +515,9 @@ reswitch:	switch (ch) {
 				xdigs = xdigs_upper;
 				expchar = 'P';
 			}
-			goto fp_common;
-// FIXME: here!
-fprintf(stderr, "handle %%a!\n");
+			if (prec >= 0)
+				prec++;
+			goto fp_begin;
 		case 'e':
 		case 'E':
 			expchar = ch;
@@ -550,16 +531,12 @@ fprintf(stderr, "handle %%a!\n");
 			if (prec == 0)
 				prec = 1;
 fp_begin:
-			if (prec == -1)
-				prec = DEFPREC;
-
 			if (flags & LONGDBL) {
 				_double = (double) GETARG(long double);
 			} else {
 				_double = GETARG(double);
 			}
 
-fp_common:
 			/* do this before tricky precision changes */
 			if (_my_isinf(_double)) {
 				if (_double < 0)
@@ -575,9 +552,20 @@ fp_common:
 			}
 
 			flags |= FPT;
-			cp = cvt(_double, prec, flags, &softsign,
-				&expt, ch, &ndig);
-				cp_free = cp;
+			if (ch == 'a' || ch == 'A') {
+				cp = hcvt(_double, xdigs, prec, &softsign,
+					&expt, &ndig);
+				if (prec < 0)
+					prec = ndig;
+				if (expt == INT_MAX)
+					ox[1] = '\0';
+			} else {
+				if (prec == -1)
+					prec = DEFPREC;
+				cp = cvt(_double, prec, flags, &softsign,
+					&expt, ch, &ndig);
+			}
+			cp_free = cp;
 			if (ch == 'g' || ch == 'G') {
 				if (expt > -4 && expt <= prec) {
 					expchar = '\0';
@@ -654,6 +642,7 @@ fp_common:
 			xdigs = xdigs_lower;
 			flags |= HEXPREFIX;
 			ch = 'x';
+			ox[1] = ch;
 			goto nosign;
 		case 's':
 			if ((cp = GETARG(char *)) == NULL)
@@ -691,8 +680,10 @@ fp_common:
 hex:			_umax = UARG();
 			base = HEX;
 			/* leading 0x/X only if non-zero */
-			if (flags & ALT && _umax != 0)
+			if (flags & ALT && _umax != 0) {
 				flags |= HEXPREFIX;
+				ox[1] = ch;
+			}
 
 			/* unsigned conversions */
 nosign:			sign = '\0';
@@ -780,7 +771,7 @@ number:			if ((dprec = prec) >= 0)
 		realsz = dprec > size ? dprec : size;
 		if (sign)
 			realsz++;
-		else if (flags & HEXPREFIX)
+		if (flags & HEXPREFIX)
 			realsz+= 2;
 
 		/* right-adjusting blank padding */
@@ -790,9 +781,9 @@ number:			if ((dprec = prec) >= 0)
 		/* prefix */
 		if (sign) {
 			PRINT(&sign, 1);
-		} else if (flags & HEXPREFIX) {
+		}
+		if (flags & HEXPREFIX) {
 			ox[0] = '0';
-			ox[1] = ch;
 			PRINT(ox, 2);
 		}
 
@@ -808,7 +799,7 @@ number:			if ((dprec = prec) >= 0)
 		if ((flags & FPT) == 0) {
 			PRINT(cp, size);
 		} else {	/* glue together f_p fragments */
-			if (ch >= 'f') {	/* 'f' or 'g' */
+			if (!expchar) {	/* 'f' or 'g' */
 				if (_double == 0) {
 					/* kludge for __dtoa irregularity */
 					PRINT("0", 1);
@@ -832,11 +823,10 @@ number:			if ((dprec = prec) >= 0)
 					PRINT(".", 1);
 					PRINT(cp, ndig-expt);
 				}
-			} else {	/* 'e' or 'E' */
+			} else {	/* 'e', 'E', 'a', 'A', long enough 'g', 'G' */
 				if (ndig > 1 || flags & ALT) {
-					ox[0] = *cp++;
-					ox[1] = '.';
-					PRINT(ox, 2);
+					PRINT(cp++, 1);
+					PRINT(".", 1);
 					if (_double) {
 						PRINT(cp, ndig-1);
 					} else	/* 0.[0..] */
@@ -846,7 +836,6 @@ number:			if ((dprec = prec) >= 0)
 					PRINT(cp, 1);
 				PRINT(expstr, expsize);
 			}
-// FIXME: here?
 		}
 #else
 		PRINT(cp, size);
@@ -1277,16 +1266,18 @@ __grow_type_table(unsigned char **typetable, int *tablesize)
 
 #ifdef FLOATING_POINT
 
+//hdtoa(double d, const char *xdigs, int ndigits, int *decpt, int *sign,
+//    char **rve)
+
 extern char *__dtoa(double, int, int, int *, int *, char **);
 
 static char *
 cvt(double value, int ndigits, int flags, char *sign, int *decpt, int ch,
-    int *length)
+	int *length)
 {
 	int mode, dsgn;
 	char *digits, *bp, *rve;
 
-// FIXME: here?
 	if (ch == 'f') {
 		mode = 3;		/* ndigits after the decimal point */
 	} else {
@@ -1318,6 +1309,25 @@ cvt(double value, int ndigits, int flags, char *sign, int *decpt, int ch,
 		while (rve < bp)
 			*rve++ = '0';
 	}
+	*length = rve - digits;
+	return (digits);
+}
+
+extern char *__hdtoa(double, const char *, int, int *, int *, char **);
+
+static char *
+hcvt(double value, const char *xdigs, int ndigits, char *sign, int *decpt,
+	int *length)
+{
+	int dsgn;
+	char *digits, *rve;
+
+	if (value < 0) {
+		value = -value;
+		*sign = '-';
+	} else
+		*sign = '\000';
+	digits = __hdtoa(value, xdigs, ndigits, decpt, &dsgn, &rve);
 	*length = rve - digits;
 	return (digits);
 }
