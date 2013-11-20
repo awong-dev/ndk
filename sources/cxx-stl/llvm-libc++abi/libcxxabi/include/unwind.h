@@ -41,7 +41,9 @@ typedef enum {
   _URC_HANDLER_FOUND = 6,
   _URC_INSTALL_CONTEXT = 7,
   _URC_CONTINUE_UNWIND = 8,
-  _URC_FAILURE = 9
+#ifdef __arm__
+  _URC_FAILURE = 9,
+#endif
 } _Unwind_Reason_Code;
 
 typedef enum {
