@@ -2,10 +2,7 @@ libgabi++_path := $(call my-dir)
 
 libgabi++_src_files := \
         src/array_type_info.cc \
-        src/auxilary.cc \
         src/class_type_info.cc \
-        src/cxxabi.cc \
-        src/cxxabi_vec.cc \
         src/delete.cc \
         src/dwarf_helper.cc \
         src/dynamic_cast.cc \
@@ -23,7 +20,6 @@ libgabi++_src_files := \
         src/pointer_to_member_type_info.cc \
         src/call_unexpected.cc \
         src/si_class_type_info.cc \
-        src/terminate.cc \
         src/type_info.cc \
         src/vmi_class_type_info.cc
 

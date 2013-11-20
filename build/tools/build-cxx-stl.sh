@@ -146,7 +146,26 @@ GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 STLPORT_SRCDIR=$ANDROID_NDK_ROOT/$STLPORT_SUBDIR
 LIBCXX_SRCDIR=$ANDROID_NDK_ROOT/$LIBCXX_SUBDIR
 
-LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include"
+LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
+
+# Determine GAbi++ build parameters. Note that GAbi++ is also built as part
+# of STLport and Libc++, in slightly different ways.
+if [ "$CXX_STL" = "libc++" ]; then
+  GABIXX_INCLUDES=$LIBCXX_INCLUDES
+  # Use clang to build libc++ by default
+  if [ "$EXPLICIT_COMPILER_VERSION" != "true" ]; then
+    LLVM_VERSION=$DEFAULT_LLVM_VERSION
+  fi
+else
+  GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
+fi
+GABIXX_CFLAGS="$COMMON_CFLAGS $GABIXX_INCLUDES"
+GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
+GABIXX_SOURCES="" #$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
+GABIXX_LDFLAGS="-ldl"
+if [ "$CXX_STL" = "libc++" ]; then
+  GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS"
+fi
 
 COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
@@ -190,7 +209,7 @@ src/cxa.c"
 
 # Determine Libc++ build parameters
 LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
-LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXRT=1 -DGABIXX_LIBCXX=1 -std=c++11"
+LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXABI=1 -std=c++11"
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
 libcxx/src/bind.cpp \

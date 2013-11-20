@@ -222,7 +222,7 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -g"
+  OPTIONS="-std=c++11 -g -nostdlib -lc -stdlib=libc++"
 fi
 OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"

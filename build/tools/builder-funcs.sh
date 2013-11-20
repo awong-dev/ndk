@@ -362,7 +362,9 @@ builder_shared_library ()
         $_BUILD_LDFLAGS_BEGIN_SO \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
-        -lgcc \
+        -Lsources/android/compiler-rt/libs/armeabi-v7a \
+        -lcompiler_rt_shared \
+        -nostdlib \
         $_BUILD_SHARED_LIBRARIES \
         -lc -lm \
         $_BUILD_LDFLAGS \
