@@ -289,6 +289,7 @@ libcxx/src/support/android/locale_android.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_new_delete.cpp \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1.c \
+../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-arm.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-sjlj.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersSave.S \
