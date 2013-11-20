@@ -157,7 +157,7 @@ GABIXX_SRCDIR=$BUILD_DIR/ndk/$GABIXX_SUBDIR
 STLPORT_SRCDIR=$BUILD_DIR/ndk/$STLPORT_SUBDIR
 LIBCXX_SRCDIR=$BUILD_DIR/ndk/$LIBCXX_SUBDIR
 
-LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
+LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include"
 
 COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
