@@ -26,7 +26,10 @@ typedef enum {
   _URC_END_OF_STACK = 5,
   _URC_HANDLER_FOUND = 6,
   _URC_INSTALL_CONTEXT = 7,
-  _URC_CONTINUE_UNWIND = 8
+  _URC_CONTINUE_UNWIND = 8,
+#ifdef __arm__
+  _URC_FAILURE = 9,
+#endif
 } _Unwind_Reason_Code;
 
 typedef enum {
