@@ -234,7 +234,7 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -g -nostdlib -lc -stdlib=libc++"
+  OPTIONS="-std=c++11 -g -stdlib=libc++"
   # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
   # unless we specify -UNDEBUG to bring assert() back.
   # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
@@ -348,6 +348,7 @@ else
   else
     LIBS="-lc++_shared -latomic"
   fi
+  LIBS="-lc++_shared -lcompiler_rt_shared -latomic -ldl -nodefaultlibs -lc"
 fi
 
 case $TRIPLE in
