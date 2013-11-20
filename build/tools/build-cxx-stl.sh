@@ -146,7 +146,7 @@ GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 STLPORT_SRCDIR=$ANDROID_NDK_ROOT/$STLPORT_SUBDIR
 LIBCXX_SRCDIR=$ANDROID_NDK_ROOT/$LIBCXX_SUBDIR
 
-LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
+LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
 
 COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
@@ -236,6 +236,45 @@ libcxx/src/typeinfo.cpp \
 libcxx/src/utility.cpp \
 libcxx/src/valarray.cpp \
 libcxx/src/support/android/locale_android.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_demangle.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_exception.hpp \
+../llvm-libc++abi/libcxxabi/src/cxa_default_handlers.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_unexpected.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_handlers.hpp \
+../llvm-libc++abi/libcxxabi/src/cxa_vector.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_virtual.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_handlers.cpp \
+../llvm-libc++abi/libcxxabi/src/private_typeinfo.h \
+../llvm-libc++abi/libcxxabi/src/cxa_aux_runtime.cpp \
+../llvm-libc++abi/libcxxabi/src/private_typeinfo.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_guard.cpp \
+../llvm-libc++abi/libcxxabi/src/abort_message.h \
+../llvm-libc++abi/libcxxabi/src/fallback_malloc.ipp \
+../llvm-libc++abi/libcxxabi/src/abort_message.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_personality.cpp \
+../llvm-libc++abi/libcxxabi/src/exception.cpp \
+../llvm-libc++abi/libcxxabi/src/typeinfo.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_exception_storage.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_new_delete.cpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/CompactUnwinder.hpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
+../llvm-libc++abi/libcxxabi/src/Unwind/DwarfInstructions.hpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1.c \
+../llvm-libc++abi/libcxxabi/src/Unwind/DwarfParser.hpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-sjlj.c \
+../llvm-libc++abi/libcxxabi/src/Unwind/libunwind.cpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/unwind_ext.h \
+../llvm-libc++abi/libcxxabi/src/Unwind/libunwind_ext.h \
+../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.s \
+../llvm-libc++abi/libcxxabi/src/Unwind/Unwind_AppleExtras.cpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/Registers.hpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/UnwindCursor.hpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/dwarf2.h \
+../llvm-libc++abi/libcxxabi/src/Unwind/config.h \
+../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersSave.s \
+../llvm-libc++abi/libcxxabi/src/Unwind/AddressSpace.hpp \
+../llvm-libc++abi/libcxxabi/src/cxa_exception.cpp \
+../llvm-libc++abi/libcxxabi/src/stdexcept.cpp \
 ../../android/support/src/locale_support.c \
 ../../android/support/src/math_support.c \
 ../../android/support/src/stdlib_support.c \
