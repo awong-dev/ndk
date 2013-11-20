@@ -285,7 +285,11 @@ builder_sources ()
             echo "build $obj: do $srcfull" >> $_BUILD_MK
         fi
         builder_log "${_BUILD_PREFIX}$text: $src"
-        builder_command $NDK_CCACHE $cc -c -o "$obj" "$srcfull" $cflags
+        builder_command $NDK_CCACHE $cc -c -o "$obj" -MMD -MF "$obj".d "$srcfull" $cflags
+        if [ "$_BUILD_MK" ]; then
+            echo "  depfile = $obj.d" >> $_BUILD_MK
+            echo "  deps = gcc" >> $_BUILD_MK
+        fi
         fail_panic "Could not compile ${_BUILD_PREFIX}$src"
         _BUILD_OBJECTS=$_BUILD_OBJECTS" $obj"
     done
