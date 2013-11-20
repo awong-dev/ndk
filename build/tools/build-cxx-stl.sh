@@ -248,6 +248,7 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/stdio/vfwprintf.c \
 ../../android/support/src/msun/e_log2.c \
 ../../android/support/src/msun/e_log2f.c \
+../../android/support/src/msun/s_logb.c \
 ../../android/support/src/musl-multibyte/btowc.c \
 ../../android/support/src/musl-multibyte/internal.c \
 ../../android/support/src/musl-multibyte/mblen.c \
