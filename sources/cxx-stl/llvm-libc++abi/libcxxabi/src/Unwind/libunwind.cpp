@@ -17,6 +17,8 @@
 #include "libunwind_ext.h"
 #include "config.h"
 
+#include <stdlib.h>
+
 
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
 
