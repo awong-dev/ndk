@@ -45,3 +45,13 @@ float nexttowardf(float f, long double td) {
 long double nexttowardl(long double ld, long double td) {
   return nextafter((double)ld, (double)td);
 }
+
+/*
+ * hypotl() is broken in bionic (hypotl(3, 4) returns 0x1.3ffffffffffffp+2
+ * instead of 0x1.4p+2), so make it forward to hypot, which also is ok due
+ * long double and double being identical.
+ */
+
+long double hypotl(long double x, long double y) {
+  return (long double)hypot((double)x, (double)y);
+}
