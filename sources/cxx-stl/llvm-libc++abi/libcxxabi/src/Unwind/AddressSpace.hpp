@@ -256,6 +256,9 @@ inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
 inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
                                                 size_t bufLen,
                                                 unw_word_t *offset) {
+#warning FIXME
+  return false;
+  /*
   dl_info dyldInfo;
   if (dladdr((void *)addr, &dyldInfo)) {
     if (dyldInfo.dli_sname != NULL) {
@@ -265,6 +268,7 @@ inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
     }
   }
   return false;
+  */
 }
 
 
