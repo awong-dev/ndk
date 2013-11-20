@@ -422,6 +422,7 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
               const scan_results& results)
 {
 #if __arm__
+#warning Verify hardcoded registers against arm eh-abi.
     _Unwind_SetGR(context, 0, reinterpret_cast<uintptr_t>(unwind_exception));
     _Unwind_SetGR(context, 1, static_cast<uintptr_t>(results.ttypeIndex));
 #else
@@ -838,7 +839,7 @@ _UA_CLEANUP_PHASE
 */
 
 _Unwind_Reason_Code
-#if __arm__
+#if __arm__ && CXXABI_SJLJ
 __gxx_personality_sj0
 #else
 __gxx_personality_v0
