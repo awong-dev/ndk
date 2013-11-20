@@ -14,6 +14,7 @@ android_support_sources := \
     src/stdio/vfwprintf.c \
     src/msun/e_log2.c \
     src/msun/e_log2f.c \
+    src/msun/s_logb.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
     src/musl-multibyte/mblen.c \
