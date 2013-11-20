@@ -12,6 +12,8 @@ android_support_sources := \
     src/locale/newlocale.c \
     src/locale/uselocale.c \
     src/stdio/vfwprintf.c \
+    src/msun/e_log2.c \
+    src/msun/e_log2f.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
     src/musl-multibyte/mblen.c \
