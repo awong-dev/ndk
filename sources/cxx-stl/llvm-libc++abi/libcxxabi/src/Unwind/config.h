@@ -51,10 +51,12 @@
     #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
     #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   0
     #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+    #define _LIBUNWIND_SUPPORT_ARM_UNWIND     0
   #else
     #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
     #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   1
     #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+    #define _LIBUNWIND_SUPPORT_ARM_UNWIND     0
   #endif
 
 #else
@@ -65,9 +67,10 @@
   #define _LIBUNWIND_LOG(msg, ...) fprintf(stderr, "libuwind: " msg, __VA_ARGS__)
   #define _LIBUNWIND_ABORT(msg) fprintf(stderr, "libunwind: %s %s:%d - %s\n",  __func__, __FILE__, __LINE__, msg), assert(false)
 
-    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
-    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   1
-    #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+  #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 0
+  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   0
+  #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+  #define _LIBUNWIND_SUPPORT_ARM_UNWIND     1
 
   // #define _LIBUNWIND_BUILD_ZERO_COST_APIS
   // #define _LIBUNWIND_BUILD_SJLJ_APIS
