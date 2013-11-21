@@ -1452,10 +1452,6 @@ inline void Registers_arm::setVectorRegister(int, v128) {
   _LIBUNWIND_ABORT("no arm vector register support yet");
 }
 
-extern "C" void Registers_arm::jumpto() {
-#warning TODO(danakj): Implement this, probably in UnwindRegistersSave.S.
-}
-
 } // namespace libunwind
 
 #endif // __REGISTERS_HPP__
