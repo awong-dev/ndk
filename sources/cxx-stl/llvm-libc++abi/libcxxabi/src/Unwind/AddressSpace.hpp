@@ -318,6 +318,8 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
   info.arm_section = (uintptr_t) dl_unwind_find_exidx(
       (_Unwind_Ptr) targetAddr, &length);
   info.arm_section_length = length;
+  if (info.arm_section && info.arm_section_length)
+    return true;
 #endif
 
   return false;
