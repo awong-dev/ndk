@@ -1325,16 +1325,20 @@ private:
   };
 
   GPRs    _registers;
+  double  _vectorHalfRegisters[32];
 };
 
 inline Registers_arm::Registers_arm(const void *registers) {
   static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
                     "arm registers do not fit into unw_context_t");
   memcpy(&_registers, registers, sizeof(_registers));
+  // TODO(ajwong): Should actually copy floating point registers?
+  memset(&_vectorHalfRegisters, 0, sizeof(_vectorHalfRegisters));
 }
 
 inline Registers_arm::Registers_arm() {
   memset(&_registers, 0, sizeof(_registers));
+  memset(&_vectorHalfRegisters, 0, sizeof(_vectorHalfRegisters));
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {
