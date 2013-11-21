@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
+#include <link.h>
 
 #if __APPLE__
 #include <mach-o/getsect.h>
@@ -313,9 +314,10 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
 #endif
 
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
-#warning TODO(danakj): Set these to something legit.
-  info.arm_section        = (uintptr_t)0x10101010;
-  info.arm_section_length = 0;
+  int length = 0;
+  info.arm_section = (uintptr_t) dl_unwind_find_exidx(
+      (_Unwind_Ptr) targetAddr, &length);
+  info.arm_section_length = length;
 #endif
 
   return false;
