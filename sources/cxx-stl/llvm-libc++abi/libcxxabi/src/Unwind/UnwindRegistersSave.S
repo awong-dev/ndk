@@ -319,5 +319,9 @@ __ZN9libunwind15Registers_arm646jumptoEv:
 
 
 
+#elif __arm__
+
+#warning TODO(danakj): Implement _ZN9libunwind13Registers_arm6jumptoEv
+
 #endif
 

@@ -1273,6 +1273,189 @@ inline void Registers_arm64::setVectorRegister(int, v128) {
   _LIBUNWIND_ABORT("no arm64 vector register support yet");
 }
 
+/// Registers_arm holds the register state of a thread in a 32-bit arm
+/// process.
+class _LIBUNWIND_HIDDEN Registers_arm {
+public:
+  Registers_arm();
+  Registers_arm(const void *registers);
+
+  bool        validRegister(int num) const;
+  uint32_t    getRegister(int num) const;
+  void        setRegister(int num, uint32_t value);
+  bool        validFloatRegister(int num) const;
+  double      getFloatRegister(int num) const;
+  void        setFloatRegister(int num, double value);
+  bool        validVectorRegister(int num) const;
+  v128        getVectorRegister(int num) const;
+  void        setVectorRegister(int num, v128 value);
+  const char *getRegisterName(int num);
+  void        jumpto();
+
+  uint32_t  getSP() const         { return _registers.__sp; }
+  void      setSP(uint64_t value) { _registers.__sp = value; }
+  uint32_t  getIP() const         { return _registers.__pc; }
+  void      setIP(uint64_t value) { _registers.__pc = value; }
+#warning TODO(danakj): Should these exist on ARM/NEON 32?
+//  uint32_t  getFP() const         { return _registers.__fp; }
+//  void      setFP(uint64_t value) { _registers.__fp = value; }
+
+private:
+  struct GPRs {
+    uint32_t __x[13]; // x0-x12
+    uint32_t __sp;    // Stack pointer x13
+    uint32_t __lr;    // Link register x14
+    uint32_t __pc;    // Program counter
+    uint32_t __cpsr;  // Current program status register
+    uint32_t padding; // 16-byte align? saved program status register (privileged access)?
+#warning TODO(danakj): Get the right registers for ARM/NEON here.
+  };
+
+
+  GPRs    _registers;
+#warning TODO(danakj): No FPU registers on arm32? How about NEON?
+  double  _vectorHalfRegisters[32];
+  // Currently only the lower double in 128-bit vectore registers
+  // is perserved during unwinding.  We could define new register
+  // numbers (> 96) which mean whole vector registers, then this
+  // struct would need to change to contain whole vector registers.
+};
+
+inline Registers_arm::Registers_arm(const void *registers) {
+  static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
+                    "arm registers do not fit into unw_context_t");
+  memcpy(&_registers, registers, sizeof(_registers));
+#warning TODO(danakj): Get the right offset here.
+  memcpy(_vectorHalfRegisters, (((char *)registers) + 0x110),
+         sizeof(_vectorHalfRegisters));
+}
+
+inline Registers_arm::Registers_arm() {
+  bzero(&_registers, sizeof(_registers));
+  bzero(&_registers, sizeof(_vectorHalfRegisters));
+}
+
+inline bool Registers_arm::validRegister(int regNum) const {
+  if (regNum == UNW_REG_IP)
+    return true;
+  if (regNum == UNW_REG_SP)
+    return true;
+#warning TODO(danakj): Sort out the right values here.
+  if (regNum < 0)
+    return false;
+  if (regNum > 16)
+    return false;
+  return true;
+}
+
+inline uint32_t Registers_arm::getRegister(int regNum) const {
+  if (regNum == UNW_REG_IP)
+    return _registers.__pc;
+  if (regNum == UNW_REG_SP)
+    return _registers.__sp;
+#warning TODO(danakj): Sort out the right values here.
+  if ((regNum >= 0) && (regNum < 15))
+    return _registers.__x[regNum];
+  if (regNum == 16)
+    return _registers.__cpsr;
+  _LIBUNWIND_ABORT("unsupported arm register");
+}
+
+inline void Registers_arm::setRegister(int regNum, uint32_t value) {
+  if (regNum == UNW_REG_IP)
+    _registers.__pc = value;
+  else if (regNum == UNW_REG_SP)
+    _registers.__sp = value;
+#warning TODO(danakj): Sort out the right values here.
+  else if ((regNum >= 0) && (regNum < 32))
+    _registers.__x[regNum] = value;
+  else
+    _LIBUNWIND_ABORT("unsupported arm register");
+}
+
+inline const char *Registers_arm::getRegisterName(int regNum) {
+#warning TODO(danakj): Add/remove names for ARM/NEON.
+  switch (regNum) {
+  case UNW_REG_IP:
+    return "pc";
+  case UNW_REG_SP:
+    return "sp";
+  case UNW_ARM_X0:
+    return "x0";
+  case UNW_ARM_X1:
+    return "x1";
+  case UNW_ARM_X2:
+    return "x2";
+  case UNW_ARM_X3:
+    return "x3";
+  case UNW_ARM_X4:
+    return "x4";
+  case UNW_ARM_X5:
+    return "x5";
+  case UNW_ARM_X6:
+    return "x6";
+  case UNW_ARM_X7:
+    return "x7";
+  case UNW_ARM_X8:
+    return "x8";
+  case UNW_ARM_X9:
+    return "x9";
+  case UNW_ARM_X10:
+    return "x10";
+  case UNW_ARM_X11:
+    return "x11";
+  case UNW_ARM_X12:
+    return "x12";
+  case UNW_ARM_X13:
+    return "x13";
+  case UNW_ARM_X14:
+    return "x14";
+  case UNW_ARM_X15:
+    return "x14";
+  case UNW_ARM_X16:
+    return "x14";
+  default:
+    return "unknown register";
+  }
+}
+
+inline bool Registers_arm::validFloatRegister(int regNum) const {
+#warning TODO(danakj): Sort out the right values here.
+  if (regNum < UNW_ARM_D0)
+    return false;
+  if (regNum > UNW_ARM_D31)
+    return false;
+  return true;
+}
+
+inline double Registers_arm::getFloatRegister(int regNum) const {
+#warning TODO(danakj): Sort out the right values here.
+  assert(validFloatRegister(regNum));
+  return _vectorHalfRegisters[regNum - UNW_ARM_D0];
+}
+
+inline void Registers_arm::setFloatRegister(int regNum, double value) {
+#warning TODO(danakj): Sort out the right values here.
+  assert(validFloatRegister(regNum));
+  _vectorHalfRegisters[regNum - UNW_ARM_D0] = value;
+}
+
+inline bool Registers_arm::validVectorRegister(int) const {
+  return false;
+}
+
+inline v128 Registers_arm::getVectorRegister(int) const {
+  _LIBUNWIND_ABORT("no arm vector register support yet");
+}
+
+inline void Registers_arm::setVectorRegister(int, v128) {
+  _LIBUNWIND_ABORT("no arm vector register support yet");
+}
+
+extern "C" void Registers_arm::jumpto() {
+#warning TODO(danakj): Implement this, probably in UnwindRegistersSave.S.
+}
+
 } // namespace libunwind
 
 #endif // __REGISTERS_HPP__
