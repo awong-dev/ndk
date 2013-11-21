@@ -409,9 +409,8 @@ public:
 private:
 
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
-  int stepWithArm() {
-#warning TODO(danakj): Implement this.
-  }
+  bool getInfoFromEHABISection(pint_t pc, const UnwindInfoSections &sects);
+  int stepWithArm();
 #endif
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND
@@ -584,6 +583,76 @@ const char *UnwindCursor<A, R>::getRegisterName(int regNum) {
 template <typename A, typename R> bool UnwindCursor<A, R>::isSignalFrame() {
   return _isSignalFrame;
 }
+
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND
+struct EHABIIndexEntry {
+  uint32_t functionOffset;
+  uint32_t data;
+};
+
+static inline uint32_t signExtendPrel31(uint32_t data) {
+  return data | ((data & 0x40000000u) << 1);
+};
+
+template <typename A, typename R>
+bool UnwindCursor<A, R>::getInfoFromEHABISection(
+    pint_t pc,
+    const UnwindInfoSections &sects) {
+  // TODO(piman): binary search instead.
+  pint_t lastPC = 0;
+  pint_t thisPC = 0;
+  pint_t dataOffset = 0;
+  // arm_section_length is in entries.
+  for (size_t i = 0; i < sects.arm_section_length; ++i) {
+    pint_t entry = sects.arm_section + arrayoffsetof(
+        EHABIIndexEntry, i, functionOffset);
+    lastPC = thisPC;
+    thisPC = entry + signExtendPrel31(_addressSpace.get32(entry));
+    if (pc < thisPC)
+      break;
+    dataOffset = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
+  }
+  _info.start_ip = lastPC;
+  _info.end_ip = thisPC;
+  if (dataOffset == 0)  // Not found
+    return false;
+  uint32_t data = _addressSpace.get32(dataOffset);
+  if (data == 1)  // EXIDX_CANTUNWIND
+    return false;
+  if (data & 0x80000000) {
+    _info.handler = (data & 0x0f000000) >> 24;
+    _info.format = 1;
+    _info.unwind_info = dataOffset;
+  } else {
+    pint_t tableOffset = dataOffset + signExtendPrel31(data);
+    uint32_t tableData = _addressSpace.get32(tableOffset);
+    if (tableData & 0x80000000) {
+      _info.handler = (data & 0x0f000000) >> 24;
+      _info.format = 1;
+      _info.unwind_info = dataOffset;
+    } else {
+      pint_t handlerOffset = tableOffset + signExtendPrel31(tableData);
+      _info.handler = handlerOffset;
+      _info.unwind_info = tableOffset + 4;
+    }
+  }
+  return true;
+}
+
+template <typename A, typename R>
+int UnwindCursor<A, R>::stepWithArm() {
+  // Bottom of stack is defined is when no unwind info cannot be found.
+  if (_unwindInfoMissing)
+    return UNW_STEP_END;
+
+  if (_info.format == 1) {
+    // TODO(piman): Call __aeabi_unwind_cpp_pr*, indexed on _info.handler
+  } else {
+    // TODO(piman): Call function at _info.handler
+  }
+  return UNW_STEP_END;
+}
+#endif
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND
 template <typename A, typename R>
@@ -963,10 +1032,9 @@ void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
 #endif
 
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
-    // If there is dwarf unwind info, look there next.
-    if (sects.arm_section != 0) {
-#warning TODO(danakj): Implement for ARM.
-    }
+    // If there is ARM EHABI unwind info, look there next.
+    if (sects.arm_section != 0 && this->getInfoFromEHABISection(pc, sects))
+      return;
 #endif
   }
 
