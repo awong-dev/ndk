@@ -1066,7 +1066,7 @@ inline Registers_arm64::Registers_arm64(const void *registers) {
 
 inline Registers_arm64::Registers_arm64() {
   bzero(&_registers, sizeof(_registers));
-  bzero(&_registers, sizeof(_vectorHalfRegisters));
+  bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
 }
 
 inline bool Registers_arm64::validRegister(int regNum) const {
@@ -1275,6 +1275,8 @@ inline void Registers_arm64::setVectorRegister(int, v128) {
 
 /// Registers_arm holds the register state of a thread in a 32-bit arm
 /// process.
+///
+/// NOTE: Assuming cortex (armv7a) or newer with NEON.
 class _LIBUNWIND_HIDDEN Registers_arm {
 public:
   Registers_arm();
@@ -1296,43 +1298,31 @@ public:
   void      setSP(uint64_t value) { _registers.__sp = value; }
   uint32_t  getIP() const         { return _registers.__pc; }
   void      setIP(uint64_t value) { _registers.__pc = value; }
-#warning TODO(danakj): Should these exist on ARM/NEON 32?
-//  uint32_t  getFP() const         { return _registers.__fp; }
-//  void      setFP(uint64_t value) { _registers.__fp = value; }
 
 private:
   struct GPRs {
     uint32_t __x[13]; // x0-x12
     uint32_t __sp;    // Stack pointer x13
     uint32_t __lr;    // Link register x14
-    uint32_t __pc;    // Program counter
-    uint32_t __cpsr;  // Current program status register
-    uint32_t padding; // 16-byte align? saved program status register (privileged access)?
-#warning TODO(danakj): Get the right registers for ARM/NEON here.
+    uint32_t __pc;    // Program counter x15
   };
 
 
   GPRs    _registers;
-#warning TODO(danakj): No FPU registers on arm32? How about NEON?
   double  _vectorHalfRegisters[32];
-  // Currently only the lower double in 128-bit vectore registers
-  // is perserved during unwinding.  We could define new register
-  // numbers (> 96) which mean whole vector registers, then this
-  // struct would need to change to contain whole vector registers.
 };
 
 inline Registers_arm::Registers_arm(const void *registers) {
   static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
                     "arm registers do not fit into unw_context_t");
   memcpy(&_registers, registers, sizeof(_registers));
-#warning TODO(danakj): Get the right offset here.
-  memcpy(_vectorHalfRegisters, (((char *)registers) + 0x110),
-         sizeof(_vectorHalfRegisters));
+  // TODO(ajwong): Should actually copy floating point registers?
+  bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
 }
 
 inline Registers_arm::Registers_arm() {
   bzero(&_registers, sizeof(_registers));
-  bzero(&_registers, sizeof(_vectorHalfRegisters));
+  bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {
@@ -1340,102 +1330,157 @@ inline bool Registers_arm::validRegister(int regNum) const {
     return true;
   if (regNum == UNW_REG_SP)
     return true;
-#warning TODO(danakj): Sort out the right values here.
   if (regNum < 0)
     return false;
-  if (regNum > 16)
+  if (regNum >= UNW_ARM_MAX_REG)
     return false;
+  // Above general purpose reg, but under neon reg indexes.
+  if ((regNum > UNW_ARM_R15) && (regNum < UNW_ARM_D0))
+    return false;
+#warning "Should't this also fail for ranges UNW_ARM_D0 to UNW_ARM_D31?"
   return true;
 }
 
 inline uint32_t Registers_arm::getRegister(int regNum) const {
-  if (regNum == UNW_REG_IP)
-    return _registers.__pc;
-  if (regNum == UNW_REG_SP)
+  if (regNum == UNW_REG_SP || regNum == UNW_ARM_SP)
     return _registers.__sp;
-#warning TODO(danakj): Sort out the right values here.
-  if ((regNum >= 0) && (regNum < 15))
+  if (regNum == UNW_ARM_LR)
+    return _registers.__lr;
+  if (regNum == UNW_REG_IP || regNum == UNW_ARM_IP)
+    return _registers.__pc;
+  if ((regNum >= UNW_ARM_R0) && (regNum <= UNW_ARM_R12))
     return _registers.__x[regNum];
-  if (regNum == 16)
-    return _registers.__cpsr;
   _LIBUNWIND_ABORT("unsupported arm register");
 }
 
 inline void Registers_arm::setRegister(int regNum, uint32_t value) {
-  if (regNum == UNW_REG_IP)
-    _registers.__pc = value;
-  else if (regNum == UNW_REG_SP)
+  if (regNum == UNW_REG_SP || regNum == UNW_ARM_SP)
     _registers.__sp = value;
-#warning TODO(danakj): Sort out the right values here.
-  else if ((regNum >= 0) && (regNum < 32))
+  else if (regNum == UNW_ARM_LR)
+    _registers.__lr = value;
+  else if (regNum == UNW_REG_IP || regNum == UNW_ARM_IP)
+    _registers.__pc = value;
+  else if ((regNum >= UNW_ARM_R0) && (regNum <= UNW_ARM_R12))
     _registers.__x[regNum] = value;
   else
     _LIBUNWIND_ABORT("unsupported arm register");
 }
 
 inline const char *Registers_arm::getRegisterName(int regNum) {
-#warning TODO(danakj): Add/remove names for ARM/NEON.
   switch (regNum) {
   case UNW_REG_IP:
+  case UNW_ARM_IP: // UNW_ARM_R15 is alias
     return "pc";
+  case UNW_ARM_LR: // UNW_ARM_R14 is alias
+    return "lr";
   case UNW_REG_SP:
+  case UNW_ARM_SP: // UNW_ARM_R13 is alias
     return "sp";
-  case UNW_ARM_X0:
-    return "x0";
-  case UNW_ARM_X1:
-    return "x1";
-  case UNW_ARM_X2:
-    return "x2";
-  case UNW_ARM_X3:
-    return "x3";
-  case UNW_ARM_X4:
-    return "x4";
-  case UNW_ARM_X5:
-    return "x5";
-  case UNW_ARM_X6:
-    return "x6";
-  case UNW_ARM_X7:
-    return "x7";
-  case UNW_ARM_X8:
-    return "x8";
-  case UNW_ARM_X9:
-    return "x9";
-  case UNW_ARM_X10:
-    return "x10";
-  case UNW_ARM_X11:
-    return "x11";
-  case UNW_ARM_X12:
-    return "x12";
-  case UNW_ARM_X13:
-    return "x13";
-  case UNW_ARM_X14:
-    return "x14";
-  case UNW_ARM_X15:
-    return "x14";
-  case UNW_ARM_X16:
-    return "x14";
+  case UNW_ARM_R0:
+    return "r0";
+  case UNW_ARM_R1:
+    return "r1";
+  case UNW_ARM_R2:
+    return "r2";
+  case UNW_ARM_R3:
+    return "r3";
+  case UNW_ARM_R4:
+    return "r4";
+  case UNW_ARM_R5:
+    return "r5";
+  case UNW_ARM_R6:
+    return "r6";
+  case UNW_ARM_R7:
+    return "r7";
+  case UNW_ARM_R8:
+    return "r8";
+  case UNW_ARM_R9:
+    return "r9";
+  case UNW_ARM_R10:
+    return "r10";
+  case UNW_ARM_R11:
+    return "r11";
+  case UNW_ARM_R12:
+    return "r12";
+  case UNW_ARM_D0:
+    return "d0";
+  case UNW_ARM_D1:
+    return "d1";
+  case UNW_ARM_D2:
+    return "d2";
+  case UNW_ARM_D3:
+    return "d3";
+  case UNW_ARM_D4:
+    return "d4";
+  case UNW_ARM_D5:
+    return "d5";
+  case UNW_ARM_D6:
+    return "d6";
+  case UNW_ARM_D7:
+    return "d7";
+  case UNW_ARM_D8:
+    return "d8";
+  case UNW_ARM_D9:
+    return "d9";
+  case UNW_ARM_D10:
+    return "d10";
+  case UNW_ARM_D11:
+    return "d11";
+  case UNW_ARM_D12:
+    return "d12";
+  case UNW_ARM_D13:
+    return "d13";
+  case UNW_ARM_D14:
+    return "d14";
+  case UNW_ARM_D15:
+    return "d15";
+  case UNW_ARM_D16:
+    return "d16";
+  case UNW_ARM_D17:
+    return "d17";
+  case UNW_ARM_D18:
+    return "d18";
+  case UNW_ARM_D19:
+    return "d19";
+  case UNW_ARM_D20:
+    return "d20";
+  case UNW_ARM_D21:
+    return "d21";
+  case UNW_ARM_D22:
+    return "d22";
+  case UNW_ARM_D23:
+    return "d23";
+  case UNW_ARM_D24:
+    return "d24";
+  case UNW_ARM_D25:
+    return "d25";
+  case UNW_ARM_D26:
+    return "d26";
+  case UNW_ARM_D27:
+    return "d27";
+  case UNW_ARM_D28:
+    return "d28";
+  case UNW_ARM_D29:
+    return "d29";
+  case UNW_ARM_D30:
+    return "d30";
+  case UNW_ARM_D31:
+    return "d31";
   default:
     return "unknown register";
   }
 }
 
 inline bool Registers_arm::validFloatRegister(int regNum) const {
-#warning TODO(danakj): Sort out the right values here.
-  if (regNum < UNW_ARM_D0)
-    return false;
-  if (regNum > UNW_ARM_D31)
-    return false;
-  return true;
+  return ((regNum >= UNW_ARM_D0) && (regNum <= UNW_ARM_D31));
 }
 
 inline double Registers_arm::getFloatRegister(int regNum) const {
-#warning TODO(danakj): Sort out the right values here.
   assert(validFloatRegister(regNum));
   return _vectorHalfRegisters[regNum - UNW_ARM_D0];
 }
 
 inline void Registers_arm::setFloatRegister(int regNum, double value) {
-#warning TODO(danakj): Sort out the right values here.
   assert(validFloatRegister(regNum));
   _vectorHalfRegisters[regNum - UNW_ARM_D0] = value;
 }
@@ -1445,11 +1490,11 @@ inline bool Registers_arm::validVectorRegister(int) const {
 }
 
 inline v128 Registers_arm::getVectorRegister(int) const {
-  _LIBUNWIND_ABORT("no arm vector register support yet");
+  _LIBUNWIND_ABORT("ARM vector support not implemented");
 }
 
 inline void Registers_arm::setVectorRegister(int, v128) {
-  _LIBUNWIND_ABORT("no arm vector register support yet");
+  _LIBUNWIND_ABORT("ARM vector support not implemented");
 }
 
 } // namespace libunwind
