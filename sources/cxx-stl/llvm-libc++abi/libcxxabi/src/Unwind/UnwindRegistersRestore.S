@@ -310,7 +310,7 @@ unw_getcontext:
   stm r0, {r0-r12}
   str r13, [r0, #52]
   str r14, [r0, #56]
-  str r15, [r0, #60]
+  @ No need to store pc (r15), since it's restored to lr.
   mov r0, #0      @ return UNW_ESUCCESS
   mov pc, lr
 

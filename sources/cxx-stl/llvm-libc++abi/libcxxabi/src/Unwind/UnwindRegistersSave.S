@@ -340,7 +340,25 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 
 #elif __arm__
 
-#warning TODO(danakj): Implement _ZN9libunwind13Registers_arm6jumptoEv
+  .text
+  .globl _ZN9libunwind13Registers_arm6jumptoEv
+  .hidden _ZN9libunwind13Registers_arm6jumptoEv
+@
+@ void libunwind::Registers_arm::jumpto()
+@
+@ On entry:
+@  thread_state pointer is in r0
+@
+_ZN9libunwind13Registers_arm6jumptoEv:
+  @ Use lr as base so that r0 can be restored.
+  mov lr, r0
+  @ 32bit thumb-2 restrictions for ldm:
+  @ . the sp (r13) cannot be in the list
+  @ . the pc (r15) and lr (r14) cannot both be in the list in an LDM instruction
+  ldm lr, {r0-r12}
+  ldr r13, [lr, #52]
+  ldr lr, [lr, #56]
+  mov pc, lr
 
 #endif
 
