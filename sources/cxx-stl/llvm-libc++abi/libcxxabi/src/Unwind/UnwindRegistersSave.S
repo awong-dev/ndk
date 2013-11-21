@@ -338,5 +338,9 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   mov r0, #0      @ return UNW_ESUCCESS
   mov pc, lr
 
+#elif __arm__
+
+#warning TODO(danakj): Implement _ZN9libunwind13Registers_arm6jumptoEv
+
 #endif
 

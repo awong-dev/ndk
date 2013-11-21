@@ -451,6 +451,11 @@ private:
         _info.format, _info.start_ip, _addressSpace, _registers);
   }
 
+  int stepWithCompactEncoding(Registers_arm &) {
+    return CompactUnwinder_arm<A>::stepWithCompactEncoding(
+        _info.format, _info.start_ip, _addressSpace, _registers);
+  }
+
   bool compactSaysUseDwarf(uint32_t *offset=NULL) const {
     R dummy;
     return compactSaysUseDwarf(dummy, offset);
@@ -487,6 +492,11 @@ private:
     return false;
   }
 
+  bool compactSaysUseDwarf(Registers_arm &, uint32_t *offset) const {
+#warning TODO(danakj): Do something for ARM here.
+    return false;
+  }
+
   compact_unwind_encoding_t dwarfEncoding() const {
     R dummy;
     return dwarfEncoding(dummy);
@@ -506,6 +516,11 @@ private:
 
   compact_unwind_encoding_t dwarfEncoding(Registers_arm64 &) const {
     return UNWIND_ARM64_MODE_DWARF;
+  }
+
+  compact_unwind_encoding_t dwarfEncoding(Registers_arm &) const {
+#warning TODO(danakj): Do something for ARM here.
+    return 0;
   }
 #endif // _LIBUNWIND_SUPPORT_COMPACT_UNWIND
 
