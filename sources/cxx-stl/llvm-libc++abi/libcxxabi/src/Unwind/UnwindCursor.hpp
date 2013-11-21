@@ -590,52 +590,84 @@ struct EHABIIndexEntry {
   uint32_t data;
 };
 
+enum unw_proc_info_format {
+  UNW_FORMAT_DIRECT,
+  UNW_FORMAT_INDIRECT_TABLE_INDEX,
+};
+
+// Unable to unwind in the ARM index table (section 5 EHABI).
+#define UNW_EXIDX_CANTUNWIND 0x1
+
 static inline uint32_t signExtendPrel31(uint32_t data) {
   return data | ((data & 0x40000000u) << 1);
-};
+}
 
 template <typename A, typename R>
 bool UnwindCursor<A, R>::getInfoFromEHABISection(
     pint_t pc,
     const UnwindInfoSections &sects) {
   // TODO(piman): binary search instead.
-  pint_t lastPC = 0;
   pint_t thisPC = 0;
-  pint_t dataOffset = 0;
+  pint_t nextPC = 0;
+  pint_t dataAddr = 0;
   // arm_section_length is in entries.
   for (size_t i = 0; i < sects.arm_section_length; ++i) {
-    pint_t entry = sects.arm_section + arrayoffsetof(
+    pint_t entryAddr = sects.arm_section + arrayoffsetof(
         EHABIIndexEntry, i, functionOffset);
-    lastPC = thisPC;
-    thisPC = entry + signExtendPrel31(_addressSpace.get32(entry));
-    if (pc < thisPC)
+    thisPC = nextPC;
+    nextPC = entryAddr + signExtendPrel31(_addressSpace.get32(entryAddr));
+    if (pc < nextPC)
       break;
-    dataOffset = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
+    dataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
   }
-  _info.start_ip = lastPC;
-  _info.end_ip = thisPC;
-  if (dataOffset == 0)  // Not found
+
+  if (dataAddr == 0) {
+    _LIBUNWIND_ABORT("pc came before first entry in table");
     return false;
-  uint32_t data = _addressSpace.get32(dataOffset);
-  if (data == 1)  // EXIDX_CANTUNWIND
+  }
+
+  uint32_t data = _addressSpace.get32(dataAddr);
+  if (data == UNW_EXIDX_CANTUNWIND)
     return false;
+
+  // If the high bit is set, the exception handling table entry is inline inside
+  // the index table entry. Otherwise, the table points at an offset in the
+  // exception handling table (section 5 EHABI).
+  pint_t exceptionTableAddr;
+  uint32_t exceptionTableData;
   if (data & 0x80000000) {
-    _info.handler = (data & 0x0f000000) >> 24;
-    _info.format = 1;
-    _info.unwind_info = dataOffset;
+    exceptionTableAddr = dataAddr;
+    exceptionTableData = data;
   } else {
-    pint_t tableOffset = dataOffset + signExtendPrel31(data);
-    uint32_t tableData = _addressSpace.get32(tableOffset);
-    if (tableData & 0x80000000) {
-      _info.handler = (data & 0x0f000000) >> 24;
-      _info.format = 1;
-      _info.unwind_info = dataOffset;
-    } else {
-      pint_t handlerOffset = tableOffset + signExtendPrel31(tableData);
-      _info.handler = handlerOffset;
-      _info.unwind_info = tableOffset + 4;
-    }
+    exceptionTableAddr = dataAddr + signExtendPrel31(data);
+    exceptionTableData = _addressSpace.get32(exceptionTableAddr);
   }
+
+  uint32_t personalityFormat;
+  unw_word_t personalityRoutine;
+  unw_word_t personalityDataAddr;
+
+  // If the high bit in the exception handling table entry is set, the entry is
+  // in compact form (section 6.3 EHABI).
+  if (exceptionTableData & 0x80000000) {
+    // Grab the index of the personality routine from the compact form.
+    personalityRoutine = (exceptionTableData & 0x0f000000) >> 24;
+    personalityDataAddr = exceptionTableAddr;
+    personalityFormat = UNW_FORMAT_INDIRECT_TABLE_INDEX;
+  } else {
+    pint_t personalityAddr =
+        exceptionTableAddr + signExtendPrel31(exceptionTableData);
+    personalityRoutine = personalityAddr;
+    personalityDataAddr = exceptionTableAddr + 4;
+    personalityFormat = UNW_FORMAT_DIRECT;
+  }
+
+  _info.start_ip = thisPC;
+  _info.end_ip = nextPC;
+  _info.format = personalityFormat;
+  _info.handler = personalityRoutine;
+  _info.unwind_info = personalityDataAddr;
+
   return true;
 }
 
@@ -645,10 +677,13 @@ int UnwindCursor<A, R>::stepWithArm() {
   if (_unwindInfoMissing)
     return UNW_STEP_END;
 
-  if (_info.format == 1) {
+  if (_info.format == UNW_FORMAT_INDIRECT_TABLE_INDEX) {
     // TODO(piman): Call __aeabi_unwind_cpp_pr*, indexed on _info.handler
+    // _info.unwindo_info is the address of the compact table entry (data for
+    // the handler begins inside this addr's first word).
   } else {
     // TODO(piman): Call function at _info.handler
+    // _info.unwindo_info is the address of the data for the handler
   }
   return UNW_STEP_END;
 }
