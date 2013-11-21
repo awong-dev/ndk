@@ -29,6 +29,10 @@
 #include "CompactUnwinder.hpp"
 #include "config.h"
 
+#if __arm__
+#include "Unwind-arm.h"
+#endif
+
 namespace libunwind {
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND
@@ -647,6 +651,28 @@ int UnwindCursor<A, R>::stepWithArm() {
 
   if (_info.format == 1) {
     // TODO(piman): Call __aeabi_unwind_cpp_pr*, indexed on _info.handler
+    uint32_t compact_pr_desc = _addressSpace.get32(_info.unwind_info);
+    uint32_t pr_index = (compact_pr_desc & 0x0f000000) >> 24;
+
+    /*
+    _Unwind_State state = _US_UNWIND_FRAME_STARTING;  // Is this right?
+    _Unwind_Control_Block ucb;
+    bzero(&ucb, sizeof(&ucb));
+    _Unwind_Context context;
+    bzero(&context, sizeof(&context));
+    */
+
+    switch(pr_index) {
+      case 0:
+//        __aeabi_unwind_cpp_pr0(state, &ucb, &context);
+        break;
+      case 1:
+        break;
+      case 2:
+        break;
+      default:
+        _LIBUNWIND_ABORT("unknown personality routine index");
+    }
   } else {
     // TODO(piman): Call function at _info.handler
   }
