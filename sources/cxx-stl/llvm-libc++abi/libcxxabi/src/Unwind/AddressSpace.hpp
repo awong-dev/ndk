@@ -47,6 +47,10 @@ struct UnwindInfoSections {
   uintptr_t       compact_unwind_section;
   uintptr_t       compact_unwind_section_length;
 #endif
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND
+  uintptr_t       arm_section;
+  uintptr_t       arm_section_length;
+#endif
 };
 
 
@@ -238,6 +242,12 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
 #else
   // TO DO
 
+#endif
+
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND
+#warning TODO(danakj): Set these to something legit.
+  info.arm_section        = (uintptr_t)0x10101010;
+  info.arm_section_length = 0;
 #endif
 
   return false;
