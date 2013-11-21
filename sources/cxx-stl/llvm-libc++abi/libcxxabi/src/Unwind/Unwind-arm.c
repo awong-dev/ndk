@@ -62,6 +62,7 @@ typedef struct _Unwind_Control_Block {
 _Unwind_Reason_Code __aeabi_unwind_cpp_pr0(_Unwind_State state,
                                            _Unwind_Control_Block *ucbp,
                                            _Unwind_Context *context) {
+#warning TODO(danakj): Support ARM/NEON here.
   assert(false && "pr0 not supported");
   return _URC_FAILURE;
 }
@@ -69,6 +70,7 @@ _Unwind_Reason_Code __aeabi_unwind_cpp_pr0(_Unwind_State state,
 _Unwind_Reason_Code __aeabi_unwind_cpp_pr1(_Unwind_State state,
                                            _Unwind_Control_Block *ucbp,
                                            _Unwind_Context *context) {
+#warning TODO(danakj): Support ARM/NEON here.
   assert(false && "pr1 not supported");
   return _URC_FAILURE;
 }
@@ -76,11 +78,13 @@ _Unwind_Reason_Code __aeabi_unwind_cpp_pr1(_Unwind_State state,
 _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(_Unwind_State state,
                                            _Unwind_Control_Block *ucbp,
                                            _Unwind_Context *context) {
+#warning TODO(danakj): Support ARM/NEON here.
   assert(false && "pr2 not supported");
   return _URC_FAILURE;
 }
 
 int unw_getcontext(unw_context_t* thread_state) {
+#warning TODO(danakj): Support ARM/NEON here.
   assert(false && "unw_getcontext not supported");
   return UNW_EUNSPEC;
 }

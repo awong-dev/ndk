@@ -52,6 +52,9 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
 #elif __arm64__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm64>(
                                  context, LocalAddressSpace::sThisAddressSpace);
+#elif __arm__
+  new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm>(
+                                 context, LocalAddressSpace::sThisAddressSpace);
 #endif
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   co->setInfoBasedOnIPRegister();
@@ -89,6 +92,9 @@ _LIBUNWIND_EXPORT int unw_init_remote_thread(unw_cursor_t *cursor,
         UnwindCursor<OtherAddressSpace<Pointer32<BigEndian> >, Registers_ppc>(
             ((unw_addr_space_ppc *)as)->oas, arg);
     break;
+#ifdef __arm__
+#warning TODO(danakj): Support ARM/NEON here.
+#endif
   default:
     return UNW_EUNSPEC;
   }
@@ -114,6 +120,8 @@ _LIBUNWIND_EXPORT unw_addr_space_t unw_create_addr_space_for_task(task_t task) {
     as->cpuType = CPU_TYPE_I386;
     //as->oas
   }
+#elif __arm___
+#warning TODO(danakj): Support ARM/NEON here.
 #else
 // FIXME
 #endif
@@ -134,6 +142,8 @@ _LIBUNWIND_EXPORT void unw_destroy_addr_space(unw_addr_space_t asp) {
     delete as;
   }
   break;
+#elif __arm__
+#warning TODO(danakj): Support ARM/NEON here.
 #endif
   case CPU_TYPE_POWERPC: {
     unw_addr_space_ppc *as = (unw_addr_space_ppc *)asp;
