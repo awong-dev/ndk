@@ -83,10 +83,4 @@ _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(_Unwind_State state,
   return _URC_FAILURE;
 }
 
-int unw_getcontext(unw_context_t* thread_state) {
-#warning TODO(danakj): Support ARM/NEON here.
-  assert(false && "unw_getcontext not supported");
-  return UNW_EUNSPEC;
-}
-
 #endif  // __arm__ && !CXXABI_SJLJ

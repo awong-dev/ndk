@@ -231,7 +231,6 @@ _unw_getcontext:
   li  r3, 0    ; return UNW_ESUCCESS
   blr
 
-
 #elif __arm64__
 
 ;
@@ -281,6 +280,26 @@ _unw_getcontext:
   str    d31,     [x0, #0x208]
   ldr    x0, #0      ; return UNW_ESUCCESS
   ret
+
+#elif __arm__
+
+@
+@ extern int unw_getcontext(unw_context_t* thread_state)
+@
+@ On entry:
+@  thread_state pointer is in r0
+@
+  .globl unw_getcontext
+unw_getcontext:
+  @ 32bit thumb-2 restrictions for stm:
+  @ . the sp (r13) cannot be in the list
+  @ . the pc (r15) cannot be in the list in an STM instruction
+  stm r0, {r0-r12}
+  str r13, [r0, #52]
+  str r14, [r0, #56]
+  str r15, [r0, #60]
+  mov r0, #0      @ return UNW_ESUCCESS
+  mov pc, lr
 
 #endif
 
