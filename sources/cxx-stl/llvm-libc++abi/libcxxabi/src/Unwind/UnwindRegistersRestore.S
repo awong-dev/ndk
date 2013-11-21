@@ -308,9 +308,9 @@ unw_getcontext:
   @ . the sp (r13) cannot be in the list
   @ . the pc (r15) cannot be in the list in an STM instruction
   stm r0, {r0-r12}
-  str r13, [r0, #52]
-  str r14, [r0, #56]
-  @ No need to store pc (r15), since it's restored to lr.
+  str sp, [r0, #52]
+  str lr, [r0, #56]
+  str lr, [r0, #60]  @ store return address as pc
   mov r0, #0      @ return UNW_ESUCCESS
   mov pc, lr
 

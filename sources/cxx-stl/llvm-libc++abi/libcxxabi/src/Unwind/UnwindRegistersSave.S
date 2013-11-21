@@ -356,8 +356,8 @@ _ZN9libunwind13Registers_arm6jumptoEv:
   @ . the sp (r13) cannot be in the list
   @ . the pc (r15) and lr (r14) cannot both be in the list in an LDM instruction
   ldm lr, {r0-r12}
-  ldr r13, [lr, #52]
-  ldr lr, [lr, #56]
+  ldr sp, [lr, #52]
+  ldr lr, [lr, #60]  @ restore pc into lr
   mov pc, lr
 
 #endif
