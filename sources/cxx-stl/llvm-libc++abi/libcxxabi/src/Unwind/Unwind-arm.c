@@ -16,7 +16,6 @@
 #include <stdlib.h>
 
 #include "config.h"
-#include "Unwind-arm.h"
 
 #if __arm__ && !CXXABI_SJLJ
 
