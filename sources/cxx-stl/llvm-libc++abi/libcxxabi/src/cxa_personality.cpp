@@ -941,9 +941,15 @@ __gxx_personality_v0
                 exception_header->languageSpecificData = results.languageSpecificData;
                 exception_header->catchTemp = reinterpret_cast<void*>(results.landingPad);
                 exception_header->adjustedPtr = results.adjustedPtr;
+#if __arm__ && !CXXABI_SJLJ
+                unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
+                // TODO(piman): cache data for phase 2?
+#endif
             }
             return _URC_HANDLER_FOUND;
         }
+        // TODO(piman): unwind stack.
+
         // Did not find a catching-handler.  Return the results of the scan
         //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE1_ERROR
         //     if we were called improperly).
@@ -966,6 +972,7 @@ __gxx_personality_v0
                 results.languageSpecificData = exception_header->languageSpecificData;
                 results.landingPad = reinterpret_cast<uintptr_t>(exception_header->catchTemp);
                 results.adjustedPtr = exception_header->adjustedPtr;
+                // TODO(piman): is this data still correct?
             }
             else
             {
@@ -978,6 +985,8 @@ __gxx_personality_v0
             }
             // Jump to the handler
             set_registers(unwind_exception, context, results);
+            // TODO(piman): save data for resume?
+            // TODO(piman): __cxa_begin_cleanup
             return _URC_INSTALL_CONTEXT;
         }
         // Either we didn't do a phase 1 search (due to forced unwinding), or
@@ -988,8 +997,11 @@ __gxx_personality_v0
         {
             // Found a non-catching handler.  Jump to it:
             set_registers(unwind_exception, context, results);
+            // TODO(piman): __cxa_begin_cleanup
             return _URC_INSTALL_CONTEXT;
         }
+        // TODO(piman): unwind stack.
+
         // Did not find a cleanup.  Return the results of the scan
         //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE2_ERROR
         //     if we were called improperly).
