@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include "dwarf2.h"
+#include "libunwind_ext.h"
 #include "AddressSpace.hpp"
 #include "Registers.hpp"
 #include "DwarfParser.hpp"
