@@ -617,15 +617,17 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   // TODO(piman): binary search instead.
   pint_t thisPC = 0;
   pint_t nextPC = 0;
+  pint_t entryAddr = 0;
   pint_t dataAddr = 0;
   // arm_section_length is in entries.
   for (size_t i = 0; i < sects.arm_section_length; ++i) {
-    pint_t entryAddr = sects.arm_section + arrayoffsetof(
+    pint_t nextEntryAddr = sects.arm_section + arrayoffsetof(
         EHABIIndexEntry, i, functionOffset);
     thisPC = nextPC;
-    nextPC = entryAddr + signExtendPrel31(_addressSpace.get32(entryAddr));
+    nextPC = nextEntryAddr + signExtendPrel31(_addressSpace.get32(nextEntryAddr));
     if (pc < nextPC)
       break;
+    entryAddr = nextEntryAddr;
     dataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
   }
 
@@ -643,7 +645,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   uint32_t exceptionTableData;
   bool isInline;
   if (data & 0x80000000) {
-    exceptionTableAddr = dataAddr;
+    exceptionTableAddr = entryAddr;
     exceptionTableData = data;
     isInline = true;
   } else {
@@ -655,33 +657,38 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   uint32_t personalityFormat;
   unw_word_t personalityRoutine;
   unw_word_t languageSpecificDataAddr;
-
+  pint_t unwindInfoAddr = exceptionTableAddr + 4;
+  uint32_t unwindInfo = _addressSpace.get32(unwindInfoAddr);
+  int choice = (unwindInfo & 0x0f000000) >> 24;
+  int extraWords = 0;
+  switch (choice) {
+    case 0:
+      personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr0;
+      extraWords = 0;
+      break;
+    case 1:
+      personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr1;
+      extraWords = (unwindInfo & 0x00ff0000) >> 16;
+      break;
+    case 2:
+      personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr2;
+      extraWords = (unwindInfo & 0x00ff0000) >> 16;
+      break;
+    default:
+      _LIBUNWIND_ABORT("unknown personality routine");
+      return false;
+  }
   // If the high bit in the exception handling table entry is set, the entry is
   // in compact form (section 6.3 EHABI).
   if (exceptionTableData & 0x80000000) {
     // Grab the index of the personality routine from the compact form.
-    int choice = (exceptionTableData & 0x0f000000) >> 24;
-    switch (choice) {
-      case 0:
-        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr0;
-        break;
-      case 1:
-        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr1;
-        break;
-      case 2:
-        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr2;
-        break;
-      default:
-        _LIBUNWIND_ABORT("unknown personality routine");
-        return false;
-    }
     languageSpecificDataAddr = 0;
     personalityFormat = UNW_FORMAT_INDIRECT_TABLE_INDEX;
   } else {
     pint_t personalityAddr =
         exceptionTableAddr + signExtendPrel31(exceptionTableData);
     personalityRoutine = personalityAddr;
-    languageSpecificDataAddr = exceptionTableAddr + 4;
+    languageSpecificDataAddr = unwindInfoAddr + 4 + 4 * extraWords;
     personalityFormat = UNW_FORMAT_DIRECT;
   }
 
