@@ -839,11 +839,7 @@ _UA_CLEANUP_PHASE
 */
 
 _Unwind_Reason_Code
-#if __arm__ && CXXABI_SJLJ
-__gxx_personality_sj0
-#else
-__gxx_personality_v0
-#endif
+__gxx_personality_internal
                     (int version, _Unwind_Action actions, uint64_t exceptionClass,
                      _Unwind_Exception* unwind_exception, _Unwind_Context* context)
 {
@@ -925,6 +921,56 @@ __gxx_personality_v0
     // We were called improperly: neither a phase 1 or phase 2 search
     return _URC_FATAL_PHASE1_ERROR;
 }
+
+#if __arm__ && !CXXABI_SJLJ
+_Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
+  int version = 1;
+  uint64_t exceptionClass = unwind_exception->exception_class;
+  int actions = 0;
+  switch (state) {
+    default: {
+      return _URC_FAILURE;
+    }
+    case _US_VIRTUAL_UNWIND_FRAME: {
+      actions = _UA_SEARCH_PHASE;
+      break;
+    }
+    case _US_UNWIND_FRAME_STARTING: {
+      actions = _UA_CLEANUP_PHASE;
+      if (unwind_exception->barrier_cache.sp == _Unwind_GetGR(context, 13 /* SP */)) {
+        actions |= _UA_HANDLER_FRAME;
+      }
+      break;
+    }
+    case _US_UNWIND_FRAME_RESUME: {
+      // TODO(piman): Do something. See sources/cxx-stl/gabi++/src/helper_func_internal.cc
+      // For now, nothing seems to call _Unwind_Resume, so this won't be called.
+      // Doesn't seem right, but what do I know?
+      return _URC_FAILURE;
+    }
+  }
+  // TODO(piman): helper_func_internal does this, is this needed?
+  // _Unwind_SetGR (context, UNWIND_POINTER_REG, reinterpret_cast<uint32_t>(unwind_exception));
+  _Unwind_Reason_Code result = __gxx_personality_internal(
+      version, static_cast<_Unwind_Action>(actions), exceptionClass, unwind_exception, context);
+
+  if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
+    unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
+  }
+  return result;
+}
+#else
+_Unwind_Reason_Code
+#if __arm__ && CXXABI_SJLJ
+__gxx_personality_sj0
+#else
+__gxx_personality_v0
+#endif
+                    (int version, _Unwind_Action actions, uint64_t exceptionClass,
+                     _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
+  return __gxx_personality_internal(version, actions, exceptionClass, unwind_exception, context);
+}
+#endif
 
 __attribute__((noreturn))
 void

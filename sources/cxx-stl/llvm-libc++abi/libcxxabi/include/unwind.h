@@ -40,7 +40,60 @@ typedef enum {
   _UA_END_OF_STACK = 16 // gcc extension to C++ ABI
 } _Unwind_Action;
 
-struct _Unwind_Context;   // opaque
+typedef struct _Unwind_Context _Unwind_Context;   // opaque
+
+#ifdef __arm__
+typedef uint32_t _Unwind_State;
+static const _Unwind_State _US_VIRTUAL_UNWIND_FRAME   = 0;
+static const _Unwind_State _US_UNWIND_FRAME_STARTING  = 1;
+static const _Unwind_State _US_UNWIND_FRAME_RESUME    = 2;
+
+typedef uint32_t _Unwind_EHT_Header;
+
+typedef struct _Unwind_Exception {
+#if 0
+  // TODO(piman): EHABI says char[8], but cxa_default_handlers expects uint64_t.
+  char exception_class[8];
+#else
+  uint64_t exception_class;
+#endif
+  void (*exception_cleanup)(_Unwind_Reason_Code, struct _Unwind_Exception *);
+  /* Unwinder cache, private fields for the unwinder's use */
+  struct {
+    uint32_t reserved1; /* init reserved1 to 0, then don't touch */
+    uint32_t reserved2;
+    uint32_t reserved3;
+    uint32_t reserved4;
+    uint32_t reserved5;
+  } unwinder_cache;
+  /* Propagation barrier cache (valid after phase 1): */
+  struct {
+    uint32_t sp;
+    uint32_t bitpattern[5];
+  } barrier_cache;
+  /* Cleanup cache (preserved over cleanup): */
+  struct {
+    uint32_t bitpattern[4];
+  } cleanup_cache;
+  /* Pr cache (for pr's benefit): */
+  struct {
+    uint32_t fnstart; /* function start address */
+    _Unwind_EHT_Header *ehtp; /* pointer to EHT entry header word */
+    uint32_t additional; /* additional data */
+    uint32_t reserved1;
+  } pr_cache;
+  long long int :0; /* Force alignment of next item to 8-byte boundary */
+} _Unwind_Exception;
+
+typedef struct _Unwind_Exception _Unwind_Control_Block;
+
+typedef _Unwind_Reason_Code (*__personality_routine)
+      (_Unwind_State state,
+       _Unwind_Control_Block* ucb,
+       struct _Unwind_Context* context);
+
+#else
+
 struct _Unwind_Exception; // forward declaration
 
 struct _Unwind_Exception {
@@ -72,6 +125,7 @@ typedef _Unwind_Reason_Code (*__personality_routine)
        uint64_t exceptionClass,
        struct _Unwind_Exception* exceptionObject,
        struct _Unwind_Context* context);
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,10 +152,12 @@ extern void _Unwind_SetIP(struct _Unwind_Context *, uintptr_t new_value);
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
 extern uintptr_t
     _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context);
-#if __arm__ && CXXABI_SJLJ
+#if __arm__
+#if CXXABI_SJLJ
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(struct _Unwind_Exception *exception_object,
                               _Unwind_Stop_Fn stop, void *stop_parameter);
+#endif
 #else
 extern _Unwind_Reason_Code
     _Unwind_ForcedUnwind(struct _Unwind_Exception *exception_object,
