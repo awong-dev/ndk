@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unwind.h>
 
 #if __APPLE__
   #include <mach-o/dyld.h>
@@ -410,7 +411,6 @@ private:
 
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
   bool getInfoFromEHABISection(pint_t pc, const UnwindInfoSections &sects);
-  int stepWithArm();
 #endif
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND
@@ -602,6 +602,13 @@ static inline uint32_t signExtendPrel31(uint32_t data) {
   return data | ((data & 0x40000000u) << 1);
 }
 
+extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr0(
+    _Unwind_State state, _Unwind_Control_Block *ucbp, _Unwind_Context *context);
+extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr1(
+    _Unwind_State state, _Unwind_Control_Block *ucbp, _Unwind_Context *context);
+extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(
+    _Unwind_State state, _Unwind_Control_Block *ucbp, _Unwind_Context *context);
+
 template <typename A, typename R>
 bool UnwindCursor<A, R>::getInfoFromEHABISection(
     pint_t pc,
@@ -621,10 +628,8 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
     dataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
   }
 
-  if (dataAddr == 0) {
-    _LIBUNWIND_ABORT("pc came before first entry in table");
+  if (dataAddr == 0)
     return false;
-  }
 
   uint32_t data = _addressSpace.get32(dataAddr);
   if (data == UNW_EXIDX_CANTUNWIND)
@@ -651,7 +656,21 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   // in compact form (section 6.3 EHABI).
   if (exceptionTableData & 0x80000000) {
     // Grab the index of the personality routine from the compact form.
-    personalityRoutine = (exceptionTableData & 0x0f000000) >> 24;
+    int choice = (exceptionTableData & 0x0f000000) >> 24;
+    switch (choice) {
+      case 0:
+        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr0;
+        break;
+      case 1:
+        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr1;
+        break;
+      case 2:
+        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr2;
+        break;
+      default:
+        _LIBUNWIND_ABORT("unknown personality routine");
+        return false;
+    }
     personalityDataAddr = exceptionTableAddr;
     personalityFormat = UNW_FORMAT_INDIRECT_TABLE_INDEX;
   } else {
@@ -669,43 +688,6 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   _info.unwind_info = personalityDataAddr;
 
   return true;
-}
-
-template <typename A, typename R>
-int UnwindCursor<A, R>::stepWithArm() {
-  // Bottom of stack is defined is when no unwind info cannot be found.
-  if (_unwindInfoMissing)
-    return UNW_STEP_END;
-
-  if (_info.format == UNW_FORMAT_INDIRECT_TABLE_INDEX) {
-    // TODO(piman): Call __aeabi_unwind_cpp_pr*, indexed on _info.handler
-    uint32_t compact_pr_desc = _addressSpace.get32(_info.unwind_info);
-    uint32_t pr_index = (compact_pr_desc & 0x0f000000) >> 24;
-
-    /*
-    _Unwind_State state = _US_UNWIND_FRAME_STARTING;  // Is this right?
-    _Unwind_Control_Block ucb;
-    bzero(&ucb, sizeof(&ucb));
-    _Unwind_Context context;
-    bzero(&context, sizeof(&context));
-    */
-
-    switch(pr_index) {
-      case 0:
-//        __aeabi_unwind_cpp_pr0(state, &ucb, &context);
-        break;
-      case 1:
-        break;
-      case 2:
-        break;
-      default:
-        _LIBUNWIND_ABORT("unknown personality routine index");
-    }
-  } else {
-    // TODO(piman): Call function at _info.handler
-    // _info.unwindo_info is the address of the data for the handler
-  }
-  return UNW_STEP_END;
 }
 #endif
 
@@ -1171,7 +1153,7 @@ int UnwindCursor<A, R>::step() {
 #elif _LIBUNWIND_SUPPORT_DWARF_UNWIND
   result = this->stepWithDwarfFDE();
 #elif _LIBUNWIND_SUPPORT_ARM_UNWIND
-  result = this->stepWithArm();
+  result = UNW_STEP_SUCCESS;
 #else
   #error Need _LIBUNWIND_SUPPORT_COMPACT_UNWIND or _LIBUNWIND_SUPPORT_DWARF_UNWIND or _LIBUNWIND_SUPPORT_ARM_UNWIND
 #endif
