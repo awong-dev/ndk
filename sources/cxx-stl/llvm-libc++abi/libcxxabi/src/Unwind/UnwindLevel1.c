@@ -83,7 +83,9 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
           exception_object, p);
       struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor1);
 #ifdef __arm__
-      // TODO(piman): initialize exception_object.pr_cache. #7.3.1
+      exception_object->pr_cache.fnstart = frameInfo.start_ip;
+      exception_object->pr_cache.ehtp = (_Unwind_EHT_Header *)frameInfo.unwind_info;
+      exception_object->pr_cache.additional = frameInfo.flags;
       _Unwind_Reason_Code personalityResult =
           (*p)(_US_VIRTUAL_UNWIND_FRAME, exception_object, context);
 #else
@@ -205,7 +207,9 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
           (__personality_routine)(long)(frameInfo.handler);
       struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor2);
 #ifdef __arm__
-      // TODO(piman): initialize exception_object.pr_cache. #7.4.1
+      exception_object->pr_cache.fnstart = frameInfo.start_ip;
+      exception_object->pr_cache.ehtp = (_Unwind_EHT_Header *)frameInfo.unwind_info;
+      exception_object->pr_cache.additional = frameInfo.flags;
       _Unwind_State state =
           resume ? _US_UNWIND_FRAME_RESUME : _US_UNWIND_FRAME_STARTING;
       _Unwind_Reason_Code personalityResult =
