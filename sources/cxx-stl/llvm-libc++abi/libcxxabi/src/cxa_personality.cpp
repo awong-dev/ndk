@@ -792,6 +792,22 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
 
 // public API
 
+#if __arm__ && !CXXABI_SJLJ
+bool __cxa_begin_cleanup(void* unwind_exception) {
+  // TODO(piman): Cache unwind_exception somewhere?
+  return true;
+}
+
+LIBCXXABI_NORETURN
+void __cxa_end_cleanup(void) {
+  // TODO(piman): Get unwind_exception from somewhere
+  // TODO(piman): we may need to write pieces of this in assemply so that we
+  // don't corrupt registers. #8.4.1
+  _Unwind_Exception* unwind_exception = NULL;
+  return _Unwind_Resume(unwind_exception);
+}
+#endif
+
 /*
 The personality function branches on actions like so:
 
@@ -909,7 +925,9 @@ __gxx_personality_internal
             // Jump to the handler
             set_registers(unwind_exception, context, results);
             // TODO(piman): save data for resume?
-            // TODO(piman): __cxa_begin_cleanup
+#if __arm__ && !CXXABI_SJLJ
+            __cxa_begin_cleanup(unwind_exception);
+#endif
             return _URC_INSTALL_CONTEXT;
         }
         // Either we didn't do a phase 1 search (due to forced unwinding), or
@@ -920,7 +938,9 @@ __gxx_personality_internal
         {
             // Found a non-catching handler.  Jump to it:
             set_registers(unwind_exception, context, results);
-            // TODO(piman): __cxa_begin_cleanup
+#if __arm__ && !CXXABI_SJLJ
+            __cxa_begin_cleanup(unwind_exception);
+#endif
             return _URC_INSTALL_CONTEXT;
         }
         // TODO(piman): unwind stack.
