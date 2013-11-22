@@ -29,10 +29,6 @@
 #include "CompactUnwinder.hpp"
 #include "config.h"
 
-#if __arm__
-#include "Unwind-arm.h"
-#endif
-
 namespace libunwind {
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND

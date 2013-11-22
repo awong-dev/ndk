@@ -81,16 +81,27 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
       _LIBUNWIND_TRACE_UNWINDING(
           "unwind_phase1(ex_ojb=%p): calling personality function %p\n",
           exception_object, p);
+      struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor1);
+#ifdef __arm__
+      // TODO(piman): initialize exception_object.pr_cache. #7.3.1
+      _Unwind_Reason_Code personalityResult =
+          (*p)(_US_VIRTUAL_UNWIND_FRAME, exception_object, context);
+#else
       _Unwind_Reason_Code personalityResult =
           (*p)(1, _UA_SEARCH_PHASE, exception_object->exception_class,
-               exception_object, (struct _Unwind_Context *)(&cursor1));
+               exception_object, context);
+#endif
       switch (personalityResult) {
       case _URC_HANDLER_FOUND:
         // found a catch clause or locals that need destructing in this frame
         // stop search and remember stack pointer at the frame
         handlerNotFound = false;
+#ifndef __arm__
         unw_get_reg(&cursor1, UNW_REG_SP, &sp);
         exception_object->private_2 = (uintptr_t)sp;
+#else
+        // p should have initialized barrier_cache. #7.3.5
+#endif
         _LIBUNWIND_TRACE_UNWINDING("unwind_phase1(ex_ojb=%p): "
                                    "_URC_HANDLER_FOUND \n",
                                    exception_object);
@@ -102,6 +113,12 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
             exception_object);
         // continue unwinding
         break;
+
+#ifdef __arm__
+      // # 7.3.3
+      case _URC_FAILURE:
+        return _URC_FAILURE;
+#endif
 
       default:
         // something went wrong
@@ -117,9 +134,17 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
 
 
 static _Unwind_Reason_Code
-unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
+unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, bool resume) {
   unw_cursor_t cursor2;
   unw_init_local(&cursor2, uc);
+
+#ifdef __arm__
+  if (resume) {
+    // #7.4.6 says we need to restore pc from what we saved when staring the
+    // cleanup (see below).
+    unw_set_reg(&cursor2, UNW_REG_IP, exception_object->unwinder_cache.reserved2);
+  }
+#endif
 
   _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p)\n", exception_object);
 
@@ -140,6 +165,14 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
                             exception_object);
       return _URC_FATAL_PHASE2_ERROR;
     }
+
+#ifdef __arm__
+    // #7.4.1 says we need to preserve pc for when _Unwind_Resume is called
+    // back, to find this same frame.
+    unw_word_t pc;
+    unw_get_reg(&cursor2, UNW_REG_IP, &pc);
+    exception_object->unwinder_cache.reserved2 = (uint32_t)pc;
+#endif
 
     // Get info about this frame.
     unw_word_t sp;
@@ -170,6 +203,14 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
     if (frameInfo.handler != 0) {
       __personality_routine p =
           (__personality_routine)(long)(frameInfo.handler);
+      struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor2);
+#ifdef __arm__
+      // TODO(piman): initialize exception_object.pr_cache. #7.4.1
+      _Unwind_State state =
+          resume ? _US_UNWIND_FRAME_RESUME : _US_UNWIND_FRAME_STARTING;
+      _Unwind_Reason_Code personalityResult =
+          (*p)(state, exception_object, context);
+#else
       _Unwind_Action action = _UA_CLEANUP_PHASE;
       if (sp == exception_object->private_2) {
         // Tell personality this was the frame it marked in phase 1.
@@ -177,18 +218,23 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
       }
        _Unwind_Reason_Code personalityResult =
           (*p)(1, action, exception_object->exception_class, exception_object,
-               (struct _Unwind_Context *)(&cursor2));
+               context);
+#endif
       switch (personalityResult) {
       case _URC_CONTINUE_UNWIND:
         // Continue unwinding
         _LIBUNWIND_TRACE_UNWINDING(
             "unwind_phase2(ex_ojb=%p): _URC_CONTINUE_UNWIND\n",
             exception_object);
+#ifdef __arm__
+        // TODO(piman) do we want any check here?
+#else
         if (sp == exception_object->private_2) {
           // Phase 1 said we would stop at this frame, but we did not...
           _LIBUNWIND_ABORT("during phase1 personality function said it would "
                            "stop here, but now if phase2 it did not stop here");
         }
+#endif
         break;
       case _URC_INSTALL_CONTEXT:
         _LIBUNWIND_TRACE_UNWINDING(
@@ -207,6 +253,11 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
         unw_resume(&cursor2);
         // unw_resume() only returns if there was an error.
         return _URC_FATAL_PHASE2_ERROR;
+#ifdef __arm__
+      // # 7.4.3
+      case _URC_FAILURE:
+        return _URC_FAILURE;
+#endif
       default:
         // Personality routine returned an unknown result code.
         _LIBUNWIND_DEBUG_LOG("personality function returned unknown result %d",
@@ -221,6 +272,7 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
   return _URC_FATAL_PHASE2_ERROR;
 }
 
+#ifndef __arm__
 static _Unwind_Reason_Code
 unwind_phase2_forced(unw_context_t *uc,
                      struct _Unwind_Exception *exception_object,
@@ -320,6 +372,7 @@ unwind_phase2_forced(unw_context_t *uc,
   // would.
   return _URC_FATAL_PHASE2_ERROR;
 }
+#endif
 
 
 /// Called by __cxa_throw.  Only returns if there is a fatal error.
@@ -330,10 +383,14 @@ _Unwind_RaiseException(struct _Unwind_Exception *exception_object) {
   unw_context_t uc;
   unw_getcontext(&uc);
 
+#ifdef __arm__
+  exception_object->unwinder_cache.reserved1 = 0;
+#else
   // Mark that this is a non-forced unwind, so _Unwind_Resume()
   // can do the right thing.
   exception_object->private_1 = 0;
   exception_object->private_2 = 0;
+#endif
 
   // phase 1: the search phase
   _Unwind_Reason_Code phase1 = unwind_phase1(&uc, exception_object);
@@ -341,7 +398,7 @@ _Unwind_RaiseException(struct _Unwind_Exception *exception_object) {
     return phase1;
 
   // phase 2: the clean up phase
-  return unwind_phase2(&uc, exception_object);
+  return unwind_phase2(&uc, exception_object, false);
 }
 
 
@@ -363,12 +420,16 @@ _Unwind_Resume(struct _Unwind_Exception *exception_object) {
   unw_context_t uc;
   unw_getcontext(&uc);
 
+#ifdef __arm__
+  // TODO(piman): Do we need a "force unwind" mechanism?
+#else
   if (exception_object->private_1 != 0)
     unwind_phase2_forced(&uc, exception_object,
                          (_Unwind_Stop_Fn) exception_object->private_1,
                          (void *)exception_object->private_2);
   else
-    unwind_phase2(&uc, exception_object);
+#endif
+    unwind_phase2(&uc, exception_object, true);
 
   // Clients assume _Unwind_Resume() does not return, so all we can do is abort.
   _LIBUNWIND_ABORT("_Unwind_Resume() can't return");
@@ -376,6 +437,7 @@ _Unwind_Resume(struct _Unwind_Exception *exception_object) {
 
 
 
+#ifndef __arm__
 /// Not used by C++.
 /// Unwinds stack, calling "stop" function at each frame.
 /// Could be used to implement longjmp().
@@ -395,6 +457,7 @@ _Unwind_ForcedUnwind(struct _Unwind_Exception *exception_object,
   // do it
   return unwind_phase2_forced(&uc, exception_object, stop, stop_parameter);
 }
+#endif
 
 
 /// Called by personality handler during phase 2 to get LSDA for current frame.
