@@ -641,17 +641,20 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   // exception handling table (section 5 EHABI).
   pint_t exceptionTableAddr;
   uint32_t exceptionTableData;
+  bool isInline;
   if (data & 0x80000000) {
     exceptionTableAddr = dataAddr;
     exceptionTableData = data;
+    isInline = true;
   } else {
     exceptionTableAddr = dataAddr + signExtendPrel31(data);
     exceptionTableData = _addressSpace.get32(exceptionTableAddr);
+    isInline = false;
   }
 
   uint32_t personalityFormat;
   unw_word_t personalityRoutine;
-  unw_word_t personalityDataAddr;
+  unw_word_t languageSpecificDataAddr;
 
   // If the high bit in the exception handling table entry is set, the entry is
   // in compact form (section 6.3 EHABI).
@@ -672,13 +675,13 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
         _LIBUNWIND_ABORT("unknown personality routine");
         return false;
     }
-    personalityDataAddr = exceptionTableAddr;
+    languageSpecificDataAddr = 0;
     personalityFormat = UNW_FORMAT_INDIRECT_TABLE_INDEX;
   } else {
     pint_t personalityAddr =
         exceptionTableAddr + signExtendPrel31(exceptionTableData);
     personalityRoutine = personalityAddr;
-    personalityDataAddr = exceptionTableAddr + 4;
+    languageSpecificDataAddr = exceptionTableAddr + 4;
     personalityFormat = UNW_FORMAT_DIRECT;
   }
 
@@ -686,7 +689,9 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   _info.end_ip = nextPC;
   _info.format = personalityFormat;
   _info.handler = personalityRoutine;
-  _info.unwind_info = personalityDataAddr;
+  _info.unwind_info = exceptionTableAddr;
+  _info.lsda = languageSpecificDataAddr;
+  _info.flags = isInline ? 1 : 0;
 
   return true;
 }
