@@ -79,7 +79,7 @@ struct _Unwind_Control_Block {
     uint32_t reserved4;
     uint32_t reserved5;
   } unwinder_cache;
-
+  /* Propagation barrier cache (valid after phase 1): */
   struct {
     uint32_t sp;
     uint32_t bitpattern[5];
@@ -234,6 +234,7 @@ extern uintptr_t
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(_Unwind_Exception *exception_object,
                               _Unwind_Stop_Fn stop, void *stop_parameter);
+#endif
 #else
 extern _Unwind_Reason_Code
     _Unwind_ForcedUnwind(_Unwind_Exception *exception_object,
