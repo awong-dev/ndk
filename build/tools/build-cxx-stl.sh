@@ -218,7 +218,7 @@ function version_ge {
 }
 
 #COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
-COMMON_CFLAGS="-fPIC -O0 -ffunction-sections -fdata-sections"
+COMMON_CFLAGS="-fPIC -O0 -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 if [ -n "$LLVM_VERSION" ]; then
   COMMON_CFLAGS="$COMMON_CFLAGS -fcolor-diagnostics"
