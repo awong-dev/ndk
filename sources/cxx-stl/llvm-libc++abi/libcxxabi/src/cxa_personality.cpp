@@ -345,6 +345,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
         // this should not happen.  Indicates corrupted eh_table.
         call_terminate(native_exception, unwind_exception);
     }
+#if !__arm__
     switch (ttypeEncoding & 0x0F)
     {
     case DW_EH_PE_absptr:
@@ -368,6 +369,10 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     }
     classInfo -= ttypeIndex;
     return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
+#else
+    const uint8_t* ptr = classInfo - ttypeIndex * 4;
+    return (const __shim_type_info*)readRelocatedPointer(ptr);
+#endif
 }
 #endif
 
@@ -579,7 +584,13 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.languageSpecificData = lsda;
     // Get the current instruction pointer and offset it before next
     // instruction in the current frame which threw the exception.
-    uintptr_t ip = _Unwind_GetIP(context) - 1;
+    uintptr_t ip = _Unwind_GetIP(context);
+#if __arm__
+    // Clear thumb bit.
+    uintptr_t thumbBit = ip & 1;
+    ip &= ~1;
+#endif
+    --ip;
     // Get beginning current frame's code (as defined by the 
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
