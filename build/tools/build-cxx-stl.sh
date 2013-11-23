@@ -193,7 +193,8 @@ function version_ge {
     return $false
 }
 
-COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
+#COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
+COMMON_CFLAGS="-fPIC -O0 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 
 if [ "$WITH_DEBUG_INFO" ]; then

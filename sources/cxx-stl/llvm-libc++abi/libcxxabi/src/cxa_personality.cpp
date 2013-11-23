@@ -964,7 +964,6 @@ __gxx_personality_v0
             }
             return _URC_HANDLER_FOUND;
         }
-        // TODO(piman): unwind stack.
 
         // Did not find a catching-handler.  Return the results of the scan
         //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE1_ERROR
@@ -1020,7 +1019,6 @@ __gxx_personality_v0
 #endif
             return _URC_INSTALL_CONTEXT;
         }
-        // TODO(piman): unwind stack.
 
         // Did not find a cleanup.  Return the results of the scan
         //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE2_ERROR
@@ -1179,10 +1177,7 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
       break;
     }
     case _US_UNWIND_FRAME_RESUME: {
-      // TODO(piman): Do something. See sources/cxx-stl/gabi++/src/helper_func_internal.cc
-      // For now, nothing seems to call _Unwind_Resume, so this won't be called.
-      // Doesn't seem right, but what do I know?
-      return _URC_FAILURE;
+      return _Unwind_One_Frame(unwind_exception, context);
     }
   }
   // TODO(piman): helper_func_internal does this, is this needed?
@@ -1193,6 +1188,8 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
   if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
     unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
   }
+  if (result == _URC_CONTINUE_UNWIND)
+    return _Unwind_One_Frame(unwind_exception, context);
   return result;
 }
 #else
