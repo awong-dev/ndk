@@ -167,7 +167,8 @@ if [ "$CXX_STL" = "libc++" ]; then
   GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS"
 fi
 
-COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
+#COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
+COMMON_CFLAGS="-fPIC -O0 -g -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 
 # Determine STLport build parameters
