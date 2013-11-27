@@ -301,7 +301,7 @@ else
     echo "ERROR: Can't push shared libcompiler_rt to target device!"
     exit 1
   fi
-  LIBS="-lc++_shared -lcompiler_rt_shared -latomic -ldl -nodefaultlibs -lc"
+  LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
 fi
 
 case $TRIPLE in
