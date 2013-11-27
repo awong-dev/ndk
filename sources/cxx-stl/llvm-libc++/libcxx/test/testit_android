@@ -348,7 +348,7 @@ else
   else
     LIBS="-lc++_shared -latomic"
   fi
-  LIBS="-lc++_shared -lcompiler_rt_shared -latomic -ldl -nodefaultlibs -lc"
+  LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
 fi
 
 case $TRIPLE in
