@@ -655,6 +655,13 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   //   exceptionTableData -- the data inside the first word of the eht entry.
   //   isInlinedInIndex -- whether the entry is in the index.
   unw_word_t personalityRoutine = 0xbadf00d;
+  // The languageSpecificDataAddr should follow the personality function inside
+  // the exception handler table (section 6.1 EHABI). The personality function
+  // can either be a pointer (encoded as an offset) or it can be placed inline
+  // into the exception handler table (section 6.2 EHABI). Further, the
+  // personality function can be inlined into the index table, but in this case
+  // the entry is known to fit entirely in 4 bytes, so there can be no
+  // language-specific data (section 6.3 EHABI).
   unw_word_t languageSpecificDataAddr = 0xbadf00d;
 
   // If the high bit in the exception handling table entry is set, the entry is
@@ -684,7 +691,9 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
     if (isInlinedInIndex) {
       languageSpecificDataAddr = 0;
       if (extraWords != 0) {
-        _LIBUNWIND_ABORT("index inlined table detected but pr function requires extra words");
+        _LIBUNWIND_ABORT("index inlined table detected but pr function "
+                         "requires extra words");
+        return false;
       }
     } else  {
       // Skip 4 bytes for initial data word then 4*extraWords depending on
@@ -695,9 +704,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
     pint_t personalityAddr =
         exceptionTableAddr + signExtendPrel31(exceptionTableData);
     personalityRoutine = personalityAddr;
-    languageSpecificDataAddr = 0;
-    // TODO(ajwong): On generic format, we can't know the entry size. Also, by
-    // definition, the function itself is already language specific, no?
+    languageSpecificDataAddr = exceptionTableAddr + 4;
   }
 
   _info.start_ip = thisPC;
