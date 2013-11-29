@@ -616,78 +616,94 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   // TODO(piman): binary search instead.
   pint_t thisPC = 0;
   pint_t nextPC = 0;
-  pint_t entryAddr = 0;
-  pint_t dataAddr = 0;
+  pint_t indexAddr = 0;
+  pint_t indexDataAddr = 0;
   // arm_section_length is in entries.
   for (size_t i = 0; i < sects.arm_section_length; ++i) {
-    pint_t nextEntryAddr = sects.arm_section + arrayoffsetof(
+    pint_t nextIndexAddr = sects.arm_section + arrayoffsetof(
         EHABIIndexEntry, i, functionOffset);
     thisPC = nextPC;
-    nextPC = nextEntryAddr + signExtendPrel31(_addressSpace.get32(nextEntryAddr));
+    nextPC = nextIndexAddr + signExtendPrel31(_addressSpace.get32(nextIndexAddr));
     if (pc < nextPC)
       break;
-    entryAddr = nextEntryAddr;
-    dataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
+    indexAddr = nextIndexAddr;
+    indexDataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
   }
 
-  if (dataAddr == 0)
+  if (indexDataAddr == 0)
     return false;
 
-  uint32_t data = _addressSpace.get32(dataAddr);
-  if (data == UNW_EXIDX_CANTUNWIND)
+  uint32_t indexData = _addressSpace.get32(indexDataAddr);
+  if (indexData == UNW_EXIDX_CANTUNWIND)
     return false;
 
   // If the high bit is set, the exception handling table entry is inline inside
-  // the index table entry. Otherwise, the table points at an offset in the
-  // exception handling table (section 5 EHABI).
+  // the index table entry on the second word (aka |indexDataAddr|). Otherwise,
+  // the table points at an offset in the exception handling table (section 5 EHABI).
   pint_t exceptionTableAddr;
   uint32_t exceptionTableData;
-  bool isInline;
-  if (data & 0x80000000) {
-    exceptionTableAddr = entryAddr;
-    exceptionTableData = data;
-    isInline = true;
+  bool isInlinedInIndex;
+  if (indexData & 0x80000000) {
+    exceptionTableAddr = indexDataAddr;
+    // TODO(ajwong): Should this data be 0?
+    exceptionTableData = indexData;
+    isInlinedInIndex = true;
   } else {
-    exceptionTableAddr = dataAddr + signExtendPrel31(data);
+    exceptionTableAddr = indexDataAddr + signExtendPrel31(indexData);
     exceptionTableData = _addressSpace.get32(exceptionTableAddr);
-    isInline = false;
+    isInlinedInIndex = false;
   }
 
-  uint32_t personalityFormat;
-  unw_word_t personalityRoutine;
-  unw_word_t languageSpecificDataAddr;
-  pint_t unwindInfoAddr = exceptionTableAddr + 4;
-  uint32_t unwindInfo = _addressSpace.get32(unwindInfoAddr);
-  int choice = (unwindInfo & 0x0f000000) >> 24;
-  int extraWords = 0;
-  switch (choice) {
-    case 0:
-      personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr0;
-      extraWords = 0;
-      break;
-    case 1:
-      personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr1;
-      extraWords = (unwindInfo & 0x00ff0000) >> 16;
-      break;
-    case 2:
-      personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr2;
-      extraWords = (unwindInfo & 0x00ff0000) >> 16;
-      break;
-    default:
-      _LIBUNWIND_ABORT("unknown personality routine");
-      return false;
-  }
+  // Now we know the 3 things:
+  //   exceptionTableAddr -- exception handler table entry.
+  //   exceptionTableData -- the data inside the first word of the eht entry.
+  //   isInlinedInIndex -- whether the entry is in the index.
+  uint32_t personalityFormat = 0xbadf00d;
+  unw_word_t personalityRoutine = 0xbadf00d;
+  unw_word_t languageSpecificDataAddr = 0xbadf00d;
+
   // If the high bit in the exception handling table entry is set, the entry is
   // in compact form (section 6.3 EHABI).
   if (exceptionTableData & 0x80000000) {
     // Grab the index of the personality routine from the compact form.
-    languageSpecificDataAddr = 0;
+    int choice = (exceptionTableData & 0x0f000000) >> 24;
+    int extraWords = 0;
+    switch (choice) {
+      case 0:
+        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr0;
+        extraWords = 0;
+        break;
+      case 1:
+        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr1;
+        extraWords = (exceptionTableData & 0x00ff0000) >> 16;
+        break;
+      case 2:
+        personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr2;
+        extraWords = (exceptionTableData & 0x00ff0000) >> 16;
+        break;
+      default:
+        _LIBUNWIND_ABORT("unknown personality routine");
+        return false;
+    }
+
     personalityFormat = UNW_FORMAT_INDIRECT_TABLE_INDEX;
+    if (isInlinedInIndex) {
+      languageSpecificDataAddr = 0;
+      if (extraWords != 0) {
+        _LIBUNWIND_ABORT("index inlined table detected but pr function requires extra words");
+      }
+    } else  {
+      // Skip 4 bytes for initial data word then 4*extraWords depending on
+      // data for pr function.
+      languageSpecificDataAddr = exceptionTableAddr + 4 + 4 * extraWords;
+    }
   } else {
     pint_t personalityAddr =
         exceptionTableAddr + signExtendPrel31(exceptionTableData);
     personalityRoutine = personalityAddr;
-    languageSpecificDataAddr = unwindInfoAddr + 4 + 4 * extraWords;
+    languageSpecificDataAddr = 0;
+    // TODO(ajwong): On generic format, we can't know the entry size. Also, by
+    // definition, the function itself is already language specific, no?
     personalityFormat = UNW_FORMAT_DIRECT;
   }
 
@@ -697,7 +713,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   _info.handler = personalityRoutine;
   _info.unwind_info = exceptionTableAddr;
   _info.lsda = languageSpecificDataAddr;
-  _info.flags = isInline ? 1 : 0;
+  _info.flags = isInlinedInIndex ? 1 : 0;
 
   return true;
 }

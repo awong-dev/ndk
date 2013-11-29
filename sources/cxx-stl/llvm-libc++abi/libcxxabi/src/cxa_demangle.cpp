@@ -4593,19 +4593,6 @@ struct string_pair
 
 }  // unnamed namespace
 
-__attribute__ ((__visibility__("default")))
-extern "C"
-char*
-__cxa_demangle(const char* mangled_name, char* buf, size_t* n, int* status)
-{
-    if (mangled_name == nullptr || (buf != nullptr && n == nullptr))
-    {
-        if (status)
-            *status = invalid_args;
-        return nullptr;
-    }
-    size_t internal_size = buf != nullptr ? *n : 0;
-    arena<bs> a;
     struct Db
     {
         typedef String String;
@@ -4628,6 +4615,19 @@ __cxa_demangle(const char* mangled_name, char* buf, size_t* n, int* status)
             template_param(0, subs, ar)
         {}
     };
+__attribute__ ((__visibility__("default")))
+extern "C"
+char*
+__cxa_demangle(const char* mangled_name, char* buf, size_t* n, int* status)
+{
+    if (mangled_name == nullptr || (buf != nullptr && n == nullptr))
+    {
+        if (status)
+            *status = invalid_args;
+        return nullptr;
+    }
+    size_t internal_size = buf != nullptr ? *n : 0;
+    arena<bs> a;
     Db db(a);
     db.cv = 0;
     db.ref = 0;

@@ -223,6 +223,9 @@ CC=$CXX
 if [ -z "$OPTIONS" ]
 then
   OPTIONS="-std=c++11 -g"
+  if [ "$LLVM_VERSION" = "3.4" ]; then
+    OPTIONS="${OPTIONS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+  fi
 fi
 OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
