@@ -617,39 +617,40 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   // TODO(piman): binary search instead.
   pint_t thisPC = 0;
   pint_t nextPC = 0;
-  pint_t entryAddr = 0;
-  pint_t dataAddr = 0;
+  pint_t indexAddr = 0;
+  pint_t indexDataAddr = 0;
   // arm_section_length is in entries.
   for (size_t i = 0; i < sects.arm_section_length; ++i) {
-    pint_t nextEntryAddr = sects.arm_section + arrayoffsetof(
+    pint_t nextIndexAddr = sects.arm_section + arrayoffsetof(
         EHABIIndexEntry, i, functionOffset);
     thisPC = nextPC;
-    nextPC = nextEntryAddr + signExtendPrel31(_addressSpace.get32(nextEntryAddr));
+    nextPC = nextIndexAddr + signExtendPrel31(_addressSpace.get32(nextIndexAddr));
     if (pc < nextPC)
       break;
-    entryAddr = nextEntryAddr;
-    dataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
+    indexAddr = nextIndexAddr;
+    indexDataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
   }
 
-  if (dataAddr == 0)
+  if (indexDataAddr == 0)
     return false;
 
-  uint32_t data = _addressSpace.get32(dataAddr);
-  if (data == UNW_EXIDX_CANTUNWIND)
+  uint32_t indexData = _addressSpace.get32(indexDataAddr);
+  if (indexData == UNW_EXIDX_CANTUNWIND)
     return false;
 
   // If the high bit is set, the exception handling table entry is inline inside
-  // the index table entry. Otherwise, the table points at an offset in the
-  // exception handling table (section 5 EHABI).
+  // the index table entry on the second word (aka |indexDataAddr|). Otherwise,
+  // the table points at an offset in the exception handling table (section 5 EHABI).
   pint_t exceptionTableAddr;
   uint32_t exceptionTableData;
   bool isInline;
-  if (data & 0x80000000) {
-    exceptionTableAddr = entryAddr;
-    exceptionTableData = data;
+  if (indexData & 0x80000000) {
+    exceptionTableAddr = indexDataAddr;
+    // TODO(ajwong): Should this data be 0?
+    exceptionTableData = indexData;
     isInline = true;
   } else {
-    exceptionTableAddr = dataAddr + signExtendPrel31(data);
+    exceptionTableAddr = indexDataAddr + signExtendPrel31(indexData);
     exceptionTableData = _addressSpace.get32(exceptionTableAddr);
     isInline = false;
   }
@@ -657,7 +658,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   uint32_t personalityFormat;
   unw_word_t personalityRoutine;
   unw_word_t languageSpecificDataAddr;
-  pint_t unwindInfoAddr = exceptionTableAddr + 4;
+  pint_t unwindInfoAddr = exceptionTableAddr;  // TODO(ajwong): Is this necessary?
   uint32_t unwindInfo = _addressSpace.get32(unwindInfoAddr);
   int choice = (unwindInfo & 0x0f000000) >> 24;
   int extraWords = 0;
