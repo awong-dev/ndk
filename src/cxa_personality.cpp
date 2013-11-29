@@ -828,7 +828,7 @@ void __cxa_end_cleanup(void) {
   // TODO(piman): we may need to write pieces of this in assemply so that we
   // don't corrupt registers. #8.4.1
   _Unwind_Exception* unwind_exception = NULL;
-  return _Unwind_Resume(unwind_exception);
+  _Unwind_Resume(unwind_exception);
 }
 #endif
 
