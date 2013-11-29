@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
 
 #include "libunwind.h"
 #include "unwind.h"
