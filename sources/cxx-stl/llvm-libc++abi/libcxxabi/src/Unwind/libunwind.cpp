@@ -251,7 +251,7 @@ _LIBUNWIND_EXPORT int unw_resume(unw_cursor_t *cursor) {
 _LIBUNWIND_EXPORT int unw_get_proc_name(unw_cursor_t *cursor, char *buf,
                                         size_t bufLen, unw_word_t *offset) {
   _LIBUNWIND_TRACE_API("unw_get_proc_name(cursor=%p, &buf=%p,"
-                             "bufLen=%ld)\n", cursor, buf, bufLen);
+                             "bufLen=%zu)\n", cursor, buf, bufLen);
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->getFunctionName(buf, bufLen, offset))
     return UNW_ESUCCESS;
