@@ -356,15 +356,17 @@ builder_shared_library ()
     # Important: -lgcc must appear after objects and static libraries,
     #            but before shared libraries for Android. It doesn't hurt
     #            for other platforms.
+    # TODO(ajwong): As an optimization, should this have:
+    #   -Wl,-Bsymbolic-functions,--dynamic-list-cpp-new,--dyanmic-list-data,--dynamic-list-cpp-typeinfo \
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -Wl,-shared,-Bsymbolic \
+        -Wl,-shared \
         $_BUILD_LDFLAGS_BEGIN_SO \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -Lsources/android/compiler-rt/libs/armeabi-v7a \
         -lcompiler_rt_shared \
-        -nostdlib \
+        -nodefaultlibs \
         $_BUILD_SHARED_LIBRARIES \
         -lc -lm \
         $_BUILD_LDFLAGS \
