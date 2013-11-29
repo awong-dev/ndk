@@ -4593,28 +4593,28 @@ struct string_pair
 
 }  // unnamed namespace
 
-    struct Db
-    {
-        typedef String String;
-        typedef Vector<string_pair> sub_type;
-        typedef Vector<sub_type> template_param_type;
-        Vector<string_pair> names;
-        Vector<sub_type> subs;
-        Vector<template_param_type> template_param;
-        unsigned cv;
-        unsigned ref;
-        bool parsed_ctor_dtor_cv;
-        bool tag_templates;
-        bool fix_forward_references;
-        bool try_to_parse_template_args;
+struct Db
+{
+    typedef String String;
+    typedef Vector<string_pair> sub_type;
+    typedef Vector<sub_type> template_param_type;
+    Vector<string_pair> names;
+    Vector<sub_type> subs;
+    Vector<template_param_type> template_param;
+    unsigned cv;
+    unsigned ref;
+    bool parsed_ctor_dtor_cv;
+    bool tag_templates;
+    bool fix_forward_references;
+    bool try_to_parse_template_args;
 
-        template <size_t N>
-        Db(arena<N>& ar) :
-            names(ar),
-            subs(0, names, ar),
-            template_param(0, subs, ar)
-        {}
-    };
+    template <size_t N>
+    Db(arena<N>& ar) :
+        names(ar),
+        subs(0, names, ar),
+        template_param(0, subs, ar)
+    {}
+};
 __attribute__ ((__visibility__("default")))
 extern "C"
 char*
