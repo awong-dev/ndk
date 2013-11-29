@@ -205,6 +205,7 @@ extern "C" _Unwind_VRS_Result _Unwind_VRS_Pop(
   } else {
     _Unwind_SetGR(context, UNW_ARM_SP, reinterpret_cast<uint32_t>(sp));
   }
+  return _UVRSR_OK;
 }
 
 #endif  // __arm__ && !CXXABI_SJLJ

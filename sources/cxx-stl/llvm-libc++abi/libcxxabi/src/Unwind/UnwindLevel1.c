@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "libunwind.h"
 #include "unwind.h"
@@ -473,10 +474,10 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
   if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
     result = (uintptr_t)frameInfo.lsda;
   _LIBUNWIND_TRACE_API("_Unwind_GetLanguageSpecificData(context=%p)"
-                             "=> 0x%lX\n", context, result);
+                             "=> 0x%" PRIXPTR "\n", context, result);
   if (result != 0) {
     if (*((uint8_t *)result) != 0xFF)
-      _LIBUNWIND_DEBUG_LOG("lsda at 0x%lX does not start with 0xFF\n", result);
+      _LIBUNWIND_DEBUG_LOG("lsda at 0x%" PRIXPTR " does not start with 0xFF\n", result);
   }
   return result;
 }
@@ -542,7 +543,7 @@ _Unwind_GetRegionStart(struct _Unwind_Context *context) {
   uintptr_t result = 0;
   if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
     result = (uintptr_t)frameInfo.start_ip;
-  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%lX\n",
+  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%" PRIXPTR "\n",
                              context, result);
   return result;
 }
