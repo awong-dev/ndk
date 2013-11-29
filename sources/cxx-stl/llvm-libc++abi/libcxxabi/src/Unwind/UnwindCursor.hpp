@@ -591,11 +591,6 @@ struct EHABIIndexEntry {
   uint32_t data;
 };
 
-enum unw_proc_info_format {
-  UNW_FORMAT_DIRECT,
-  UNW_FORMAT_INDIRECT_TABLE_INDEX,
-};
-
 // Unable to unwind in the ARM index table (section 5 EHABI).
 #define UNW_EXIDX_CANTUNWIND 0x1
 
@@ -659,7 +654,6 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   //   exceptionTableAddr -- exception handler table entry.
   //   exceptionTableData -- the data inside the first word of the eht entry.
   //   isInlinedInIndex -- whether the entry is in the index.
-  uint32_t personalityFormat = 0xbadf00d;
   unw_word_t personalityRoutine = 0xbadf00d;
   unw_word_t languageSpecificDataAddr = 0xbadf00d;
 
@@ -687,7 +681,6 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
         return false;
     }
 
-    personalityFormat = UNW_FORMAT_INDIRECT_TABLE_INDEX;
     if (isInlinedInIndex) {
       languageSpecificDataAddr = 0;
       if (extraWords != 0) {
@@ -705,12 +698,10 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
     languageSpecificDataAddr = 0;
     // TODO(ajwong): On generic format, we can't know the entry size. Also, by
     // definition, the function itself is already language specific, no?
-    personalityFormat = UNW_FORMAT_DIRECT;
   }
 
   _info.start_ip = thisPC;
   _info.end_ip = nextPC;
-  _info.format = personalityFormat;
   _info.handler = personalityRoutine;
   _info.unwind_info = exceptionTableAddr;
   _info.lsda = languageSpecificDataAddr;
