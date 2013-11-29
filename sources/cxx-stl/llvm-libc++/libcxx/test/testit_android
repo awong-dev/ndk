@@ -243,6 +243,9 @@ then
   if [ "$CXX" = "${CXX%%*clang++*}" ] ; then
     OPTIONS="$OPTIONS -UNDEBUG"
   fi
+  if [ "$LLVM_VERSION" = "3.4" ]; then
+    OPTIONS="${OPTIONS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+  fi
 fi
 OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
