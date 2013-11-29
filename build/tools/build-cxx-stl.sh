@@ -167,10 +167,25 @@ if [ "$CXX_STL" = "libc++" ]; then
   GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS"
 fi
 
+function version_ge {
+    input_string=$1
+    compare_string=$2
+    input_major=$(echo $input_string | cut -d\. -f 1)
+    input_minor=$(echo $input_string | cut -d\. -f 2)
+    compare_major=$(echo $compare_string | cut -d\. -f 1)
+    compare_minor=$(echo $compare_string | cut -d\. -f 2)
+    true=0
+    false=1
+    if [ $input_major -gt $compare_major ]; then return $true; fi
+    if [ $input_major -lt $compare_major ]; then return $false; fi
+    if [ $input_minor -ge $compare_minor ]; then return $true; fi
+    return $false
+}
+
 #COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CFLAGS="-fPIC -O0 -g -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
-if [ "$LLVM_VERSION" = "3.4" ]; then
+if version_ge "$LLVM_VERSION" "3.4"; then
   COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
 fi
 
