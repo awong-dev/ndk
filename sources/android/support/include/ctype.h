@@ -32,6 +32,8 @@
 #include_next <ctype.h>
 #include <xlocale.h>  // for locale_t
 
+#include <xlocale.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
