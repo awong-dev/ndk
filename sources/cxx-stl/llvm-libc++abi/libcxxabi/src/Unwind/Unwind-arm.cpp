@@ -154,7 +154,7 @@ extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(
 extern "C" _Unwind_Reason_Code _Unwind_One_Frame(
     _Unwind_Control_Block* ucbp,
     struct _Unwind_Context* context) {
-  uint32_t* unwindingData = ucbp->pr_cache.ehtp + 1;
+  uint32_t* unwindingData = ucbp->pr_cache.ehtp;
   uint32_t unwindInfo = *unwindingData;
   int choice = (unwindInfo & 0x0f000000) >> 24;
   size_t len = 0;
@@ -172,7 +172,12 @@ extern "C" _Unwind_Reason_Code _Unwind_One_Frame(
     default:
       return _URC_FAILURE;
   }
-  return unwindStack(context, unwindingData, startOffset, len) ? _URC_CONTINUE_UNWIND : _URC_FAILURE;
+  if (!unwindStack(context, unwindingData, startOffset, len))
+    return _URC_FAILURE;
+
+  // TODO(ajwong): Perform typematch here.
+
+  return _URC_CONTINUE_UNWIND;
 }
 
 extern "C" _Unwind_VRS_Result _Unwind_VRS_Pop(
