@@ -423,20 +423,20 @@ if [ -n "$LLVM_VERSION" ]; then
 
   cat > "$TMPDIR/bin/clang" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@" $EXTRA_CLANG_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANG_FLAGS
     $(dump_extra_compile_commands)
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@" $EXTRA_CLANG_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANG_FLAGS
 fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@" $EXTRA_CLANGXX_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANGXX_FLAGS
     $(dump_extra_compile_commands)
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@" $EXTRA_CLANGXX_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANGXX_FLAGS
 fi
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
