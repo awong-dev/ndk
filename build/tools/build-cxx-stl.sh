@@ -170,6 +170,9 @@ fi
 #COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CFLAGS="-fPIC -O0 -g -ffunction-sections -fdata-sections -fcolor-diagnostics"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
+if [ "$LLVM_VERSION" = "3.4" ]; then
+  COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+fi
 
 # Determine STLport build parameters
 STLPORT_CFLAGS="$COMMON_CFLAGS -DGNU_SOURCE -I$STLPORT_SRCDIR/stlport $GABIXX_INCLUDES"
