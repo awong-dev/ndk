@@ -273,10 +273,6 @@ typedef enum {
   _UVRSR_FAILED = 2
 } _Unwind_VRS_Result;
 
-extern _Unwind_Reason_Code _Unwind_One_Frame(
-    _Unwind_Control_Block* ucbp,
-    struct _Unwind_Context* context);
-
 extern _Unwind_VRS_Result _Unwind_VRS_Set(
     _Unwind_Context *context,
     _Unwind_VRS_RegClass regclass,
