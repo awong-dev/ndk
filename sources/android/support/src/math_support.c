@@ -45,3 +45,7 @@ float nexttowardf(float f, long double td) {
 long double nexttowardl(long double ld, long double td) {
   return nextafter((double)ld, (double)td);
 }
+
+long double     logbl(long double x) {
+  return logb(x);
+}
