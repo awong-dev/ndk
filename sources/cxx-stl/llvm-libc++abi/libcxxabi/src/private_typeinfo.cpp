@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "unwind.h"
+#include "cxa_exception.hpp"
 #include "private_typeinfo.h"
 
 // The flag _LIBCXX_DYNAMIC_FALLBACK is used to make dynamic_cast more
@@ -1161,6 +1163,38 @@ __base_class_type_info::search_below_dst(__dynamic_cast_info* info,
                                       not_public_path,
                                   use_strcmp);
 }
+
+#ifdef __arm__
+__cxa_type_match_result
+__cxa_type_match(_Unwind_Control_Block* ucbp,
+                 const std::type_info* rttip,
+                 bool is_reference_type,
+                 void** matched_object) {
+
+  __cxa_exception* header = reinterpret_cast<__cxa_exception*>(ucbp+1)-1;
+  __cxa_type_match_result result = ctm_succeeded;
+
+  void* adjustedPtr = header+1;
+  if (dynamic_cast<const __pointer_type_info*>(header->exceptionType)) {
+    adjustedPtr = *reinterpret_cast<void**>(adjustedPtr);
+    result = ctm_succeeded_with_ptr_to_base;
+  }
+
+  const __shim_type_info* catch_type = dynamic_cast<const __shim_type_info*>(rttip);
+  const __shim_type_info* thrown_type =
+      static_cast<const __shim_type_info*>(header->exceptionType);
+  if (!catch_type || !thrown_type) {
+    return ctm_failed;
+  }
+
+  if (catch_type->can_catch(thrown_type, adjustedPtr)) {
+    *matched_object = adjustedPtr;
+    return result;
+  }
+
+  return ctm_failed;
+}
+#endif
 
 #pragma GCC visibility pop
 
