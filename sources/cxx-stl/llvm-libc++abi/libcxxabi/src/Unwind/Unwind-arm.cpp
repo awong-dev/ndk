@@ -43,103 +43,6 @@ static inline uint32_t signExtendPrel31(uint32_t data) {
   return data | ((data & 0x40000000u) << 1);
 }
 
-bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t len) {
-  bool wrotePC = false;
-  bool finish = false;
-  while (offset < len && !finish) {
-    uint8_t byte = getByte(data, offset++);
-    if ((byte & 0x80) == 0) {
-      uint32_t sp = _Unwind_GetGR(context, UNW_ARM_SP);
-      if (byte & 0x40)
-        sp -= ((byte & 0x3f) << 2) + 4;
-      else
-        sp += (byte << 2) + 4;
-      _Unwind_SetGR(context, UNW_ARM_SP, sp);
-    } else {
-      switch (byte & 0xf0) {
-        case 0x80: {
-          if (offset >= len)
-            return false;
-          uint16_t registers = ((byte & 0x0f) << 12) | (getByte(data, offset++) << 4);
-          if (!registers)
-            return false;
-          if (registers & (1<<15))
-            wrotePC = true;
-          _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
-          break;
-        }
-        case 0x90: {
-          uint8_t reg = byte & 0x0f;
-          if (reg == 13 || reg == 15)
-            return false;
-          uint32_t sp = _Unwind_GetGR(context, UNW_ARM_R0 + reg);
-          _Unwind_SetGR(context, UNW_ARM_SP, sp);
-          break;
-        }
-        case 0xa0: {
-          uint8_t numRegisters = 1 + byte & 0x07;
-          uint16_t registers = ((1<<numRegisters) - 1) << 4;
-          if (byte & 0x08)
-            registers |= 1<<14;
-          _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
-          break;
-        }
-        case 0xb0: {
-          switch (byte) {
-            case 0xb0:
-              finish = true;
-              break;
-            case 0xb1: {
-              if (offset >= len)
-                return false;
-              uint8_t registers = getByte(data, offset++);
-              if (registers & 0xf0 || !registers)
-                return false;
-              _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
-              break;
-            }
-            case 0xb2: {
-              uint32_t addend = 0;
-              while (true) {
-                if (offset >= len)
-                  return false;
-                uint8_t v = getByte(data, offset++);
-                addend = addend << 7 | (v & 0x7f);
-                if ((v & 0x80) == 0)
-                  break;
-              }
-              uint32_t sp = _Unwind_GetGR(context, UNW_ARM_SP);
-              sp += 0x204 + addend;
-              _Unwind_SetGR(context, UNW_ARM_SP, sp);
-              break;
-            }
-            case 0xb3:
-              // TODO(piman): pop VFP single precision from FSTMFDX.
-              return false;
-            case 0xb4:
-            case 0xb5:
-            case 0xb6:
-            case 0xb7:
-              return false;
-            default:
-              // TODO(piman): pop VFP double precision from FSTMFDX.
-              return false;
-          }
-          break;
-        }
-        default:
-          // TODO(piman): iwMMX, VFP double precision from FSTMFDD, spares.
-          return false;
-      }
-    }
-  }
-  if (!wrotePC) {
-    uint32_t lr = _Unwind_GetGR(context, UNW_ARM_R14);
-    _Unwind_SetGR(context, UNW_ARM_R15, lr);
-  }
-  return true;
-}
-
 _Unwind_Reason_Code ProcessDescriptors(
     _Unwind_State state,
     _Unwind_Control_Block* ucbp,
@@ -244,7 +147,7 @@ _Unwind_Reason_Code unwindOneFrame(
     default:
       return _URC_FAILURE;
   }
-  if (!unwindStack(context, unwindingData, startOffset, len))
+  if (!_Unwind_VRS_Interpret(context, unwindingData, startOffset, len))
     return _URC_FAILURE;
 
   // TODO(ajwong): Perform typematch here.
@@ -253,6 +156,107 @@ _Unwind_Reason_Code unwindOneFrame(
                             ucbp->pr_cache.additional);
 }
 
+}
+
+extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
+    _Unwind_Context* context,
+    uint32_t* data,
+    size_t offset,
+    size_t len) {
+  bool wrotePC = false;
+  bool finish = false;
+  while (offset < len && !finish) {
+    uint8_t byte = getByte(data, offset++);
+    if ((byte & 0x80) == 0) {
+      uint32_t sp = _Unwind_GetGR(context, UNW_ARM_SP);
+      if (byte & 0x40)
+        sp -= ((byte & 0x3f) << 2) + 4;
+      else
+        sp += (byte << 2) + 4;
+      _Unwind_SetGR(context, UNW_ARM_SP, sp);
+    } else {
+      switch (byte & 0xf0) {
+        case 0x80: {
+          if (offset >= len)
+            return _URC_FAILURE;
+          uint16_t registers = ((byte & 0x0f) << 12) | (getByte(data, offset++) << 4);
+          if (!registers)
+            return _URC_FAILURE;
+          if (registers & (1<<15))
+            wrotePC = true;
+          _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
+          break;
+        }
+        case 0x90: {
+          uint8_t reg = byte & 0x0f;
+          if (reg == 13 || reg == 15)
+            return _URC_FAILURE;
+          uint32_t sp = _Unwind_GetGR(context, UNW_ARM_R0 + reg);
+          _Unwind_SetGR(context, UNW_ARM_SP, sp);
+          break;
+        }
+        case 0xa0: {
+          uint8_t numRegisters = 1 + byte & 0x07;
+          uint16_t registers = ((1<<numRegisters) - 1) << 4;
+          if (byte & 0x08)
+            registers |= 1<<14;
+          _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
+          break;
+        }
+        case 0xb0: {
+          switch (byte) {
+            case 0xb0:
+              finish = true;
+              break;
+            case 0xb1: {
+              if (offset >= len)
+                return _URC_FAILURE;
+              uint8_t registers = getByte(data, offset++);
+              if (registers & 0xf0 || !registers)
+                return _URC_FAILURE;
+              _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
+              break;
+            }
+            case 0xb2: {
+              uint32_t addend = 0;
+              while (true) {
+                if (offset >= len)
+                  return _URC_FAILURE;
+                uint8_t v = getByte(data, offset++);
+                addend = addend << 7 | (v & 0x7f);
+                if ((v & 0x80) == 0)
+                  break;
+              }
+              uint32_t sp = _Unwind_GetGR(context, UNW_ARM_SP);
+              sp += 0x204 + addend;
+              _Unwind_SetGR(context, UNW_ARM_SP, sp);
+              break;
+            }
+            case 0xb3:
+              // TODO(piman): pop VFP single precision from FSTMFDX.
+              return _URC_FAILURE;
+            case 0xb4:
+            case 0xb5:
+            case 0xb6:
+            case 0xb7:
+              return _URC_FAILURE;
+            default:
+              // TODO(piman): pop VFP double precision from FSTMFDX.
+              return _URC_FAILURE;
+          }
+          break;
+        }
+        default:
+          // TODO(piman): iwMMX, VFP double precision from FSTMFDD, spares.
+          return _URC_FAILURE;
+      }
+    }
+  }
+  if (!wrotePC) {
+    uint32_t lr = _Unwind_GetGR(context, UNW_ARM_R14);
+    _Unwind_SetGR(context, UNW_ARM_R15, lr);
+  }
+  return _URC_CONTINUE_UNWIND;
 }
 
 extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr0(
