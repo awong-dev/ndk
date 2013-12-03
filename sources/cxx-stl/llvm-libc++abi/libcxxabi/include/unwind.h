@@ -150,8 +150,10 @@ extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
 extern uintptr_t _Unwind_GetIP(struct _Unwind_Context *context);
 extern void _Unwind_SetIP(struct _Unwind_Context *, uintptr_t new_value);
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
+#ifndef __arm__  // TODO(ajwong): Collapse these if __arm__ blobs.
 extern uintptr_t
     _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context);
+#endif
 #if __arm__
 #if CXXABI_SJLJ
 extern _Unwind_Reason_Code
@@ -213,6 +215,12 @@ extern _Unwind_VRS_Result _Unwind_VRS_Pop(
     _Unwind_VRS_RegClass regclass,
     uint32_t discriminator,
     _Unwind_VRS_DataRepresentation representation);
+
+extern _Unwind_Reason_Code _Unwind_VRS_Interpret(
+    _Unwind_Context* context,
+    uint32_t* data,
+    size_t offset,
+    size_t len);
 #endif
 
 //

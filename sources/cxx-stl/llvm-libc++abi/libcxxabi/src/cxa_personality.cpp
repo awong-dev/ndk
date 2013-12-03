@@ -513,7 +513,11 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         return;
     }
     // Start scan by getting exception table address
+#ifndef __arm__
     const uint8_t* lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
+#else
+    const uint8_t* lsda = (const uint8_t*)unwind_exception->pr_cache.additional;
+#endif
     if (lsda == 0)
     {
         // There is no exception table
@@ -981,6 +985,19 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
   int version = 1;
   uint64_t exceptionClass = unwind_exception->exception_class;
   int actions = 0;
+  uint32_t* unwinding_data = unwind_exception->pr_cache.ehtp + 1;
+  uint32_t first_data_word = *unwinding_data;
+  // MSB of first word is num extraWords.
+  size_t data_words = 1 + ((first_data_word >> 24) & 0xff);
+  size_t unwinding_data_len = (data_words * 4);
+
+  // Dwarf Language specific data comes after unwinding op codes.
+  // Clobber pr_cache.additional with the lsda because in the generic handler,
+  // the additional data doesn't have anything of value.
+  //
+  // TODO(ajwong): Don't even set this data if we're a generic handler.
+  unwind_exception->pr_cache.additional =
+      reinterpret_cast<uint32_t>(unwinding_data + data_words);
   switch (state) {
     default: {
       return _URC_FAILURE;
@@ -997,7 +1014,7 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
       break;
     }
     case _US_UNWIND_FRAME_RESUME: {
-//      return _Unwind_One_Frame(unwind_exception, context);
+      return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
     }
   }
   // TODO(piman): helper_func_internal does this, is this needed?
@@ -1008,10 +1025,8 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
   if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
     unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
   }
-  /*
   if (result == _URC_CONTINUE_UNWIND)
-    return _Unwind_One_Frame(unwind_exception, context);
-    */
+    return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
   return result;
 }
 #else

@@ -116,7 +116,6 @@ void _Unwind_Resume(_Unwind_Exception* ucbp);
 void _Unwind_Complete(_Unwind_Exception* ucbp);
 void _Unwind_DeleteException(_Unwind_Exception* ucbp);
 uint64_t _Unwind_GetRegionStart(_Unwind_Context*);
-void* _Unwind_GetLanguageSpecificData(_Unwind_Context*);
 
 
 _Unwind_VRS_Result _Unwind_VRS_Get(_Unwind_Context *context,

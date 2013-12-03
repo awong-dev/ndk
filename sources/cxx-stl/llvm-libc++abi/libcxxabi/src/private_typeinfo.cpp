@@ -1149,7 +1149,7 @@ __cxa_type_match(_Unwind_Control_Block* ucbp,
                  const std::type_info* rttip,
                  bool is_reference_type,
                  void** matched_object) {
-
+  // #7.1.3, Last paragraph says that UCB immediately preceeds EO.
   __cxa_exception* header = reinterpret_cast<__cxa_exception*>(ucbp+1)-1;
   __cxa_type_match_result result = ctm_succeeded;
 
