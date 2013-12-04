@@ -69,7 +69,7 @@ _Unwind_Reason_Code ProcessDescriptors(
       descriptor = getNextNibble(descriptor, &length);
       descriptor = getNextNibble(descriptor, &offset);
     }
-    // See 9.2 table for descoding the kind of descriptor. It's a 2-bit value.
+    // See 9.2 table for decoding the kind of descriptor. It's a 2-bit value.
     enum DescriptorKind {
       DESC_CLEANUP = 0x0,
       DESC_FUNC = 0x1,
@@ -87,9 +87,11 @@ _Unwind_Reason_Code ProcessDescriptors(
 
     switch (kind) {
       case DESC_CLEANUP: {
+        // TODO(ajwong): Handle cleanup descriptors.
         break;
       }
       case DESC_FUNC: {
+        // TODO(ajwong): Handle function descriptors.
         break;
       }
       case DESC_CATCH: {
@@ -98,6 +100,8 @@ _Unwind_Reason_Code ProcessDescriptors(
         descriptor = getNextWord(descriptor, &landing_pad);
 
         if (isInScope) {
+          // TODO(ajwong): This is only phase1 compatible logic. Implement
+          // phase2.
           bool is_reference_type = landing_pad & 0x80000000;
           landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
           if (landing_pad == 0xffffffff) {
@@ -129,6 +133,7 @@ _Unwind_Reason_Code unwindOneFrame(
     _Unwind_Control_Block* ucbp,
     struct _Unwind_Context* context) {
   // TODO(piman): handle phase1/phase2.
+
   uint32_t* unwindingData = ucbp->pr_cache.ehtp;
   uint32_t unwindInfo = *unwindingData;
   int choice = (unwindInfo & 0x0f000000) >> 24;
@@ -147,13 +152,19 @@ _Unwind_Reason_Code unwindOneFrame(
     default:
       return _URC_FAILURE;
   }
-  if (!_Unwind_VRS_Interpret(context, unwindingData, startOffset, len))
-    return _URC_FAILURE;
 
-  // TODO(ajwong): Perform typematch here.
-  return ProcessDescriptors(state, ucbp, context,
-                            reinterpret_cast<const char*>(ucbp->pr_cache.ehtp) + len,
-                            ucbp->pr_cache.additional);
+  // Handle descriptors before unwinding so they are processed in the context
+  // of the correct stack frame.
+  _Unwind_Reason_Code result =
+      ProcessDescriptors(
+          state, ucbp, context,
+          reinterpret_cast<const char*>(ucbp->pr_cache.ehtp) + len,
+          ucbp->pr_cache.additional);
+
+  if (result != _URC_CONTINUE_UNWIND)
+    return result;
+
+  return _Unwind_VRS_Interpret(context, unwindingData, startOffset, len);
 }
 
 }
