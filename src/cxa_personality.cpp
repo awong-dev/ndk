@@ -473,7 +473,8 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
 static
 void
 scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception,
-            _Unwind_Exception* unwind_exception, _Unwind_Context* context)
+            _Unwind_Exception* unwind_exception, _Unwind_Context* context,
+            const uint8_t* lsda)
 {
     // Initialize results to found nothing but an error
     results.ttypeIndex = 0;
@@ -513,11 +514,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         return;
     }
     // Start scan by getting exception table address
-#ifndef __arm__
-    const uint8_t* lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
-#else
-    const uint8_t* lsda = (const uint8_t*)unwind_exception->pr_cache.additional;
-#endif
     if (lsda == 0)
     {
         // There is no exception table
@@ -885,7 +881,8 @@ _UA_CLEANUP_PHASE
 _Unwind_Reason_Code
 __gxx_personality_internal
                     (int version, _Unwind_Action actions, uint64_t exceptionClass,
-                     _Unwind_Exception* unwind_exception, _Unwind_Context* context)
+                     _Unwind_Exception* unwind_exception, _Unwind_Context* context,
+                     const uint8_t* lsda)
 {
     if (version != 1 || unwind_exception == 0 || context == 0)
         return _URC_FATAL_PHASE1_ERROR;
@@ -896,7 +893,7 @@ __gxx_personality_internal
     {
         // Phase 1 search:  All we're looking for in phase 1 is a handler that
         //   halts unwinding
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found one.  Can we cache the results somewhere to optimize phase 2?
@@ -943,7 +940,7 @@ __gxx_personality_internal
             else
             {
                 // No, do the scan again to reload the results.
-                scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+                scan_eh_tab(results, actions, native_exception, unwind_exception, context, lsda);
                 // Phase 1 told us we would find a handler.  Now in Phase 2 we
                 //   didn't find a handler.  The eh table should not be changing!
                 if (results.reason != _URC_HANDLER_FOUND)
@@ -960,7 +957,7 @@ __gxx_personality_internal
         // Either we didn't do a phase 1 search (due to forced unwinding), or
         //   phase 1 reported no catching-handlers.
         // Search for a (non-catching) cleanup
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found a non-catching handler.  Jump to it:
@@ -991,13 +988,6 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
   size_t data_words = 1 + ((first_data_word >> 24) & 0xff);
   size_t unwinding_data_len = (data_words * 4);
 
-  // Dwarf Language specific data comes after unwinding op codes.
-  // Clobber pr_cache.additional with the lsda because in the generic handler,
-  // the additional data doesn't have anything of value.
-  //
-  // TODO(ajwong): Don't even set this data if we're a generic handler.
-  unwind_exception->pr_cache.additional =
-      reinterpret_cast<uint32_t>(unwinding_data + data_words);
   switch (state) {
     default: {
       return _URC_FAILURE;
@@ -1017,10 +1007,16 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
       return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
     }
   }
+  // Dwarf Language specific data comes after unwinding op codes.
+  // Clobber pr_cache.additional with the lsda because in the generic handler,
+  // the additional data doesn't have anything of value.
+  const uint8_t* lsda = reinterpret_cast<uint8_t*>(unwinding_data + data_words);
+
   // TODO(piman): helper_func_internal does this, is this needed?
   // _Unwind_SetGR (context, UNWIND_POINTER_REG, reinterpret_cast<uint32_t>(unwind_exception));
   _Unwind_Reason_Code result = __gxx_personality_internal(
-      version, static_cast<_Unwind_Action>(actions), exceptionClass, unwind_exception, context);
+      version, static_cast<_Unwind_Action>(actions), exceptionClass,
+      unwind_exception, context, lsda);
 
   if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
     unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
@@ -1038,7 +1034,8 @@ __gxx_personality_v0
 #endif
                     (int version, _Unwind_Action actions, uint64_t exceptionClass,
                      _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
-  return __gxx_personality_internal(version, actions, exceptionClass, unwind_exception, context);
+  return __gxx_personality_internal(version, actions, exceptionClass, unwind_exception, context,
+                                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
 }
 #endif
 
