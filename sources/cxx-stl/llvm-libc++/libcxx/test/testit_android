@@ -237,7 +237,7 @@ function version_ge {
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -g"
+  OPTIONS="-std=c++11 -g -funwind-tables"
   if version_ge "$LLVM_VERSION" "3.4"; then
     OPTIONS="${OPTIONS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
   fi

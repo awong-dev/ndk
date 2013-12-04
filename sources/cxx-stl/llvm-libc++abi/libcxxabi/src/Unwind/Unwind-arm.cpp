@@ -17,6 +17,7 @@
 
 #include "config.h"
 #include "libunwind.h"
+#include "../private_typeinfo.h"
 
 #if __arm__ && !CXXABI_SJLJ
 namespace {
@@ -28,7 +29,151 @@ uint8_t getByte(uint32_t* data, size_t offset) {
   return byteData[(offset & ~0x03) + (3 - (offset&0x03))];
 }
 
-bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t len) {
+const char* getNextWord(const char* data, uint32_t* out) {
+  *out = *reinterpret_cast<const uint32_t*>(data);
+  return data + 4;
+}
+
+const char* getNextNibble(const char* data, uint32_t* out) {
+  *out = *reinterpret_cast<const uint16_t*>(data);
+  return data + 2;
+}
+
+static inline uint32_t signExtendPrel31(uint32_t data) {
+  return data | ((data & 0x40000000u) << 1);
+}
+
+_Unwind_Reason_Code ProcessDescriptors(
+    _Unwind_State state,
+    _Unwind_Control_Block* ucbp,
+    struct _Unwind_Context* context,
+    const char* descriptorStart,
+    int flags) {
+  // EHT is inlined in the index using compact form. No descriptors. #5
+  if (flags & 0x1)
+    return _URC_CONTINUE_UNWIND;
+
+  const char* descriptor = descriptorStart;
+  uint32_t descriptorWord;
+  getNextWord(descriptor, &descriptorWord);
+  while (descriptorWord) {
+    // Read descriptor based on # 9.2.
+    uint32_t length;
+    uint32_t offset;
+    if (flags & 0x2) {
+      // 32-bit descriptor
+      descriptor = getNextWord(descriptor, &length);
+      descriptor = getNextWord(descriptor, &offset);
+    } else {
+      // 16-bit descriptor
+      descriptor = getNextNibble(descriptor, &length);
+      descriptor = getNextNibble(descriptor, &offset);
+    }
+    // See 9.2 table for decoding the kind of descriptor. It's a 2-bit value.
+    enum DescriptorKind {
+      DESC_CLEANUP = 0x0,
+      DESC_FUNC = 0x1,
+      DESC_CATCH = 0x2,
+      DESC_INVALID = 0x4,
+    } kind = static_cast<DescriptorKind>((length & 0x1) | ((offset & 0x1) << 1));
+
+    // Clear off flag from last bit.
+    length &= ~1;
+    offset &= ~1;
+    uintptr_t scopeStart = ucbp->pr_cache.fnstart + offset;
+    uintptr_t scopeEnd = scopeStart + length;
+    uintptr_t pc = _Unwind_GetIP(context);
+    bool isInScope = (scopeStart <= pc) && (pc < scopeEnd);
+
+    switch (kind) {
+      case DESC_CLEANUP: {
+        // TODO(ajwong): Handle cleanup descriptors.
+        break;
+      }
+      case DESC_FUNC: {
+        // TODO(ajwong): Handle function descriptors.
+        break;
+      }
+      case DESC_CATCH: {
+        // Catch descriptors require gobbling one more word.
+        uint32_t landing_pad;
+        descriptor = getNextWord(descriptor, &landing_pad);
+
+        if (isInScope) {
+          // TODO(ajwong): This is only phase1 compatible logic. Implement
+          // phase2.
+          bool is_reference_type = landing_pad & 0x80000000;
+          landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
+          if (landing_pad == 0xffffffff) {
+            return _URC_HANDLER_FOUND;
+          } else if (landing_pad == 0xfffffffe ) {
+            return _URC_FAILURE;
+          } else {
+            void* matched_object;
+            if (__cxxabiv1::__cxa_type_match(ucbp,
+                                             reinterpret_cast<const std::type_info*>(landing_pad),
+                                             is_reference_type, &matched_object) != __cxxabiv1::ctm_failed)
+                return _URC_HANDLER_FOUND;
+          }
+        }
+        break;
+      }
+      default:
+        _LIBUNWIND_ABORT("Invalid descriptor kind found.");
+    };
+
+    getNextWord(descriptor, &descriptorWord);
+  }
+
+  return _URC_CONTINUE_UNWIND;
+}
+
+_Unwind_Reason_Code unwindOneFrame(
+    _Unwind_State state,
+    _Unwind_Control_Block* ucbp,
+    struct _Unwind_Context* context) {
+  // TODO(piman): handle phase1/phase2.
+
+  uint32_t* unwindingData = ucbp->pr_cache.ehtp;
+  uint32_t unwindInfo = *unwindingData;
+  int choice = (unwindInfo & 0x0f000000) >> 24;
+  size_t len = 0;
+  size_t startOffset = 0;
+  switch (choice) {
+    case 0:
+      len = 4;
+      startOffset = 1;
+      break;
+    case 1:
+    case 2:
+      len = 4 + 4 *((unwindInfo & 0x00ff0000) >> 16);
+      startOffset = 2;
+      break;
+    default:
+      return _URC_FAILURE;
+  }
+
+  // Handle descriptors before unwinding so they are processed in the context
+  // of the correct stack frame.
+  _Unwind_Reason_Code result =
+      ProcessDescriptors(
+          state, ucbp, context,
+          reinterpret_cast<const char*>(ucbp->pr_cache.ehtp) + len,
+          ucbp->pr_cache.additional);
+
+  if (result != _URC_CONTINUE_UNWIND)
+    return result;
+
+  return _Unwind_VRS_Interpret(context, unwindingData, startOffset, len);
+}
+
+}
+
+extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
+    _Unwind_Context* context,
+    uint32_t* data,
+    size_t offset,
+    size_t len) {
   bool wrotePC = false;
   bool finish = false;
   while (offset < len && !finish) {
@@ -44,10 +189,10 @@ bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t
       switch (byte & 0xf0) {
         case 0x80: {
           if (offset >= len)
-            return false;
+            return _URC_FAILURE;
           uint16_t registers = ((byte & 0x0f) << 12) | (getByte(data, offset++) << 4);
           if (!registers)
-            return false;
+            return _URC_FAILURE;
           if (registers & (1<<15))
             wrotePC = true;
           _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
@@ -56,7 +201,7 @@ bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t
         case 0x90: {
           uint8_t reg = byte & 0x0f;
           if (reg == 13 || reg == 15)
-            return false;
+            return _URC_FAILURE;
           uint32_t sp = _Unwind_GetGR(context, UNW_ARM_R0 + reg);
           _Unwind_SetGR(context, UNW_ARM_SP, sp);
           break;
@@ -76,10 +221,10 @@ bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t
               break;
             case 0xb1: {
               if (offset >= len)
-                return false;
+                return _URC_FAILURE;
               uint8_t registers = getByte(data, offset++);
               if (registers & 0xf0 || !registers)
-                return false;
+                return _URC_FAILURE;
               _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
               break;
             }
@@ -87,7 +232,7 @@ bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t
               uint32_t addend = 0;
               while (true) {
                 if (offset >= len)
-                  return false;
+                  return _URC_FAILURE;
                 uint8_t v = getByte(data, offset++);
                 addend = addend << 7 | (v & 0x7f);
                 if ((v & 0x80) == 0)
@@ -100,21 +245,21 @@ bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t
             }
             case 0xb3:
               // TODO(piman): pop VFP single precision from FSTMFDX.
-              return false;
+              return _URC_FAILURE;
             case 0xb4:
             case 0xb5:
             case 0xb6:
             case 0xb7:
-              return false;
+              return _URC_FAILURE;
             default:
               // TODO(piman): pop VFP double precision from FSTMFDX.
-              return false;
+              return _URC_FAILURE;
           }
           break;
         }
         default:
           // TODO(piman): iwMMX, VFP double precision from FSTMFDD, spares.
-          return false;
+          return _URC_FAILURE;
       }
     }
   }
@@ -122,62 +267,28 @@ bool unwindStack(_Unwind_Context* context, uint32_t* data, size_t offset, size_t
     uint32_t lr = _Unwind_GetGR(context, UNW_ARM_R14);
     _Unwind_SetGR(context, UNW_ARM_R15, lr);
   }
-  return true;
-}
-
+  return _URC_CONTINUE_UNWIND;
 }
 
 extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr0(
     _Unwind_State state,
     _Unwind_Control_Block *ucbp,
     _Unwind_Context *context) {
-  // TODO(piman): handle phase1/phase2.
-  return _Unwind_One_Frame(ucbp, context);
+  return unwindOneFrame(state, ucbp, context);
 }
 
 extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr1(
     _Unwind_State state,
     _Unwind_Control_Block *ucbp,
     _Unwind_Context *context) {
-  // TODO(piman): handle phase1/phase2.
-  return _Unwind_One_Frame(ucbp, context);
+  return unwindOneFrame(state, ucbp, context);
 }
 
 extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(
     _Unwind_State state,
     _Unwind_Control_Block *ucbp,
     _Unwind_Context *context) {
-  // TODO(piman): handle phase1/phase2.
-  return _Unwind_One_Frame(ucbp, context);
-}
-
-extern "C" _Unwind_Reason_Code _Unwind_One_Frame(
-    _Unwind_Control_Block* ucbp,
-    struct _Unwind_Context* context) {
-  uint32_t* unwindingData = ucbp->pr_cache.ehtp;
-  uint32_t unwindInfo = *unwindingData;
-  int choice = (unwindInfo & 0x0f000000) >> 24;
-  size_t len = 0;
-  size_t startOffset = 0;
-  switch (choice) {
-    case 0:
-      len = 4;
-      startOffset = 1;
-      break;
-    case 1:
-    case 2:
-      len = 4 + 4 *((unwindInfo & 0x00ff0000) >> 16);
-      startOffset = 2;
-      break;
-    default:
-      return _URC_FAILURE;
-  }
-  if (!unwindStack(context, unwindingData, startOffset, len))
-    return _URC_FAILURE;
-
-  // TODO(ajwong): Perform typematch here.
-
-  return _URC_CONTINUE_UNWIND;
+  return unwindOneFrame(state, ucbp, context);
 }
 
 extern "C" _Unwind_VRS_Result _Unwind_VRS_Pop(

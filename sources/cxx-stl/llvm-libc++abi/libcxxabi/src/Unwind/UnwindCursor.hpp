@@ -654,14 +654,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   //   exceptionTableData -- the data inside the first word of the eht entry.
   //   isInlinedInIndex -- whether the entry is in the index.
   unw_word_t personalityRoutine = 0xbadf00d;
-  // Assume the languageSpecificDataAddr is the "other data" following the
-  // personality routing in the exception handler table (section 6.1 EHABI).
-  //
-  // If the personality routing is in compact form, meaning it is one of
-  // __aeabi_unwind_cpp_pr{0,1,2}, then the "other data" is just the unwind
-  // opcodes for those functions.  In this case, assume that the language
-  // specific data is just these unwind opcodes.
-  unw_word_t languageSpecificDataAddr = 0xbadf00d;
+  bool scope32 = false;
 
   // If the high bit in the exception handling table entry is set, the entry is
   // in compact form (section 6.3 EHABI).
@@ -673,35 +666,42 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
       case 0:
         personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr0;
         extraWords = 0;
-        languageSpecificDataAddr = exceptionTableAddr + 1;
+        scope32 = false;
         break;
       case 1:
         personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr1;
         extraWords = (exceptionTableData & 0x00ff0000) >> 16;
-        languageSpecificDataAddr = exceptionTableAddr + 2;
+        scope32 = false;
         break;
       case 2:
         personalityRoutine = (unw_word_t) &__aeabi_unwind_cpp_pr2;
         extraWords = (exceptionTableData & 0x00ff0000) >> 16;
-        languageSpecificDataAddr = exceptionTableAddr + 2;
+        scope32 = true;
         break;
       default:
         _LIBUNWIND_ABORT("unknown personality routine");
         return false;
     }
+
+    if (isInlinedInIndex) {
+      if (extraWords != 0) {
+        _LIBUNWIND_ABORT("index inlined table detected but pr function "
+                         "requires extra words");
+        return false;
+      }
+    }
   } else {
     pint_t personalityAddr =
         exceptionTableAddr + signExtendPrel31(exceptionTableData);
     personalityRoutine = personalityAddr;
-    languageSpecificDataAddr = exceptionTableAddr + 4;
   }
 
   _info.start_ip = thisPC;
   _info.end_ip = nextPC;
   _info.handler = personalityRoutine;
   _info.unwind_info = exceptionTableAddr;
-  _info.lsda = languageSpecificDataAddr;
-  _info.flags = isInlinedInIndex ? 1 : 0;
+  _info.lsda = 0xbadf00d;  // lsda is DWARF only.
+  _info.flags = isInlinedInIndex ? 1 : 0 | scope32 ? 0x2 : 0;  // Use enum?
 
   return true;
 }
