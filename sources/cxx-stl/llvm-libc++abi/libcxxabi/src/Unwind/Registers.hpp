@@ -1276,7 +1276,12 @@ inline void Registers_arm64::setVectorRegister(int, v128) {
 /// Registers_arm holds the register state of a thread in a 32-bit arm
 /// process.
 ///
-/// NOTE: Assuming cortex (armv7a) or newer with NEON.
+/// NOTE: Assumes VFPv3. On ARM processors without a floating point unit,
+/// this uses more memory than required.
+///
+/// FIXME: Support MMX Data Registers, Control registers, and load/stores
+/// for different representations in the VFP registers as listed in
+/// Table 1 of EHABI #7.5.2
 class _LIBUNWIND_HIDDEN Registers_arm {
 public:
   Registers_arm();
@@ -1285,6 +1290,13 @@ public:
   bool        validRegister(int num) const;
   uint32_t    getRegister(int num) const;
   void        setRegister(int num, uint32_t value);
+  // FIXME: Due to ARM VRS's support for reading/writing different
+  // reperesentations into the VFP registers this set of accessors seem wrong.
+  // If {get,set}FloatRegister() is the backing store for
+  // _Unwind_VRS_{Get,Set} then it might be best to return a tagged union
+  // with types for each representation in _Unwind_VRS_DataRepresentation.
+  // Similarly, unw_{get,set}_fpreg in the public libunwind API may want to
+  // use a similar tagged union to back the unw_fpreg_t output parameter type.
   bool        validFloatRegister(int num) const;
   double      getFloatRegister(int num) const;
   void        setFloatRegister(int num, double value);
@@ -1301,7 +1313,7 @@ public:
 
 private:
   struct GPRs {
-    uint32_t __x[13]; // x0-x12
+    uint32_t __r[13]; // x0-x12
     uint32_t __sp;    // Stack pointer x13
     uint32_t __lr;    // Link register x14
     uint32_t __pc;    // Program counter x15
@@ -1315,8 +1327,8 @@ private:
 inline Registers_arm::Registers_arm(const void *registers) {
   static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
                     "arm registers do not fit into unw_context_t");
+  // See unw_getcontext() note about data.
   memcpy(&_registers, registers, sizeof(_registers));
-  // TODO(ajwong): Should actually copy floating point registers?
   bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
 }
 
@@ -1326,19 +1338,15 @@ inline Registers_arm::Registers_arm() {
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {
+  // Returns true for all non-VFP registers supported by the EHABI
+  // virtual register set (VRS).
   if (regNum == UNW_REG_IP)
     return true;
   if (regNum == UNW_REG_SP)
     return true;
-  if (regNum < 0)
-    return false;
-  if (regNum >= UNW_ARM_MAX_REG)
-    return false;
-  // Above general purpose reg, but under neon reg indexes.
-  if ((regNum > UNW_ARM_R15) && (regNum < UNW_ARM_D0))
-    return false;
-#warning "Should't this also fail for ranges UNW_ARM_D0 to UNW_ARM_D31?"
-  return true;
+  if ((regNum >= UNW_ARM_R0) && (regNum <= UNW_ARM_R15))
+    return true;
+  return false;
 }
 
 inline uint32_t Registers_arm::getRegister(int regNum) const {
@@ -1349,7 +1357,7 @@ inline uint32_t Registers_arm::getRegister(int regNum) const {
   if (regNum == UNW_REG_IP || regNum == UNW_ARM_IP)
     return _registers.__pc;
   if ((regNum >= UNW_ARM_R0) && (regNum <= UNW_ARM_R12))
-    return _registers.__x[regNum];
+    return _registers.__r[regNum];
   _LIBUNWIND_ABORT("unsupported arm register");
 }
 
@@ -1361,7 +1369,7 @@ inline void Registers_arm::setRegister(int regNum, uint32_t value) {
   else if (regNum == UNW_REG_IP || regNum == UNW_ARM_IP)
     _registers.__pc = value;
   else if ((regNum >= UNW_ARM_R0) && (regNum <= UNW_ARM_R12))
-    _registers.__x[regNum] = value;
+    _registers.__r[regNum] = value;
   else
     _LIBUNWIND_ABORT("unsupported arm register");
 }
@@ -1402,6 +1410,70 @@ inline const char *Registers_arm::getRegisterName(int regNum) {
     return "r11";
   case UNW_ARM_R12:
     return "r12";
+  case UNW_ARM_S0:
+    return "s0";
+  case UNW_ARM_S1:
+    return "s1";
+  case UNW_ARM_S2:
+    return "s2";
+  case UNW_ARM_S3:
+    return "s3";
+  case UNW_ARM_S4:
+    return "s4";
+  case UNW_ARM_S5:
+    return "s5";
+  case UNW_ARM_S6:
+    return "s6";
+  case UNW_ARM_S7:
+    return "s7";
+  case UNW_ARM_S8:
+    return "s8";
+  case UNW_ARM_S9:
+    return "s9";
+  case UNW_ARM_S10:
+    return "s10";
+  case UNW_ARM_S11:
+    return "s11";
+  case UNW_ARM_S12:
+    return "s12";
+  case UNW_ARM_S13:
+    return "s13";
+  case UNW_ARM_S14:
+    return "s14";
+  case UNW_ARM_S15:
+    return "s15";
+  case UNW_ARM_S16:
+    return "s16";
+  case UNW_ARM_S17:
+    return "s17";
+  case UNW_ARM_S18:
+    return "s18";
+  case UNW_ARM_S19:
+    return "s19";
+  case UNW_ARM_S20:
+    return "s20";
+  case UNW_ARM_S21:
+    return "s21";
+  case UNW_ARM_S22:
+    return "s22";
+  case UNW_ARM_S23:
+    return "s23";
+  case UNW_ARM_S24:
+    return "s24";
+  case UNW_ARM_S25:
+    return "s25";
+  case UNW_ARM_S26:
+    return "s26";
+  case UNW_ARM_S27:
+    return "s27";
+  case UNW_ARM_S28:
+    return "s28";
+  case UNW_ARM_S29:
+    return "s29";
+  case UNW_ARM_S30:
+    return "s30";
+  case UNW_ARM_S31:
+    return "s31";
   case UNW_ARM_D0:
     return "d0";
   case UNW_ARM_D1:
@@ -1472,7 +1544,10 @@ inline const char *Registers_arm::getRegisterName(int regNum) {
 }
 
 inline bool Registers_arm::validFloatRegister(int regNum) const {
-  return ((regNum >= UNW_ARM_D0) && (regNum <= UNW_ARM_D31));
+  // FIXME: Handle UNW_ARM_S[0-31] registers.
+  if ((regNum >= UNW_ARM_D0) && (regNum <= UNW_ARM_D31))
+    return true;
+  return false;
 }
 
 inline double Registers_arm::getFloatRegister(int regNum) const {
