@@ -285,6 +285,7 @@ _unw_getcontext:
 
 @
 @ extern int unw_getcontext(unw_context_t* thread_state)
+@ Per EHABI #4.7, only integer registers need to be preserved.
 @
 @ On entry:
 @  thread_state pointer is in r0
