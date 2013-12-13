@@ -179,12 +179,13 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
   while (offset < len && !finish) {
     uint8_t byte = getByte(data, offset++);
     if ((byte & 0x80) == 0) {
-      uint32_t sp = _Unwind_GetGR(context, UNW_ARM_SP);
+      uint32_t sp;
+      _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
       if (byte & 0x40)
         sp -= ((byte & 0x3f) << 2) + 4;
       else
         sp += (byte << 2) + 4;
-      _Unwind_SetGR(context, UNW_ARM_SP, sp);
+      _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
     } else {
       switch (byte & 0xf0) {
         case 0x80: {
@@ -202,8 +203,11 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
           uint8_t reg = byte & 0x0f;
           if (reg == 13 || reg == 15)
             return _URC_FAILURE;
-          uint32_t sp = _Unwind_GetGR(context, UNW_ARM_R0 + reg);
-          _Unwind_SetGR(context, UNW_ARM_SP, sp);
+          uint32_t sp;
+          _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_R0 + reg,
+                          _UVRSD_UINT32, &sp);
+          _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                          &sp);
           break;
         }
         case 0xa0: {
@@ -238,9 +242,12 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
                 if ((v & 0x80) == 0)
                   break;
               }
-              uint32_t sp = _Unwind_GetGR(context, UNW_ARM_SP);
+              uint32_t sp;
+              _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
+                              _UVRSD_UINT32, &sp);
               sp += 0x204 + addend;
-              _Unwind_SetGR(context, UNW_ARM_SP, sp);
+              _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
+                              _UVRSD_UINT32, &sp);
               break;
             }
             case 0xb3:
@@ -264,8 +271,9 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
     }
   }
   if (!wrotePC) {
-    uint32_t lr = _Unwind_GetGR(context, UNW_ARM_R14);
-    _Unwind_SetGR(context, UNW_ARM_R15, lr);
+    uint32_t lr;
+    _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_LR, _UVRSD_UINT32, &lr);
+    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_IP, _UVRSD_UINT32, &lr);
   }
   return _URC_CONTINUE_UNWIND;
 }
