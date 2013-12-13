@@ -61,22 +61,6 @@ typedef uint64_t unw_word_t;
 #if __arm__ && CXXABI_SJLJ
 typedef double unw_fpreg_t;
 #else
-/*
-typedef struct {
-  enum {
-    UNW_UINT32,
-    UNW_UINT64,
-    UNW_FLOAT,
-    UNW_DOUBLE,
-  } representation;
-  union {
-    uint32_t as_uint32;
-    uint64_t as_uint64;
-    float as_float;
-    double as_double;
-  } value;
-} unw_fpreg_t;
-*/
 typedef struct {
   uint8_t bytes[sizeof(double)];
 } unw_fpreg_t;
