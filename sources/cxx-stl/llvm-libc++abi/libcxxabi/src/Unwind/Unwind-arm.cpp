@@ -291,37 +291,4 @@ extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(
   return unwindOneFrame(state, ucbp, context);
 }
 
-extern "C" _Unwind_VRS_Result _Unwind_VRS_Pop(
-    _Unwind_Context *context,
-    _Unwind_VRS_RegClass regclass,
-    uint32_t discriminator,
-    _Unwind_VRS_DataRepresentation representation) {
-  if (regclass != _UVRSC_CORE || representation != _UVRSD_UINT32) {
-    // TODO(piman): VFP, ...
-    _LIBUNWIND_ABORT("during phase1 personality function said it would "
-                     "stop here, but now if phase2 it did not stop here");
-    return _UVRSR_NOT_IMPLEMENTED;
-  }
-  bool do13 = false;
-  uint32_t reg13Value = 0;
-  uint32_t* sp = reinterpret_cast<uint32_t*>(_Unwind_GetGR(context, UNW_ARM_R13));
-  for (int i = 0; i < 16; ++i) {
-    if (!(discriminator & (1<<i)))
-      continue;
-    uint32_t value = *sp++;
-    if (i == 13) {
-      reg13Value = value;
-      do13 = true;
-    } else {
-      _Unwind_SetGR(context, UNW_ARM_R0 + i, value);
-    }
-  }
-  if (do13) {
-    _Unwind_SetGR(context, UNW_ARM_SP, reg13Value);
-  } else {
-    _Unwind_SetGR(context, UNW_ARM_SP, reinterpret_cast<uint32_t>(sp));
-  }
-  return _UVRSR_OK;
-}
-
 #endif  // __arm__ && !CXXABI_SJLJ
