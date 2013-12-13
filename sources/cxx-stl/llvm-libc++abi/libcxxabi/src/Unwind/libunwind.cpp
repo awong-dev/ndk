@@ -213,8 +213,10 @@ _LIBUNWIND_EXPORT int unw_get_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
 /// Set value of specified float register at cursor position in stack frame.
 _LIBUNWIND_EXPORT int unw_set_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
                                     unw_fpreg_t value) {
+  /*
   _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%g)\n",
                              cursor, regNum, value);
+                             */
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->validFloatReg(regNum)) {
     co->setFloatReg(regNum, value);

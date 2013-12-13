@@ -1050,10 +1050,6 @@ private:
 
   GPRs    _registers;
   double  _vectorHalfRegisters[32];
-  // Currently only the lower double in 128-bit vectore registers
-  // is perserved during unwinding.  We could define new register
-  // numbers (> 96) which mean whole vector registers, then this
-  // struct would need to change to contain whole vector registers.
 };
 
 inline Registers_arm64::Registers_arm64(const void *registers) {
@@ -1298,8 +1294,8 @@ public:
   // Similarly, unw_{get,set}_fpreg in the public libunwind API may want to
   // use a similar tagged union to back the unw_fpreg_t output parameter type.
   bool        validFloatRegister(int num) const;
-  double      getFloatRegister(int num) const;
-  void        setFloatRegister(int num, double value);
+  unw_fpreg_t getFloatRegister(int num) const;
+  void        setFloatRegister(int num, unw_fpreg_t value);
   bool        validVectorRegister(int num) const;
   v128        getVectorRegister(int num) const;
   void        setVectorRegister(int num, v128 value);
@@ -1319,9 +1315,14 @@ private:
     uint32_t __pc;    // Program counter x15
   };
 
-
   GPRs    _registers;
-  double  _vectorHalfRegisters[32];
+  // VFP defines overlapping registers. So S0 & S1 comprise the high and
+  // low word of D0. Furthermore, these registers can be loaded from/stored
+  // to using various data representation formats. Use a raw byte buffer so
+  // the representation can be more clearly manipulated.
+  //
+  // Per EHABI spec, the VRS only needs to store data for D0-D31.
+  uint8_t _vfpRegisterData[sizeof(double) * 32];
 };
 
 inline Registers_arm::Registers_arm(const void *registers) {
@@ -1329,12 +1330,12 @@ inline Registers_arm::Registers_arm(const void *registers) {
                     "arm registers do not fit into unw_context_t");
   // See unw_getcontext() note about data.
   memcpy(&_registers, registers, sizeof(_registers));
-  bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
+  bzero(_vfpRegisterData, sizeof(_vfpRegisterData));
 }
 
 inline Registers_arm::Registers_arm() {
   bzero(&_registers, sizeof(_registers));
-  bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
+  bzero(_vfpRegisterData, sizeof(_vfpRegisterData));
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {
@@ -1550,26 +1551,48 @@ inline bool Registers_arm::validFloatRegister(int regNum) const {
   return false;
 }
 
-inline double Registers_arm::getFloatRegister(int regNum) const {
+inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) const {
   assert(validFloatRegister(regNum));
-  return _vectorHalfRegisters[regNum - UNW_ARM_D0];
+  unw_fpreg_t value;
+  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
+    int index = regNum - UNW_ARM_S0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(float)],
+           sizeof(float));
+  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
+    int index = regNum - UNW_ARM_D0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(double)],
+           sizeof(double));
+  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
+    int index = regNum - UNW_ARM_WR0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(uint64_t)],
+           sizeof(uint64_t));
+  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
+    int index = regNum - UNW_ARM_WC0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(uint32_t)],
+           sizeof(uint32_t));
+  }
+  return value;
 }
 
-inline void Registers_arm::setFloatRegister(int regNum, double value) {
+inline void Registers_arm::setFloatRegister(int regNum, unw_fpreg_t value) {
   assert(validFloatRegister(regNum));
-  _vectorHalfRegisters[regNum - UNW_ARM_D0] = value;
-}
-
-inline bool Registers_arm::validVectorRegister(int) const {
-  return false;
-}
-
-inline v128 Registers_arm::getVectorRegister(int) const {
-  _LIBUNWIND_ABORT("ARM vector support not implemented");
-}
-
-inline void Registers_arm::setVectorRegister(int, v128) {
-  _LIBUNWIND_ABORT("ARM vector support not implemented");
+  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
+    int index = regNum - UNW_ARM_S0;
+    memcpy(&_vfpRegisterData[index * sizeof(float)], value.bytes,
+           sizeof(float));
+  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
+    int index = regNum - UNW_ARM_D0;
+    memcpy(&_vfpRegisterData[index * sizeof(double)], value.bytes,
+           sizeof(double));
+  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
+    int index = regNum - UNW_ARM_WR0;
+    memcpy(&_vfpRegisterData[index * sizeof(uint64_t)], value.bytes,
+           sizeof(uint64_t));
+  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
+    int index = regNum - UNW_ARM_WC0;
+    memcpy(&_vfpRegisterData[index * sizeof(uint32_t)], value.bytes,
+           sizeof(uint32_t));
+  }
 }
 
 } // namespace libunwind
