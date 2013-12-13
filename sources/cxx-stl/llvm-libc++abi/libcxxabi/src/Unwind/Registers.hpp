@@ -1055,10 +1055,6 @@ private:
 
   GPRs    _registers;
   double  _vectorHalfRegisters[32];
-  // Currently only the lower double in 128-bit vectore registers
-  // is perserved during unwinding.  We could define new register
-  // numbers (> 96) which mean whole vector registers, then this
-  // struct would need to change to contain whole vector registers.
 };
 
 inline Registers_arm64::Registers_arm64(const void *registers) {
@@ -1325,7 +1321,13 @@ private:
   };
 
   GPRs    _registers;
-  double  _vectorHalfRegisters[32];
+  // VFP defines overlapping registers. So S0 & S1 comprise the high and
+  // low word of D0. Furthermore, these registers can be loaded from/stored
+  // to using various data representation formats. Use a raw byte buffer so
+  // the representation can be more clearly manipulated.
+  //
+  // Per EHABI spec, the VRS only needs to store data for D0-D31.
+  uint8_t _vfpRegisterData[sizeof(double) * 32];
 };
 
 inline Registers_arm::Registers_arm(const void *registers) {
@@ -1548,28 +1550,60 @@ inline const char *Registers_arm::getRegisterName(int regNum) {
 }
 
 inline bool Registers_arm::validFloatRegister(int) const {
-  // FIXME: Implement float register support.
+  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
+    return true;
+  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
+    return true;
+  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
+    return true;
+  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
+    return true;
+  }
   return false;
 }
 
-inline unw_fpreg_t Registers_arm::getFloatRegister(int) const {
-  _LIBUNWIND_ABORT("ARM float register support not yet implemented");
+inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) const {
+  assert(validFloatRegister(regNum));
+  unw_fpreg_t value;
+  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
+    int index = regNum - UNW_ARM_S0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(float)],
+           sizeof(float));
+  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
+    int index = regNum - UNW_ARM_D0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(double)],
+           sizeof(double));
+  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
+    int index = regNum - UNW_ARM_WR0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(uint64_t)],
+           sizeof(uint64_t));
+  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
+    int index = regNum - UNW_ARM_WC0;
+    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(uint32_t)],
+           sizeof(uint32_t));
+  }
+  return value;
 }
 
-inline void Registers_arm::setFloatRegister(int, unw_fpreg_t) {
-  _LIBUNWIND_ABORT("ARM float register support not yet implemented");
-}
-
-inline bool Registers_arm::validVectorRegister(int) const {
-  return false;
-}
-
-inline v128 Registers_arm::getVectorRegister(int) const {
-  _LIBUNWIND_ABORT("ARM vector support not implemented");
-}
-
-inline void Registers_arm::setVectorRegister(int, v128) {
-  _LIBUNWIND_ABORT("ARM vector support not implemented");
+inline void Registers_arm::setFloatRegister(int regNum, unw_fpreg_t value) {
+  assert(validFloatRegister(regNum));
+  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
+    int index = regNum - UNW_ARM_S0;
+    memcpy(&_vfpRegisterData[index * sizeof(float)], value.bytes,
+           sizeof(float));
+  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
+    int index = regNum - UNW_ARM_D0;
+    memcpy(&_vfpRegisterData[index * sizeof(double)], value.bytes,
+           sizeof(double));
+  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
+    int index = regNum - UNW_ARM_WR0;
+    memcpy(&_vfpRegisterData[index * sizeof(uint64_t)], value.bytes,
+           sizeof(uint64_t));
+  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
+    int index = regNum - UNW_ARM_WC0;
+    memcpy(&_vfpRegisterData[index * sizeof(uint32_t)], value.bytes,
+           sizeof(uint32_t));
+  }
 }
 
 } // namespace libunwind

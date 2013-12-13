@@ -560,4 +560,152 @@ _Unwind_DeleteException(struct _Unwind_Exception *exception_object) {
                                            exception_object);
 }
 
+_Unwind_VRS_Result _Unwind_VRS_Set(
+    _Unwind_Context *context,
+    _Unwind_VRS_RegClass regclass,
+    uint32_t regno,
+    _Unwind_VRS_DataRepresentation representation,
+    void *valuep) {
+  _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, regclass=%d reg=%d, rep=%d, "
+                             "value=0x%0llX)\n", context, regclass,
+                             regno, representation, 0LL /* FIXME */);
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  switch (regclass) {
+    case _UVRSC_CORE: {
+      if (representation != _UVRSD_UINT32)
+        _LIBUNWIND_ABORT("Core register representation must be _UVRSD_UINT32.");
+      return unw_set_reg(cursor, regno, *((unw_word_t*)valuep)) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    }
+    case _UVRSC_WMMXD:
+    case _UVRSC_WMMXC:
+    case _UVRSC_VFP: {
+      unw_fpreg_t value;
+      switch (representation) {
+        case _UVRSD_VFPX:
+          // TODO(ajwong): What does this mean?
+          break;
+        case _UVRSD_UINT64: {
+          uint64_t tmp = *(uint64_t*)valuep;
+          memcpy(value.bytes, &tmp, sizeof(tmp));
+          break;
+        }
+        case _UVRSD_FLOAT: {
+          float tmp = *(float*)valuep;
+          memcpy(value.bytes, &tmp, sizeof(tmp));
+          break;
+        }
+        case _UVRSD_DOUBLE: {
+          double tmp = *(double*)valuep;
+          memcpy(value.bytes, &tmp, sizeof(tmp));
+          break;
+        }
+        case _UVRSD_UINT32: {
+          uint32_t tmp = *(uint32_t*)valuep;
+          memcpy(value.bytes, &tmp, sizeof(tmp));
+          break;
+        }
+        default:
+          _LIBUNWIND_ABORT("Invalid VFP data representation.");
+      }
+      return unw_set_fpreg(cursor, regno, value) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    }
+  }
+  return _UVRSR_NOT_IMPLEMENTED;
+}
+
+_Unwind_VRS_Result _Unwind_VRS_Get(
+    _Unwind_Context *context,
+    _Unwind_VRS_RegClass regclass,
+    uint32_t regno,
+    _Unwind_VRS_DataRepresentation representation,
+    void *valuep) {
+  _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, regclass=%d reg=%d, rep=%d, "
+                             "value=0x%0llX)\n", context, regclass,
+                             regno, representation, 0LL /* FIXME */);
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  switch (regclass) {
+    case _UVRSC_CORE: {
+      if (representation != _UVRSD_UINT32)
+        _LIBUNWIND_ABORT("Core register representation must be _UVRSD_UINT32.");
+      return unw_get_reg(cursor, regno, (unw_word_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    }
+    case _UVRSC_WMMXD:
+    case _UVRSC_WMMXC:
+    case _UVRSC_VFP: {
+      unw_fpreg_t value;
+      if (unw_get_fpreg(cursor, regno, &value) != UNW_ESUCCESS)
+        return _UVRSR_FAILED;
+      switch (representation) {
+        case _UVRSD_VFPX:
+          // TODO(ajwong): What does this mean?
+          break;
+        case _UVRSD_UINT64: {
+          uint64_t tmp;
+          memcpy(&tmp, value.bytes, sizeof(tmp));
+          *(uint64_t*)valuep = tmp;
+          break;
+        }
+        case _UVRSD_FLOAT: {
+          float tmp;
+          memcpy(&tmp, value.bytes, sizeof(tmp));
+          *(float*)valuep = tmp;
+          break;
+        }
+        case _UVRSD_DOUBLE: {
+          double tmp;
+          memcpy(&tmp, value.bytes, sizeof(tmp));
+          *(double*)valuep = tmp;
+          break;
+        }
+        case _UVRSD_UINT32: {
+          uint32_t tmp;
+          memcpy(&tmp, value.bytes, sizeof(tmp));
+          *(uint32_t*)valuep = tmp;
+          break;
+        }
+        default:
+          _LIBUNWIND_ABORT("Invalid VFP data representation.");
+      }
+      return _UVRSR_OK;
+    }
+  }
+  return _UVRSR_NOT_IMPLEMENTED;
+}
+
+_Unwind_VRS_Result _Unwind_VRS_Pop(
+    _Unwind_Context *context,
+    _Unwind_VRS_RegClass regclass,
+    uint32_t discriminator,
+    _Unwind_VRS_DataRepresentation representation) {
+  if (regclass != _UVRSC_CORE || representation != _UVRSD_UINT32) {
+    // TODO(piman): VFP, ...
+    _LIBUNWIND_ABORT("during phase1 personality function said it would "
+                     "stop here, but now if phase2 it did not stop here");
+    return _UVRSR_NOT_IMPLEMENTED;
+  }
+  bool do13 = false;
+  uint32_t reg13Value = 0;
+  uint32_t* sp = (uint32_t*)_Unwind_GetGR(context, UNW_ARM_R13);
+  for (int i = 0; i < 16; ++i) {
+    if (!(discriminator & (1<<i)))
+      continue;
+    uint32_t value = *sp++;
+    if (i == 13) {
+      reg13Value = value;
+      do13 = true;
+    } else {
+      _Unwind_SetGR(context, UNW_ARM_R0 + i, value);
+    }
+  }
+  if (do13) {
+    _Unwind_SetGR(context, UNW_ARM_SP, reg13Value);
+  } else {
+    _Unwind_SetGR(context, UNW_ARM_SP, (uint32_t)sp);
+  }
+  return _UVRSR_OK;
+}
+
 #endif // _LIBUNWIND_BUILD_ZERO_COST_APIS

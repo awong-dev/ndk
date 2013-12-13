@@ -754,34 +754,6 @@ DwarfInstructions<A, R>::evaluateExpression(pint_t expression, A &addressSpace,
 }
 
 
-//
-// arm specific functions
-//
-template <typename A, typename R>
-bool DwarfInstructions<A, R>::isReturnAddressRegister(int regNum,
-                                                      const Registers_arm &) {
-#warning Do something correct for ARM/NEON here.
-  return (regNum == UNW_ARM_LR);
-}
-
-template <typename A, typename R>
-int DwarfInstructions<A, R>::lastRestoreReg(const Registers_arm &) {
-#warning Do something correct for ARM/NEON here.
-  static_assert((int)CFI_Parser<A>::kMaxRegisterNumber
-              > (int)UNW_ARM64_D31, "register number out of range");
-  return UNW_ARM_D31;
-}
-
-template <typename A, typename R>
-typename A::pint_t DwarfInstructions<A, R>::getCFA(A&, const PrologInfo &prolog,
-                                             const Registers_arm &registers) {
-#warning Do something correct for ARM/NEON here.
-  if (prolog.cfaRegister != 0)
-    return registers.getRegister(prolog.cfaRegister) + prolog.cfaRegisterOffset;
-  else
-    _LIBUNWIND_ABORT("getCFA(): unsupported location for arm cfa");
-}
-
 } // namespace libunwind
 
 #endif // __DWARF_INSTRUCTIONS_HPP__
