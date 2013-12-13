@@ -483,82 +483,7 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
 }
 
 
-
-/// Called by personality handler during phase 2 to get register values.
-_LIBUNWIND_EXPORT uintptr_t _Unwind_GetGR(struct _Unwind_Context *context,
-                                          int index) {
-  unw_cursor_t *cursor = (unw_cursor_t *)context;
-  unw_word_t result;
-  unw_get_reg(cursor, index, &result);
-  _LIBUNWIND_TRACE_API("_Unwind_GetGR(context=%p, reg=%d) => 0x%llX\n",
-    context,
-                  index, (uint64_t) result);
-  return (uintptr_t)result;
-}
-
-
-
-/// Called by personality handler during phase 2 to alter register values.
-_LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
-                                     uintptr_t new_value) {
-  _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, reg=%d, "
-                             "value=0x%0llX)\n", context,
-                             index, (uint64_t) new_value);
-  unw_cursor_t *cursor = (unw_cursor_t *)context;
-  unw_set_reg(cursor, index, new_value);
-}
-
-
-
-/// Called by personality handler during phase 2 to get instruction pointer.
-_LIBUNWIND_EXPORT uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
-  unw_cursor_t *cursor = (unw_cursor_t *)context;
-  unw_word_t result;
-  unw_get_reg(cursor, UNW_REG_IP, &result);
-  _LIBUNWIND_TRACE_API("_Unwind_GetIP(context=%p) => 0x%llX\n", context,
-                             (uint64_t) result);
-  return (uintptr_t)result;
-}
-
-
-
-/// Called by personality handler during phase 2 to alter instruction pointer,
-/// such as setting where the landing pad is, so _Unwind_Resume() will
-/// start executing in the landing pad.
-_LIBUNWIND_EXPORT void _Unwind_SetIP(struct _Unwind_Context *context,
-                                     uintptr_t new_value) {
-  _LIBUNWIND_TRACE_API("_Unwind_SetIP(context=%p, value=0x%0llX)\n",
-                             context, (uint64_t) new_value);
-  unw_cursor_t *cursor = (unw_cursor_t *)context;
-  unw_set_reg(cursor, UNW_REG_IP, new_value);
-}
-
-
-/// Called by personality handler during phase 2 to find the start of the
-/// function.
-_LIBUNWIND_EXPORT uintptr_t
-_Unwind_GetRegionStart(struct _Unwind_Context *context) {
-  unw_cursor_t *cursor = (unw_cursor_t *)context;
-  unw_proc_info_t frameInfo;
-  uintptr_t result = 0;
-  if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
-    result = (uintptr_t)frameInfo.start_ip;
-  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%" PRIXPTR "\n",
-                             context, result);
-  return result;
-}
-
-
-/// Called by personality handler during phase 2 if a foreign exception
-// is caught.
-_LIBUNWIND_EXPORT void
-_Unwind_DeleteException(struct _Unwind_Exception *exception_object) {
-  _LIBUNWIND_TRACE_API("_Unwind_DeleteException(ex_obj=%p)\n",
-                              exception_object);
-  if (exception_object->exception_cleanup != NULL)
-    (*exception_object->exception_cleanup)(_URC_FOREIGN_EXCEPTION_CAUGHT,
-                                           exception_object);
-}
+#if __arm__ && !CXXABI_SJLJ
 
 _Unwind_VRS_Result _Unwind_VRS_Set(
     _Unwind_Context *context,
@@ -688,7 +613,11 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
   }
   bool do13 = false;
   uint32_t reg13Value = 0;
-  uint32_t* sp = (uint32_t*)_Unwind_GetGR(context, UNW_ARM_R13);
+  uint32_t* sp;
+  if (_Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
+                      _UVRSD_UINT32, &sp) != _UVRSR_OK) {
+    return _UVRSR_FAILED;
+  }
   for (int i = 0; i < 16; ++i) {
     if (!(discriminator & (1<<i)))
       continue;
@@ -697,15 +626,97 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
       reg13Value = value;
       do13 = true;
     } else {
-      _Unwind_SetGR(context, UNW_ARM_R0 + i, value);
+      if (_Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0 + i,
+                          _UVRSD_UINT32, &value) != _UVRSR_OK) {
+        return _UVRSR_FAILED;
+      }
     }
   }
   if (do13) {
-    _Unwind_SetGR(context, UNW_ARM_SP, reg13Value);
+    return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
+                           _UVRSD_UINT32, &reg13Value);
   } else {
-    _Unwind_SetGR(context, UNW_ARM_SP, (uint32_t)sp);
+    return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
+                        _UVRSD_UINT32, &sp);
   }
-  return _UVRSR_OK;
+}
+
+#else
+
+/// Called by personality handler during phase 2 to get register values.
+_LIBUNWIND_EXPORT uintptr_t _Unwind_GetGR(struct _Unwind_Context *context,
+                                          int index) {
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  unw_word_t result;
+  unw_get_reg(cursor, index, &result);
+  _LIBUNWIND_TRACE_API("_Unwind_GetGR(context=%p, reg=%d) => 0x%llX\n",
+    context,
+                  index, (uint64_t) result);
+  return (uintptr_t)result;
+}
+
+
+
+/// Called by personality handler during phase 2 to alter register values.
+_LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
+                                     uintptr_t new_value) {
+  _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, reg=%d, "
+                             "value=0x%0llX)\n", context,
+                             index, (uint64_t) new_value);
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  unw_set_reg(cursor, index, new_value);
+}
+
+#endif  // __arm__ && !CXXABI_SJLJ
+
+/// Called by personality handler during phase 2 to get instruction pointer.
+_LIBUNWIND_EXPORT uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  unw_word_t result;
+  unw_get_reg(cursor, UNW_REG_IP, &result);
+  _LIBUNWIND_TRACE_API("_Unwind_GetIP(context=%p) => 0x%llX\n", context,
+                             (uint64_t) result);
+  return (uintptr_t)result;
+}
+
+
+
+/// Called by personality handler during phase 2 to alter instruction pointer,
+/// such as setting where the landing pad is, so _Unwind_Resume() will
+/// start executing in the landing pad.
+_LIBUNWIND_EXPORT void _Unwind_SetIP(struct _Unwind_Context *context,
+                                     uintptr_t new_value) {
+  _LIBUNWIND_TRACE_API("_Unwind_SetIP(context=%p, value=0x%0llX)\n",
+                             context, (uint64_t) new_value);
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  unw_set_reg(cursor, UNW_REG_IP, new_value);
+}
+
+
+/// Called by personality handler during phase 2 to find the start of the
+/// function.
+_LIBUNWIND_EXPORT uintptr_t
+_Unwind_GetRegionStart(struct _Unwind_Context *context) {
+  unw_cursor_t *cursor = (unw_cursor_t *)context;
+  unw_proc_info_t frameInfo;
+  uintptr_t result = 0;
+  if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
+    result = (uintptr_t)frameInfo.start_ip;
+  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%" PRIXPTR "\n",
+                             context, result);
+  return result;
+}
+
+
+/// Called by personality handler during phase 2 if a foreign exception
+// is caught.
+_LIBUNWIND_EXPORT void
+_Unwind_DeleteException(struct _Unwind_Exception *exception_object) {
+  _LIBUNWIND_TRACE_API("_Unwind_DeleteException(ex_obj=%p)\n",
+                              exception_object);
+  if (exception_object->exception_cleanup != NULL)
+    (*exception_object->exception_cleanup)(_URC_FOREIGN_EXCEPTION_CAUGHT,
+                                           exception_object);
 }
 
 #endif // _LIBUNWIND_BUILD_ZERO_COST_APIS
