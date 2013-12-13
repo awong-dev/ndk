@@ -371,8 +371,8 @@ public:
   virtual unw_word_t  getReg(int) = 0;
   virtual void        setReg(int, unw_word_t) = 0;
   virtual bool        validFloatReg(int) = 0;
-  virtual double      getFloatReg(int) = 0;
-  virtual void        setFloatReg(int, double) = 0;
+  virtual unw_fpreg_t getFloatReg(int) = 0;
+  virtual void        setFloatReg(int, unw_fpreg_t) = 0;
   virtual int         step() = 0;
   virtual void        getInfo(unw_proc_info_t *) = 0;
   virtual void        jumpto() = 0;
@@ -396,8 +396,8 @@ public:
   virtual unw_word_t  getReg(int);
   virtual void        setReg(int, unw_word_t);
   virtual bool        validFloatReg(int);
-  virtual double      getFloatReg(int);
-  virtual void        setFloatReg(int, double);
+  virtual unw_fpreg_t getFloatReg(int);
+  virtual void        setFloatReg(int, unw_fpreg_t);
   virtual int         step();
   virtual void        getInfo(unw_proc_info_t *);
   virtual void        jumpto();
@@ -563,12 +563,12 @@ bool UnwindCursor<A, R>::validFloatReg(int regNum) {
 }
 
 template <typename A, typename R>
-double UnwindCursor<A, R>::getFloatReg(int regNum) {
+unw_fpreg_t UnwindCursor<A, R>::getFloatReg(int regNum) {
   return _registers.getFloatRegister(regNum);
 }
 
 template <typename A, typename R>
-void UnwindCursor<A, R>::setFloatReg(int regNum, double value) {
+void UnwindCursor<A, R>::setFloatReg(int regNum, unw_fpreg_t value) {
   _registers.setFloatRegister(regNum, value);
 }
 
