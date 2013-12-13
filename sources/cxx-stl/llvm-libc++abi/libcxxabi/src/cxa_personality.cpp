@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#if __arm__ && !CXXABI_SJLJ
+#include "libunwind.h"
+#endif  // __arm__ && !CXXABI_SJLJ
+
 /*
     Exception Header Layout:
 
@@ -438,8 +442,13 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
 {
 #if __arm__
 #warning Verify hardcoded registers against arm eh-abi.
-    _Unwind_SetGR(context, 0, reinterpret_cast<uintptr_t>(unwind_exception));
-    _Unwind_SetGR(context, 1, static_cast<uintptr_t>(results.ttypeIndex));
+    // FIXME: Check return value.
+    // FIXME: Is this cast right?
+    uintptr_t tmp = static_cast<uintptr_t>(results.ttypeIndex);
+    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0,
+                    _UVRSD_UINT32, &unwind_exception);
+    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R1,
+                    _UVRSD_UINT32, &tmp);
 #else
     _Unwind_SetGR(context, __builtin_eh_return_data_regno(0),
                                  reinterpret_cast<uintptr_t>(unwind_exception));
@@ -906,7 +915,8 @@ __gxx_personality_internal
                 exception_header->catchTemp = reinterpret_cast<void*>(results.landingPad);
                 exception_header->adjustedPtr = results.adjustedPtr;
 #if __arm__ && !CXXABI_SJLJ
-                unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
+                _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                                &unwind_exception->barrier_cache.sp);
                 // TODO(piman): cache data for phase 2?
 #endif
             }
@@ -998,7 +1008,9 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
     }
     case _US_UNWIND_FRAME_STARTING: {
       actions = _UA_CLEANUP_PHASE;
-      if (unwind_exception->barrier_cache.sp == _Unwind_GetGR(context, 13 /* SP */)) {
+      uint32_t sp;
+      _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+      if (unwind_exception->barrier_cache.sp == sp) {
         actions |= _UA_HANDLER_FRAME;
       }
       break;
@@ -1019,7 +1031,8 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
       unwind_exception, context, lsda);
 
   if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
-    unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, 13 /* SP */);
+    _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                    &unwind_exception->barrier_cache.sp);
   }
   if (result == _URC_CONTINUE_UNWIND)
     return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
