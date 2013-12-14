@@ -1568,20 +1568,20 @@ inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) const {
   assert(validFloatRegister(regNum));
   unw_fpreg_t value;
   if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
-    int index = regNum - UNW_ARM_S0;
-    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(float)],
+    unsigned index = (unsigned)(regNum - UNW_ARM_S0);
+    memcpy(&value, &_vfpRegisterData[index * sizeof(float)],
            sizeof(float));
   } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
-    int index = regNum - UNW_ARM_D0;
-    memcpy(value.bytes, &_vfpRegisterData[index * sizeof(double)],
+    unsigned index = (unsigned)(regNum - UNW_ARM_D0);
+    memcpy(&value, &_vfpRegisterData[index * sizeof(double)],
            sizeof(double));
   } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
-    int index = regNum - UNW_ARM_WR0;
-    memcpy(value.bytes, &_wmmxData[index * sizeof(uint64_t)],
+    unsigned index = (unsigned)(regNum - UNW_ARM_WR0);
+    memcpy(&value, &_wmmxData[index * sizeof(uint64_t)],
            sizeof(uint64_t));
   } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
-    int index = regNum - UNW_ARM_WC0;
-    memcpy(value.bytes, &_wmmxControl[index * sizeof(uint32_t)],
+    unsigned index = (unsigned)(regNum - UNW_ARM_WC0);
+    memcpy(&value, &_wmmxControl[index * sizeof(uint32_t)],
            sizeof(uint32_t));
   }
   return value;
@@ -1590,20 +1590,20 @@ inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) const {
 inline void Registers_arm::setFloatRegister(int regNum, unw_fpreg_t value) {
   assert(validFloatRegister(regNum));
   if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
-    int index = regNum - UNW_ARM_S0;
-    memcpy(&_vfpRegisterData[index * sizeof(float)], value.bytes,
+    unsigned index = (unsigned)(regNum - UNW_ARM_S0);
+    memcpy(&_vfpRegisterData[index * sizeof(float)], &value,
            sizeof(float));
   } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
-    int index = regNum - UNW_ARM_D0;
-    memcpy(&_vfpRegisterData[index * sizeof(double)], value.bytes,
+    unsigned index = (unsigned)(regNum - UNW_ARM_D0);
+    memcpy(&_vfpRegisterData[index * sizeof(double)], &value,
            sizeof(double));
   } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
-    int index = regNum - UNW_ARM_WR0;
-    memcpy(&_wmmxData[index * sizeof(uint64_t)], value.bytes,
+    unsigned index = (unsigned)(regNum - UNW_ARM_WR0);
+    memcpy(&_wmmxData[index * sizeof(uint64_t)], &value,
            sizeof(uint64_t));
   } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
-    int index = regNum - UNW_ARM_WC0;
-    memcpy(&_wmmxControl[index * sizeof(uint32_t)], value.bytes,
+    unsigned index = (unsigned)(regNum - UNW_ARM_WC0);
+    memcpy(&_wmmxControl[index * sizeof(uint32_t)], &value,
            sizeof(uint32_t));
   }
 }
