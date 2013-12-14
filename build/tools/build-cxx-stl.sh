@@ -95,6 +95,7 @@ do_llvm_version() {
 register_jobs_option
 
 extract_parameters "$@"
+TRY64=yes
 
 ABIS=$(commas_to_spaces $ABIS)
 UNKNOWN_ABIS=

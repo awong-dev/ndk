@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "assembly.h"
 
     .text
 
@@ -24,8 +25,7 @@
 #   +-----------------------+   <-- SP
 #   +                       +
 #
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   push  %eax
   movl  8(%esp), %eax
   movl  %ebx,  4(%eax)
@@ -60,8 +60,7 @@ _unw_getcontext:
 # On entry:
 #  thread_state pointer is in rdi
 #
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   movq  %rax,   (%rdi)
   movq  %rbx,  8(%rdi)
   movq  %rcx, 16(%rdi)
@@ -96,8 +95,7 @@ _unw_getcontext:
 ; On entry:
 ;  thread_state pointer is in r3
 ;
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   stw    r0,  8(r3)
   mflr  r0
   stw    r0,  0(r3)  ; store lr as ssr0
@@ -231,6 +229,7 @@ _unw_getcontext:
   li  r3, 0    ; return UNW_ESUCCESS
   blr
 
+
 #elif __arm64__
 
 ;
@@ -239,8 +238,7 @@ _unw_getcontext:
 ; On entry:
 ;  thread_state pointer is in x0
 ;
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   stp    x0, x1,  [x0, #0x000]
   stp    x2, x3,  [x0, #0x010]
   stp    x4, x5,  [x0, #0x020]
@@ -281,17 +279,15 @@ _unw_getcontext:
   ldr    x0, #0      ; return UNW_ESUCCESS
   ret
 
-#elif __arm__
+#elif __arm__ && !__APPLE__
 
 @
 @ extern int unw_getcontext(unw_context_t* thread_state)
-@ Per EHABI #4.7, only integer registers need to be preserved.
 @
 @ On entry:
 @  thread_state pointer is in r0
 @
-  .globl unw_getcontext
-unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   @ 32bit thumb-2 restrictions for stm:
   @ . the sp (r13) cannot be in the list
   @ . the pc (r15) cannot be in the list in an STM instruction
@@ -301,5 +297,6 @@ unw_getcontext:
   str lr, [r0, #60]  @ store return address as pc
   mov r0, #0      @ return UNW_ESUCCESS
   mov pc, lr
+  @ FIXME: VFP registers
 
 #endif
