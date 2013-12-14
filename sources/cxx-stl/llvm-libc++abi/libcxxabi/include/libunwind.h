@@ -58,13 +58,7 @@ typedef struct unw_addr_space *unw_addr_space_t;
 typedef int unw_regnum_t;
 typedef uint64_t unw_word_t;
 
-#if __arm__ && CXXABI_SJLJ
 typedef double unw_fpreg_t;
-#else
-typedef struct {
-  uint8_t bytes[sizeof(double)];
-} unw_fpreg_t;
-#endif
 
 struct unw_proc_info_t {
   unw_word_t  start_ip;         /* start address of function */

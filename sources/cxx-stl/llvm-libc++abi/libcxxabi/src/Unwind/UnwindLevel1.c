@@ -512,22 +512,22 @@ _Unwind_VRS_Result _Unwind_VRS_Set(
           break;
         case _UVRSD_UINT64: {
           uint64_t tmp = *(uint64_t*)valuep;
-          memcpy(value.bytes, &tmp, sizeof(tmp));
+          memcpy(&value, &tmp, sizeof(tmp));
           break;
         }
         case _UVRSD_FLOAT: {
           float tmp = *(float*)valuep;
-          memcpy(value.bytes, &tmp, sizeof(tmp));
+          memcpy(&value, &tmp, sizeof(tmp));
           break;
         }
         case _UVRSD_DOUBLE: {
           double tmp = *(double*)valuep;
-          memcpy(value.bytes, &tmp, sizeof(tmp));
+          memcpy(&value, &tmp, sizeof(tmp));
           break;
         }
         case _UVRSD_UINT32: {
           uint32_t tmp = *(uint32_t*)valuep;
-          memcpy(value.bytes, &tmp, sizeof(tmp));
+          memcpy(&value, &tmp, sizeof(tmp));
           break;
         }
         default:
@@ -569,25 +569,25 @@ _Unwind_VRS_Result _Unwind_VRS_Get(
           break;
         case _UVRSD_UINT64: {
           uint64_t tmp;
-          memcpy(&tmp, value.bytes, sizeof(tmp));
+          memcpy(&tmp, &value, sizeof(tmp));
           *(uint64_t*)valuep = tmp;
           break;
         }
         case _UVRSD_FLOAT: {
           float tmp;
-          memcpy(&tmp, value.bytes, sizeof(tmp));
+          memcpy(&tmp, &value, sizeof(tmp));
           *(float*)valuep = tmp;
           break;
         }
         case _UVRSD_DOUBLE: {
           double tmp;
-          memcpy(&tmp, value.bytes, sizeof(tmp));
+          memcpy(&tmp, &value, sizeof(tmp));
           *(double*)valuep = tmp;
           break;
         }
         case _UVRSD_UINT32: {
           uint32_t tmp;
-          memcpy(&tmp, value.bytes, sizeof(tmp));
+          memcpy(&tmp, &value, sizeof(tmp));
           *(uint32_t*)valuep = tmp;
           break;
         }
