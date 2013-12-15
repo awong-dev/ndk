@@ -286,6 +286,8 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @
 @ On entry:
 @  thread_state pointer is in r0
+@ 
+@ Per EHABI 4.7 only core integer registers need to be saved at start.
 @
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   @ 32bit thumb-2 restrictions for stm:
