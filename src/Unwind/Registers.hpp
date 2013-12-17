@@ -1287,7 +1287,7 @@ public:
   uint32_t    getRegister(int num) const;
   void        setRegister(int num, uint32_t value);
   // FIXME: Due to ARM VRS's support for reading/writing different
-  // reperesentations into the VFP registers this set of accessors seem wrong.
+  // representations into the VFP registers this set of accessors seem wrong.
   // If {get,set}FloatRegister() is the backing store for
   // _Unwind_VRS_{Get,Set} then it might be best to return a tagged union
   // with types for each representation in _Unwind_VRS_DataRepresentation.
