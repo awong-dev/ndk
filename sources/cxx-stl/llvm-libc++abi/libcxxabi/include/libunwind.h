@@ -414,7 +414,7 @@ enum {
   UNW_ARM_S29 = 93,
   UNW_ARM_S30 = 94,
   UNW_ARM_S31 = 95,
-  //  96-103 -- OBSOLETE. F0-F7. Used by the FPA system. Superceded by VFP.
+  //  96-103 -- OBSOLETE. F0-F7. Used by the FPA system. Superseded by VFP.
   // 104-111 -- wCGR0-wCGR7, ACC0-ACC7 (Intel wireless MMX)
   UNW_ARM_WR0 = 112,
   UNW_ARM_WR1 = 113,
