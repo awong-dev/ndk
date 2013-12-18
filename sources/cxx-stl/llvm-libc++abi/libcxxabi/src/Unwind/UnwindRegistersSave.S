@@ -287,7 +287,10 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @ On entry:
 @  thread_state pointer is in r0
 @ 
-@ Per EHABI 4.7 only core integer registers need to be saved at start.
+@ FIXME: Resolve the following ambiguity:
+@ Per EHABI #4.7 only core integer registers need to be saved at start.
+@ However #7.4.5 says in general all VRS registers should be restored..
+@ Do we need a dirty bit?
 @
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   @ 32bit thumb-2 restrictions for stm:

@@ -27,6 +27,12 @@
 
 static _Unwind_Reason_Code
 unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
+  // EHABI #7.3 discusses preserving the VRS in a "temporary VRS" during
+  // phase 1 and then restoring it to the "primary VRS" for phase 2. The
+  // effect is phase 2 doesn't see any of the VRS manipulations from phase 1.
+  // In this implementation, the phases don't share the VRS backing store.
+  // Instead, they are passed the original |uc| and they create a new VRS
+  // from scratch thus achieving the same effect.
   unw_cursor_t cursor1;
   unw_init_local(&cursor1, uc);
 
@@ -138,6 +144,7 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
 
 static _Unwind_Reason_Code
 unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, bool resume) {
+  // See comment at the start of unwind_phase1 regarding VRS integrity.
   unw_cursor_t cursor2;
   unw_init_local(&cursor2, uc);
 
@@ -261,7 +268,8 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
 #ifdef __arm__
       // # 7.4.3
       case _URC_FAILURE:
-        return _URC_FAILURE;
+        abort();
+//        return _URC_FAILURE;
 #endif
       default:
         // Personality routine returned an unknown result code.
