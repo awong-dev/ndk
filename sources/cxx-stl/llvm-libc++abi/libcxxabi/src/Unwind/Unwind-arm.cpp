@@ -252,6 +252,7 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
             }
             case 0xb3:
               // TODO(piman): pop VFP single precision from FSTMFDX.
+              // (Only in phase 2, see 4.7 on lazy saving of these)
               return _URC_FAILURE;
             case 0xb4:
             case 0xb5:
@@ -260,12 +261,14 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
               return _URC_FAILURE;
             default:
               // TODO(piman): pop VFP double precision from FSTMFDX.
+              // (Only in phase 2, see 4.7 on lazy saving of these)
               return _URC_FAILURE;
           }
           break;
         }
         default:
           // TODO(piman): iwMMX, VFP double precision from FSTMFDD, spares.
+          // (Only in phase 2, see 4.7 on lazy saving of these)
           return _URC_FAILURE;
       }
     }
