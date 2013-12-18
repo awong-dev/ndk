@@ -42,4 +42,3 @@
   SYMBOL_NAME(name):
 
 #endif /* UNWIND_ASSEMBLY_H */
-

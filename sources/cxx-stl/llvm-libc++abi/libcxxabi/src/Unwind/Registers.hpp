@@ -1316,13 +1316,6 @@ private:
   };
 
   GPRs    _registers;
-  // VFP defines overlapping registers. So S0 & S1 comprise the high and
-  // low word of D0. Furthermore, these registers can be loaded from/stored
-  // to using various data representation formats. Use a raw byte buffer so
-  // the representation can be more clearly manipulated.
-  //
-  // Per EHABI spec, the VRS only needs to store data for D0-D31.
-  uint8_t _vfpRegisterData[sizeof(double) * 32];
   uint8_t _wmmxData[sizeof(uint64_t) * 16];
   uint8_t _wmmxControl[sizeof(uint32_t) * 4];
 };
@@ -1332,14 +1325,12 @@ inline Registers_arm::Registers_arm(const void *registers) {
                     "arm registers do not fit into unw_context_t");
   // See unw_getcontext() note about data.
   memcpy(&_registers, registers, sizeof(_registers));
-  bzero(_vfpRegisterData, sizeof(_vfpRegisterData));
   bzero(_wmmxData, sizeof(_wmmxData));
   bzero(_wmmxControl, sizeof(_wmmxControl));
 }
 
 inline Registers_arm::Registers_arm() {
   bzero(&_registers, sizeof(_registers));
-  bzero(_vfpRegisterData, sizeof(_vfpRegisterData));
   bzero(_wmmxData, sizeof(_wmmxData));
   bzero(_wmmxControl, sizeof(_wmmxControl));
 }
@@ -1551,56 +1542,28 @@ inline const char *Registers_arm::getRegisterName(int regNum) {
 }
 
 inline bool Registers_arm::validFloatRegister(int regNum) const {
-  // NOTE: Consider the indel MMX registers floating points so the
-  // unw_get_fpreg can be used to transmit the 64-bit data back.
-  return ((regNum >= UNW_ARM_S0) && (regNum <= UNW_ARM_S31))
-      || ((regNum >= UNW_ARM_D0) && (regNum <= UNW_ARM_D31))
-      || ((regNum >= UNW_ARM_WR0) && (regNum <= UNW_ARM_WR15))
-      || ((regNum >= UNW_ARM_WC0) && (regNum <= UNW_ARM_WC3));
+  // FIXME: Implement float register support.
+  return false;
 }
 
 inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) const {
-  assert(validFloatRegister(regNum));
-  unw_fpreg_t value;
-  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_S0);
-    memcpy(&value, &_vfpRegisterData[index * sizeof(float)],
-           sizeof(float));
-  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_D0);
-    memcpy(&value, &_vfpRegisterData[index * sizeof(double)],
-           sizeof(double));
-  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_WR0);
-    memcpy(&value, &_wmmxData[index * sizeof(uint64_t)],
-           sizeof(uint64_t));
-  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_WC0);
-    memcpy(&value, &_wmmxControl[index * sizeof(uint32_t)],
-           sizeof(uint32_t));
-  }
-  return value;
+  _LIBUNWIND_ABORT("ARM float register support not yet implemented");
 }
 
 inline void Registers_arm::setFloatRegister(int regNum, unw_fpreg_t value) {
-  assert(validFloatRegister(regNum));
-  if (regNum >= UNW_ARM_S0 && regNum <= UNW_ARM_S31) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_S0);
-    memcpy(&_vfpRegisterData[index * sizeof(float)], &value,
-           sizeof(float));
-  } else if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D31) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_D0);
-    memcpy(&_vfpRegisterData[index * sizeof(double)], &value,
-           sizeof(double));
-  } else if (regNum >= UNW_ARM_WR0 && regNum <= UNW_ARM_WR15) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_WR0);
-    memcpy(&_wmmxData[index * sizeof(uint64_t)], &value,
-           sizeof(uint64_t));
-  } else if (regNum >= UNW_ARM_WC0 && regNum <= UNW_ARM_WC3) {
-    unsigned index = (unsigned)(regNum - UNW_ARM_WC0);
-    memcpy(&_wmmxControl[index * sizeof(uint32_t)], &value,
-           sizeof(uint32_t));
-  }
+  _LIBUNWIND_ABORT("ARM float register support not yet implemented");
+}
+
+inline bool Registers_arm::validVectorRegister(int) const {
+  return false;
+}
+
+inline v128 Registers_arm::getVectorRegister(int) const {
+  _LIBUNWIND_ABORT("ARM vector support not implemented");
+}
+
+inline void Registers_arm::setVectorRegister(int, v128) {
+  _LIBUNWIND_ABORT("ARM vector support not implemented");
 }
 
 } // namespace libunwind
