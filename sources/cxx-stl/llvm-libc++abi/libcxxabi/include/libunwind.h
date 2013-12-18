@@ -56,7 +56,12 @@ typedef struct unw_cursor_t unw_cursor_t;
 typedef struct unw_addr_space *unw_addr_space_t;
 
 typedef int unw_regnum_t;
+#if __arm__
+typedef uint32_t unw_word_t;
+#else
 typedef uint64_t unw_word_t;
+#endif
+
 typedef double unw_fpreg_t;
 
 struct unw_proc_info_t {
