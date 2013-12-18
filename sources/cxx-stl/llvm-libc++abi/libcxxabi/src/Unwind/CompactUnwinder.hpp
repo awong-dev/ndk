@@ -687,6 +687,7 @@ int CompactUnwinder_arm64<A>::stepWithCompactEncodingFrame(
   return UNW_STEP_SUCCESS;
 }
 
+
 }; // namespace libunwind
 
 #endif // __COMPACT_UNWINDER_HPP__

@@ -29,7 +29,7 @@
 // The current implementation of _LIBCXX_DYNAMIC_FALLBACK requires a
 // printf-like function called syslog:
 // 
-//     void syslog(const char* format, ...);
+//     void syslog(int facility_priority, const char* format, ...);
 // 
 // If you want this functionality but your platform doesn't have syslog,
 // just implement it in terms of fprintf(stderr, ...).
@@ -40,6 +40,18 @@
 #include "abort_message.h"
 #include <string.h>
 #include <sys/syslog.h>
+#endif
+
+// On Windows, typeids are different between DLLs and EXEs, so comparing
+// type_info* will work for typeids from the same compiled file but fail
+// for typeids from a DLL and an executable. Among other things, exceptions
+// are not caught by handlers since can_catch() returns false.
+//
+// Defining _LIBCXX_DYNAMIC_FALLBACK does not help since can_catch() calls 
+// is_equal() with use_strcmp=false so the string names are not compared.
+
+#ifdef _WIN32
+#include <string.h>
 #endif
 
 namespace __cxxabiv1
@@ -64,7 +76,11 @@ inline
 bool
 is_equal(const std::type_info* x, const std::type_info* y, bool)
 {
+#ifndef _WIN32
     return x == y;
+#else
+    return (x == y) || (strcmp(x->name(), y->name()) == 0);
+#endif    
 }
 
 #endif  // _LIBCXX_DYNAMIC_FALLBACK
