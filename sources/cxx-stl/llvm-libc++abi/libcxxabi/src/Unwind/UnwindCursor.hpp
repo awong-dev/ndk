@@ -638,22 +638,22 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   // the table points at an offset in the exception handling table (section 5 EHABI).
   pint_t exceptionTableAddr;
   uint32_t exceptionTableData;
-  bool isInlinedInIndex;
+  bool isSingleWordEHT;
   if (indexData & 0x80000000) {
     exceptionTableAddr = indexDataAddr;
     // TODO(ajwong): Should this data be 0?
     exceptionTableData = indexData;
-    isInlinedInIndex = true;
+    isSingleWordEHT = true;
   } else {
     exceptionTableAddr = indexDataAddr + signExtendPrel31(indexData);
     exceptionTableData = _addressSpace.get32(exceptionTableAddr);
-    isInlinedInIndex = false;
+    isSingleWordEHT = false;
   }
 
   // Now we know the 3 things:
   //   exceptionTableAddr -- exception handler table entry.
   //   exceptionTableData -- the data inside the first word of the eht entry.
-  //   isInlinedInIndex -- whether the entry is in the index.
+  //   isSingleWordEHT -- whether the entry is in the index.
   unw_word_t personalityRoutine = 0xbadf00d;
   bool scope32 = false;
 
@@ -684,7 +684,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
         return false;
     }
 
-    if (isInlinedInIndex) {
+    if (isSingleWordEHT) {
       if (extraWords != 0) {
         _LIBUNWIND_ABORT("index inlined table detected but pr function "
                          "requires extra words");
@@ -702,7 +702,8 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   _info.handler = personalityRoutine;
   _info.unwind_info = exceptionTableAddr;
   _info.lsda = 0xbadf00d;  // lsda is DWARF only.
-  _info.flags = isInlinedInIndex ? 1 : 0 | scope32 ? 0x2 : 0;  // Use enum?
+  // flags is pr_cache.additional. See EHABI #7.2 for definition of bit 0.
+  _info.flags = isSingleWordEHT ? 1 : 0 | scope32 ? 0x2 : 0;  // Use enum?
 
   return true;
 }
