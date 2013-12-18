@@ -318,6 +318,5 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   str lr, [r0, #60]  @ store return address as pc
   mov r0, #0      @ return UNW_ESUCCESS
   mov pc, lr
-  @ FIXME: VFP registers
 
 #endif
