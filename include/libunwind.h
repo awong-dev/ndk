@@ -57,7 +57,6 @@ typedef struct unw_addr_space *unw_addr_space_t;
 
 typedef int unw_regnum_t;
 typedef uint64_t unw_word_t;
-
 typedef double unw_fpreg_t;
 
 struct unw_proc_info_t {
