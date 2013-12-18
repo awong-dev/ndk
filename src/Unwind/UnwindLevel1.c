@@ -148,21 +148,13 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
   unw_cursor_t cursor2;
   unw_init_local(&cursor2, uc);
 
-#ifdef __arm__
-  if (resume) {
-    // #7.4.6 says we need to restore pc from what we saved when staring the
-    // cleanup (see below).
-    unw_set_reg(&cursor2, UNW_REG_IP, exception_object->unwinder_cache.reserved2);
-  }
-#endif
-
   _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p)\n", exception_object);
+  int frame_count = 0;
 
   // Walk each frame until we reach where search phase said to stop.
   while (true) {
-
     // Ask libuwind to get next frame (skip over first which is
-    // _Unwind_RaiseException).
+    // _Unwind_RaiseException or _Unwind_Resume).
     int stepResult = unw_step(&cursor2);
     if (stepResult == 0) {
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p): unw_step() reached "
@@ -220,8 +212,20 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
       exception_object->pr_cache.additional = frameInfo.flags;
       _Unwind_State state =
           resume ? _US_UNWIND_FRAME_RESUME : _US_UNWIND_FRAME_STARTING;
+      // Resume only ever makes sense for 1 frame.
       _Unwind_Reason_Code personalityResult =
           (*p)(state, exception_object, context);
+      if (resume && frame_count == 1) {
+        // On a resume, first unwind the _Unwind_Resume() frame. The next frame
+        // is now the landing pad for the cleanup from a previous execution of
+        // phase2. To continue unwindingly correctly, replace VRS[15] with the
+        // IP of the frame that the previous run of phase2 installed the context
+        // for. After this, continue unwinding as if normal.
+        //
+        // See #7.4.6 for details.
+        unw_set_reg(&cursor2, UNW_REG_IP, exception_object->unwinder_cache.reserved2);
+        resume = false;
+      }
 #else
       _Unwind_Action action = _UA_CLEANUP_PHASE;
       if (sp == exception_object->private_2) {
@@ -278,6 +282,7 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
         return _URC_FATAL_PHASE2_ERROR;
       }
     }
+    frame_count++;
   }
 
   // Clean up phase did not resume at the frame that the search phase
