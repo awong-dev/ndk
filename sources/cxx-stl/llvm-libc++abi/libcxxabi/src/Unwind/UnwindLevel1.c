@@ -502,6 +502,7 @@ _Unwind_VRS_Result _Unwind_VRS_Set(
       return unw_set_reg(cursor, regno, *((unw_word_t*)valuep)) == UNW_ESUCCESS ?
           _UVRSR_OK : _UVRSR_FAILED;
     }
+    // FIXME: Are these right? See 4.7 on lazy-saving
     case _UVRSC_WMMXD:
     case _UVRSC_WMMXC:
     case _UVRSC_VFP: {
@@ -557,6 +558,7 @@ _Unwind_VRS_Result _Unwind_VRS_Get(
       return unw_get_reg(cursor, regno, (unw_word_t*)valuep) == UNW_ESUCCESS ?
           _UVRSR_OK : _UVRSR_FAILED;
     }
+    // FIXME: Are these right? See 4.7 on lazy-saving
     case _UVRSC_WMMXD:
     case _UVRSC_WMMXC:
     case _UVRSC_VFP: {
