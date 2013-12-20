@@ -273,7 +273,6 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
       // # 7.4.3
       case _URC_FAILURE:
         abort();
-//        return _URC_FAILURE;
 #endif
       default:
         // Personality routine returned an unknown result code.
