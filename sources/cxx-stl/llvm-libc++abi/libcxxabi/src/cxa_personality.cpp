@@ -349,6 +349,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
         // this should not happen.  Indicates corrupted eh_table.
         call_terminate(native_exception, unwind_exception);
     }
+    // TODO(ajwong): Why is ARM different here? Why only decodeRelocTarget2?
 #if !__arm__
     switch (ttypeEncoding & 0x0F)
     {
@@ -558,6 +559,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.landingPad = 0;
     results.adjustedPtr = 0;
     results.reason = _URC_FATAL_PHASE1_ERROR;
+
     // Check for consistent actions
     if (actions & _UA_SEARCH_PHASE)
     {
@@ -604,7 +606,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     uintptr_t thumbBit = ip & 1;
     ip &= ~1;
 #endif
-    --ip;
+//    --ip;
     // Get beginning current frame's code (as defined by the 
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
@@ -638,6 +640,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         uintptr_t classInfoOffset = readULEB128(&lsda);
         classInfo = lsda + classInfoOffset;
     }
+    // TODO(ajwong): Should this terminate?
     // Walk call-site table looking for range that 
     // includes current PC. 
     uint8_t callSiteEncoding = *lsda++;
@@ -701,13 +704,13 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
             while (true)
             {
                 const uint8_t* actionRecord = action;
-                int64_t ttypeIndex = readSLEB128(&action);
+                uint64_t ttypeIndex = readULEB128(&action);
                 if (ttypeIndex > 0)
                 {
                     // Found a catch, does it actually catch?
                     // First check for catch (...)
                     const __shim_type_info* catchType =
-                        get_shim_type_info(static_cast<uint64_t>(ttypeIndex),
+                        get_shim_type_info(ttypeIndex,
                                            classInfo, ttypeEncoding,
                                            native_exception, unwind_exception);
                     if (catchType == 0)
@@ -997,6 +1000,7 @@ __gxx_personality_v0
         //     if we were called improperly).
         return results.reason;
     }
+    // TODO(ajwong): else if?
     if (actions & _UA_CLEANUP_PHASE)
     {
         // Phase 2 search:
