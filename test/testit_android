@@ -23,7 +23,7 @@ while [ $currentdir != "test" ]; do
 done
 
 cd ..
-LIBCXX_ROOT=`pwd`
+LIBCXX_ROOT=`pwd`/../../llvm-libc++/libcxx
 cd $origpath
 
 ANDROID_SUPPORT=$(cd "$LIBCXX_ROOT"/../../../android/support && pwd)
