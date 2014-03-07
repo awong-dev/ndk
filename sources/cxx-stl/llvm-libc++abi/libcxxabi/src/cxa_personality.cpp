@@ -332,6 +332,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
         // this should not happen.  Indicates corrupted eh_table.
         call_terminate(native_exception, unwind_exception);
     }
+    // TODO(ajwong): Why is ARM different here? Why only decodeRelocTarget2?
 #if !__arm__
     switch (ttypeEncoding & 0x0F)
     {
@@ -492,6 +493,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.landingPad = 0;
     results.adjustedPtr = 0;
     results.reason = _URC_FATAL_PHASE1_ERROR;
+
     // Check for consistent actions
     if (actions & _UA_SEARCH_PHASE)
     {
@@ -538,7 +540,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     uintptr_t thumbBit = ip & 1;
     ip &= ~1;
 #endif
-    --ip;
+//    --ip;
     // Get beginning current frame's code (as defined by the 
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
@@ -572,6 +574,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         uintptr_t classInfoOffset = readULEB128(&lsda);
         classInfo = lsda + classInfoOffset;
     }
+    // TODO(ajwong): Should this terminate?
     // Walk call-site table looking for range that 
     // includes current PC. 
     uint8_t callSiteEncoding = *lsda++;
@@ -586,7 +589,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     while (callSitePtr < callSiteTableEnd)
     {
         // There is one entry per call site.
-#if 1 ||!__arm__
         // The call sites are non-overlapping in [start, start+length)
         // The call sites are ordered in increasing value of start
         uintptr_t start = readEncodedPointer(&callSitePtr, callSiteEncoding);
@@ -594,15 +596,8 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         uintptr_t landingPad = readEncodedPointer(&callSitePtr, callSiteEncoding);
         uintptr_t actionEntry = readULEB128(&callSitePtr);
         if ((start <= ipOffset) && (ipOffset < (start + length)))
-#else  // __arm__
-        // ip is 1-based index into this table
-        uintptr_t landingPad = readULEB128(&callSitePtr);
-        uintptr_t actionEntry = readULEB128(&callSitePtr);
-        if (--ip == 0)
-#endif  // __arm__
         {
             // Found the call site containing ip.
-#if 1 ||!__arm__
             if (landingPad == 0)
             {
                 // No handler here
@@ -613,9 +608,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
 #if __arm__
             landingPad |= thumbBit;
 #endif
-#else  // __arm__
-            ++landingPad;
-#endif  // __arm__
             if (actionEntry == 0)
             {
                 // Found a cleanup
@@ -638,13 +630,13 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
             while (true)
             {
                 const uint8_t* actionRecord = action;
-                int64_t ttypeIndex = readSLEB128(&action);
+                uint64_t ttypeIndex = readULEB128(&action);
                 if (ttypeIndex > 0)
                 {
                     // Found a catch, does it actually catch?
                     // First check for catch (...)
                     const __shim_type_info* catchType =
-                        get_shim_type_info(static_cast<uint64_t>(ttypeIndex),
+                        get_shim_type_info(ttypeIndex,
                                            classInfo, ttypeEncoding,
                                            native_exception, unwind_exception);
                     if (catchType == 0)
@@ -928,6 +920,7 @@ __gxx_personality_internal
         //     if we were called improperly).
         return results.reason;
     }
+    // TODO(ajwong): else if?
     if (actions & _UA_CLEANUP_PHASE)
     {
         // Phase 2 search:
