@@ -826,19 +826,41 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
 // public API
 
 #if __arm__ && !CXXABI_SJLJ
-bool __cxa_begin_cleanup(void* unwind_exception) {
-  // TODO(piman): Cache unwind_exception somewhere?
+
+bool __cxa_begin_cleanup(_Unwind_Exception* unwind_exception) {
+  // Stash unwind_exception in the (TLS) globals so that we can get it back in
+  // __cxa_end_cleanup. See #8.4.2.
+  __cxa_get_globals()->cleanupException = unwind_exception;
   return true;
 }
 
-LIBCXXABI_NORETURN
-void __cxa_end_cleanup(void) {
-  // TODO(piman): Get unwind_exception from somewhere
-  // TODO(piman): we may need to write pieces of this in assemply so that we
-  // don't corrupt registers. #8.4.1
-  _Unwind_Exception* unwind_exception = NULL;
-  _Unwind_Resume(unwind_exception);
+_Unwind_Exception* get_saved_exception() {
+  return __cxa_get_globals()->cleanupException;
 }
+
+/*
+ * This is equivalent to:
+ *
+ * LIBCXXABI_NORETURN void __cxa_end_cleanup(void) {
+ *   _Unwind_Resume(get_saved_exception());
+ * }
+ *
+ * Except:
+ * 1- we don't set up a stack frame
+ * 2- we save "scratch" registers r1-r4 when calling get_saved_exception
+ *
+ * This is because we don't want to clobber any register modified by the cleanup
+ * (see #7.4.6).
+ */
+asm volatile(
+".globl __cxa_end_cleanup\n"
+"__cxa_end_cleanup:\n"
+"  push {r1, r2, r3, r4}\n"
+"  bl get_saved_exception\n"
+"  pop {r1, r2, r3, r4}\n"
+"  bl _Unwind_Resume\n"
+);
+
 #endif
 
 /*
