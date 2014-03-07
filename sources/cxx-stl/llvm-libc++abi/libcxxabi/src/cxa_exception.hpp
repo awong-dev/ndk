@@ -106,6 +106,9 @@ static const uint64_t get_vendor_and_language =     0xFFFFFFFFFFFFFF00; // mask 
 #ifdef __ARM_EABI_UNWINDER__
         __cxa_exception* propagatingExceptions;
 #endif
+#if __arm__ && !CXXABI_SJLJ
+        _Unwind_Exception* cleanupException;
+#endif
     };
 
 #pragma GCC visibility pop
