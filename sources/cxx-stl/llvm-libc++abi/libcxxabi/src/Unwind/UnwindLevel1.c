@@ -183,14 +183,6 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
       return _URC_FATAL_PHASE2_ERROR;
     }
 
-#ifdef __arm__
-    // #7.4.1 says we need to preserve pc for when _Unwind_Resume is called
-    // back, to find this same frame.
-    unw_word_t pc;
-    unw_get_reg(&cursor2, UNW_REG_IP, &pc);
-    exception_object->unwinder_cache.reserved2 = (uint32_t)pc;
-#endif
-
     // Get info about this frame.
     unw_word_t sp;
     unw_proc_info_t frameInfo;
@@ -267,6 +259,14 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
                                      "user code with ip=0x%llX, sp=0x%llX\n",
                                     exception_object, pc, sp);
         }
+
+#ifdef __arm__
+        // #7.4.1 says we need to preserve pc for when _Unwind_Resume is called
+        // back, to find this same frame.
+        unw_word_t pc;
+        unw_get_reg(&cursor2, UNW_REG_IP, &pc);
+        exception_object->unwinder_cache.reserved2 = (uint32_t)pc;
+#endif
         unw_resume(&cursor2);
         // unw_resume() only returns if there was an error.
         return _URC_FATAL_PHASE2_ERROR;
