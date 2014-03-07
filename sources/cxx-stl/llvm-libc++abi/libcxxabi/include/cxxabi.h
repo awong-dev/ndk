@@ -171,7 +171,6 @@ extern bool __cxa_uncaught_exception() throw();
 
 
 #if __arm__ && !CXXABI_SJLJ
-extern bool __cxa_begin_cleanup(void* unwind_exception);
 extern LIBCXXABI_NORETURN void __cxa_end_cleanup(void);
 #endif
 
