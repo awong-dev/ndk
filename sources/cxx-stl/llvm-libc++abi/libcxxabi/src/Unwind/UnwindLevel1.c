@@ -74,7 +74,7 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
       unw_word_t pc;
       unw_get_reg(&cursor1, UNW_REG_IP, &pc);
       _LIBUNWIND_TRACE_UNWINDING(
-          "unwind_phase1(ex_ojb=%p): pc=0x%llX, start_ip=0x%llX, func=%s, "
+          "unwind_phase1(ex_ojb=%p): pc=0x%llX, start_ip=0x%lX, func=%s, "
           "lsda=0x%llX, personality=0x%llX\n",
           exception_object, pc, frameInfo.start_ip, functionName,
           frameInfo.lsda, frameInfo.handler);
@@ -562,7 +562,7 @@ _Unwind_VRS_Result _Unwind_VRS_Get(
     void *valuep) {
   _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, regclass=%d reg=%d, rep=%d, "
                              "value=0x%0llX)\n", context, regclass,
-                             regno, representation, 0LL /* FIXME */);
+                             regno, representation, *((uint32_t*)valuep));
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   switch (regclass) {
     case _UVRSC_CORE: {
