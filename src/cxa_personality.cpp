@@ -540,7 +540,12 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     uintptr_t thumbBit = ip & 1;
     ip &= ~1;
 #endif
-//    --ip;
+    // The ip is one past the throwing instruction. Move it backwards.
+    // TODO(ajwong): This should decrement 2 instead of 4 based on thumbBit,
+    // but _Unwind_GetIP() is returning a thumb address in at least one
+    // instance when it shouldn't be.
+    ip -= 4;
+
     // Get beginning current frame's code (as defined by the 
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
