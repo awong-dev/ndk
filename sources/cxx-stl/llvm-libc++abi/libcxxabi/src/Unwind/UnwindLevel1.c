@@ -236,14 +236,14 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
             "unwind_phase2(ex_ojb=%p): _URC_CONTINUE_UNWIND\n",
             exception_object);
 #ifdef __arm__
-        // TODO(piman) do we want any check here?
+        if (sp == exception_object->barrier_cache.sp) {
 #else
         if (sp == exception_object->private_2) {
+#endif
           // Phase 1 said we would stop at this frame, but we did not...
           _LIBUNWIND_ABORT("during phase1 personality function said it would "
                            "stop here, but now if phase2 it did not stop here");
         }
-#endif
         break;
       case _URC_INSTALL_CONTEXT:
         _LIBUNWIND_TRACE_UNWINDING(
@@ -307,7 +307,7 @@ unwind_phase2_forced(unw_context_t *uc,
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase2_forced(ex_ojb=%p): unw_step "
                                  "failed => _URC_END_OF_STACK\n",
                                  exception_object);
-      return _URC_FATAL_PHASE1_ERROR;
+      return _URC_FATAL_PHASE2_ERROR;
     }
 
     // When tracing, print state information.
