@@ -452,6 +452,17 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
     //    adjustments to adjustedPtr are ignored.
     while (true)
     {
+#if __arm__
+        // On ARM, catch clauses are 0-delimited runs of TARGET2 relocation
+        // pointers to TypeInfo objects.
+        const __shim_type_info* catchType = (const __shim_type_info*)
+                                               decodeRelocatedPointer(temp);
+        temp += sizeof(void *);
+        if (catchType == 0)
+            break;
+#else
+        // In the Itanium-ABI, catch-clauses are 0-delimited runs of uleb128
+        // indexes into the type table.
         uint64_t ttypeIndex = readULEB128(&temp);
         if (ttypeIndex == 0)
             break;
@@ -460,6 +471,7 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
                                                                ttypeEncoding,
                                                                true,
                                                                unwind_exception);
+#endif
         void* tempPtr = adjustedPtr;
         if (catchType->can_catch(excpType, tempPtr))
             return false;
