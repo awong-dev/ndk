@@ -401,6 +401,7 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
 #else
         // In the Itanium-ABI, catch-clauses are 0-delimited runs of uleb128
         // indexes into the type table.
+        // Section 7.4 of http://mentorembedded.github.io/cxx-abi/exceptions.pdf
         uint64_t ttypeIndex = readULEB128(&temp);
         if (ttypeIndex == 0)
             break;
