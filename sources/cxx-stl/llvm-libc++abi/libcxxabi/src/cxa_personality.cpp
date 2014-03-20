@@ -708,8 +708,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
             // Scan action entries until you find a matching handler, cleanup, or the end of action list
             while (true)
             {
-                const uint8_t* actionRecord = action;
-                uint64_t ttypeIndex = readULEB128(&action);
+                int64_t ttypeIndex = readSLEB128(&action);
                 if (ttypeIndex > 0)
                 {
                     // Found a catch, does it actually catch?
@@ -1412,3 +1411,5 @@ __cxa_call_unexpected(void* arg)
 }  // extern "C"
 
 }  // __cxxabiv1
+
+                const uint8_t* actionRecord = action;
