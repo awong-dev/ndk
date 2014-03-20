@@ -376,7 +376,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
 #else
     const uint8_t* ptr = classInfo - ttypeIndex * 4;
-    return (const __shim_type_info*)readRelocatedPointer(ptr);
+    return (const __shim_type_info*)decodeRelocatedPointer(ptr);
 #endif
 }
 #endif
