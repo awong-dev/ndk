@@ -366,6 +366,7 @@ private:
 
 class _LIBUNWIND_HIDDEN AbstractUnwindCursor {
 public:
+  virtual             ~AbstractUnwindCursor() {}
   virtual bool        validReg(int) = 0;
   virtual unw_word_t  getReg(int) = 0;
   virtual void        setReg(int, unw_word_t) = 0;
