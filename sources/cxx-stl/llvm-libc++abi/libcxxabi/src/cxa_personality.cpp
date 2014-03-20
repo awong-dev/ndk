@@ -935,6 +935,7 @@ _Unwind_Exception* get_saved_exception() {
  * (see #7.4.6).
  */
 asm volatile(
+".section .text\n"
 ".globl __cxa_end_cleanup\n"
 "__cxa_end_cleanup:\n"
 "  push {r1, r2, r3, r4}\n"
