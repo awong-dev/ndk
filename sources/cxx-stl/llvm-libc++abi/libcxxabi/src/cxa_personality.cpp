@@ -1213,5 +1213,3 @@ __cxa_call_unexpected(void* arg)
 }  // extern "C"
 
 }  // __cxxabiv1
-
-                const uint8_t* actionRecord = action;
