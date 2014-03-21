@@ -312,12 +312,11 @@ call_terminate(bool native_exception, _Unwind_Exception* unwind_exception)
 }
 
 #if __arm__
-const void* readRelocatedPointer(const uint8_t* ptr) {
+const void* decodeRelocatedPointer(const uint8_t* ptr) {
   uint32_t value = *reinterpret_cast<const uint32_t*>(ptr);
   if (!value)
     return NULL;
-  value = *reinterpret_cast<const uint32_t*>(ptr + value);
-  return reinterpret_cast<const void*>(value);
+  return reinterpret_cast<const void*>(ptr + value);
 }
 #endif
 
@@ -359,7 +358,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
 #else
     const uint8_t* ptr = classInfo - ttypeIndex * 4;
-    return (const __shim_type_info*)readRelocatedPointer(ptr);
+    return (const __shim_type_info*)decodeRelocatedPointer(ptr);
 #endif
 }
 
@@ -391,6 +390,19 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
     //    adjustments to adjustedPtr are ignored.
     while (true)
     {
+#if __arm__
+        // On ARM, catch clauses are 0-delimited runs of TARGET2 relocation
+        // pointers to TypeInfo objects.
+        // Reverse-engineered from llvm/lib/CodeGen/AsmPrinter/ARMException.cpp @ r201423
+        const __shim_type_info* catchType = (const __shim_type_info*)
+                                               decodeRelocatedPointer(temp);
+        temp += sizeof(void *);
+        if (catchType == 0)
+            break;
+#else
+        // In the Itanium-ABI, catch-clauses are 0-delimited runs of uleb128
+        // indexes into the type table.
+        // Section 7.4 of http://mentorembedded.github.io/cxx-abi/exceptions.pdf
         uint64_t ttypeIndex = readULEB128(&temp);
         if (ttypeIndex == 0)
             break;
@@ -399,6 +411,7 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
                                                                ttypeEncoding,
                                                                true,
                                                                unwind_exception);
+#endif
         void* tempPtr = adjustedPtr;
         if (catchType->can_catch(excpType, tempPtr))
             return false;
@@ -635,7 +648,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
             while (true)
             {
                 const uint8_t* actionRecord = action;
-                uint64_t ttypeIndex = readULEB128(&action);
+                int64_t ttypeIndex = readSLEB128(&action);
                 if (ttypeIndex > 0)
                 {
                     // Found a catch, does it actually catch?
@@ -850,6 +863,7 @@ _Unwind_Exception* get_saved_exception() {
  * (see #7.4.6).
  */
 asm volatile(
+".section .text\n"
 ".globl __cxa_end_cleanup\n"
 "__cxa_end_cleanup:\n"
 "  push {r1, r2, r3, r4}\n"
