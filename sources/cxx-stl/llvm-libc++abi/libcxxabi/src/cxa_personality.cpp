@@ -455,6 +455,7 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
 #if __arm__
         // On ARM, catch clauses are 0-delimited runs of TARGET2 relocation
         // pointers to TypeInfo objects.
+        // Reverse-engineered from llvm/lib/CodeGen/AsmPrinter/ARMException.cpp @ r201423
         const __shim_type_info* catchType = (const __shim_type_info*)
                                                decodeRelocatedPointer(temp);
         temp += sizeof(void *);
