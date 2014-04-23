@@ -211,7 +211,7 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
           break;
         }
         case 0xa0: {
-          uint8_t numRegisters = 1 + byte & 0x07;
+          uint8_t numRegisters = 1 + (byte & 0x07);
           uint16_t registers = ((1<<numRegisters) - 1) << 4;
           if (byte & 0x08)
             registers |= 1<<14;
