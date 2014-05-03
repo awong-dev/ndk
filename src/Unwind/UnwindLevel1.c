@@ -23,6 +23,10 @@
 #include "unwind.h"
 #include "config.h"
 
+#if !defined(PRIXPTR)
+#define PRIXPTR "%p"
+#endif
+
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
 
 static _Unwind_Reason_Code
