@@ -131,16 +131,6 @@ esac
 # Build the Unwinder
 case $TRIPLE in
   *-none-eabi*)
-#    case $TRIPLE in
-#      arm-*)
-#        for FILE in ../src/Unwind/support/arm/*.c; do
-#          $CC -c -g -Os $RC_FLAGS $EXTRA_CC_FLAGS $EXTRA_FLAGS -I../src/Unwind -I../src/Unwind/support/arm $OPTIONS $FILE
-#        done
-#        for FILE in ../src/Unwind/support/arm/*.S; do
-#          $CC -c -g -Os $RC_FLAGS $EXTRA_CC_FLAGS $EXTRA_FLAGS -I../src/Unwind -I../src/Unwind/supprt/arm $OPTIONS $FILE -no-integrated-as
-#        done
-#      ;;
-#    esac
     for FILE in ../src/Unwind/*.S; do
       $CC -c -g -O0 $RC_CFLAGS $EXTRA_CC_FLAGS $EXTRA_FLAGS -I../include $OPTIONS $FILE
     done
