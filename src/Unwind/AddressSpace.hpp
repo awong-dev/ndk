@@ -17,7 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if !defined(__has_include) || __has_include(<dlfcn.h>)
 #include <dlfcn.h>
+#define LIBCXXABI_HAS_DYLD 1
+#else
+#define LIBCXXABI_HAS_DYLD 0
+#endif
 
 #if __APPLE__
 #include <mach-o/getsect.h>
@@ -324,6 +329,7 @@ inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
 inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
                                                 size_t bufLen,
                                                 unw_word_t *offset) {
+#if LIBCXXABI_HAS_DYLD
   Dl_info dyldInfo;
   if (dladdr((void *)addr, &dyldInfo)) {
     if (dyldInfo.dli_sname != NULL) {
@@ -332,6 +338,7 @@ inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
       return true;
     }
   }
+#endif
   return false;
 }
 
