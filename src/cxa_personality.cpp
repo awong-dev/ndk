@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#if __arm__ && !CXXABI_SJLJ
+#include "libunwind.h"
+#endif  // __arm__ && !CXXABI_SJLJ
+
 /*
     Exception Header Layout:
 
@@ -307,6 +311,15 @@ call_terminate(bool native_exception, _Unwind_Exception* unwind_exception)
     std::terminate();
 }
 
+#if __arm__
+const void* decodeRelocatedPointer(const uint8_t* ptr) {
+  uint32_t value = *reinterpret_cast<const uint32_t*>(ptr);
+  if (!value)
+    return NULL;
+  return reinterpret_cast<const void*>(ptr + value);
+}
+#endif
+
 static
 const __shim_type_info*
 get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
@@ -318,6 +331,8 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
         // this should not happen.  Indicates corrupted eh_table.
         call_terminate(native_exception, unwind_exception);
     }
+    // TODO(ajwong): Why is ARM different here? Why only decodeRelocTarget2?
+#if !__arm__
     switch (ttypeEncoding & 0x0F)
     {
     case DW_EH_PE_absptr:
@@ -341,6 +356,10 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     }
     classInfo -= ttypeIndex;
     return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
+#else
+    const uint8_t* ptr = classInfo - ttypeIndex * 4;
+    return (const __shim_type_info*)decodeRelocatedPointer(ptr);
+#endif
 }
 
 /*
@@ -371,6 +390,19 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
     //    adjustments to adjustedPtr are ignored.
     while (true)
     {
+#if __arm__
+        // On ARM, catch clauses are 0-delimited runs of TARGET2 relocation
+        // pointers to TypeInfo objects.
+        // Reverse-engineered from llvm/lib/CodeGen/AsmPrinter/ARMException.cpp @ r201423
+        const __shim_type_info* catchType = (const __shim_type_info*)
+                                               decodeRelocatedPointer(temp);
+        temp += sizeof(void *);
+        if (catchType == 0)
+            break;
+#else
+        // In the Itanium-ABI, catch-clauses are 0-delimited runs of uleb128
+        // indexes into the type table.
+        // Section 7.4 of http://mentorembedded.github.io/cxx-abi/exceptions.pdf
         uint64_t ttypeIndex = readULEB128(&temp);
         if (ttypeIndex == 0)
             break;
@@ -379,6 +411,7 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
                                                                ttypeEncoding,
                                                                true,
                                                                unwind_exception);
+#endif
         void* tempPtr = adjustedPtr;
         if (catchType->can_catch(excpType, tempPtr))
             return false;
@@ -422,8 +455,14 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
               const scan_results& results)
 {
 #if __arm__
-    _Unwind_SetGR(context, 0, reinterpret_cast<uintptr_t>(unwind_exception));
-    _Unwind_SetGR(context, 1, static_cast<uintptr_t>(results.ttypeIndex));
+#warning Verify hardcoded registers against arm eh-abi.
+    // FIXME: Check return value.
+    // FIXME: Is this cast right?
+    uintptr_t tmp = static_cast<uintptr_t>(results.ttypeIndex);
+    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0,
+                    _UVRSD_UINT32, &unwind_exception);
+    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R1,
+                    _UVRSD_UINT32, &tmp);
 #else
     _Unwind_SetGR(context, __builtin_eh_return_data_regno(0),
                                  reinterpret_cast<uintptr_t>(unwind_exception));
@@ -457,7 +496,8 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
 static
 void
 scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception,
-            _Unwind_Exception* unwind_exception, _Unwind_Context* context)
+            _Unwind_Exception* unwind_exception, _Unwind_Context* context,
+            const uint8_t* lsda)
 {
     // Initialize results to found nothing but an error
     results.ttypeIndex = 0;
@@ -466,6 +506,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.landingPad = 0;
     results.adjustedPtr = 0;
     results.reason = _URC_FATAL_PHASE1_ERROR;
+
     // Check for consistent actions
     if (actions & _UA_SEARCH_PHASE)
     {
@@ -497,7 +538,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         return;
     }
     // Start scan by getting exception table address
-    const uint8_t* lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
     if (lsda == 0)
     {
         // There is no exception table
@@ -507,11 +547,22 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.languageSpecificData = lsda;
     // Get the current instruction pointer and offset it before next
     // instruction in the current frame which threw the exception.
-    uintptr_t ip = _Unwind_GetIP(context) - 1;
+    uintptr_t ip = _Unwind_GetIP(context);
+#if __arm__
+    // Clear thumb bit.
+    uintptr_t thumbBit = ip & 1;
+    ip &= ~1;
+#endif
+    // The ip is one past the throwing instruction. Move it backwards.
+    // TODO(ajwong): This should decrement 2 instead of 4 based on thumbBit,
+    // but _Unwind_GetIP() is returning a thumb address in at least one
+    // instance when it shouldn't be.
+    ip -= 4;
+
     // Get beginning current frame's code (as defined by the 
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
-#if __arm__
+#if 0 && __arm__
     if (ip == uintptr_t(-1))
     {
         // no action
@@ -541,10 +592,11 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         uintptr_t classInfoOffset = readULEB128(&lsda);
         classInfo = lsda + classInfoOffset;
     }
+    // TODO(ajwong): Should this terminate?
     // Walk call-site table looking for range that 
     // includes current PC. 
     uint8_t callSiteEncoding = *lsda++;
-#if __arm__
+#if 0 && __arm__
     (void)callSiteEncoding;  // On arm callSiteEncoding is never used
 #endif
     uint32_t callSiteTableLength = static_cast<uint32_t>(readULEB128(&lsda));
@@ -555,7 +607,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     while (callSitePtr < callSiteTableEnd)
     {
         // There is one entry per call site.
-#if !__arm__
         // The call sites are non-overlapping in [start, start+length)
         // The call sites are ordered in increasing value of start
         uintptr_t start = readEncodedPointer(&callSitePtr, callSiteEncoding);
@@ -563,15 +614,8 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         uintptr_t landingPad = readEncodedPointer(&callSitePtr, callSiteEncoding);
         uintptr_t actionEntry = readULEB128(&callSitePtr);
         if ((start <= ipOffset) && (ipOffset < (start + length)))
-#else  // __arm__
-        // ip is 1-based index into this table
-        uintptr_t landingPad = readULEB128(&callSitePtr);
-        uintptr_t actionEntry = readULEB128(&callSitePtr);
-        if (--ip == 0)
-#endif  // __arm__
         {
             // Found the call site containing ip.
-#if !__arm__
             if (landingPad == 0)
             {
                 // No handler here
@@ -579,9 +623,9 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
                 return;
             }
             landingPad = (uintptr_t)lpStart + landingPad;
-#else  // __arm__
-            ++landingPad;
-#endif  // __arm__
+#if __arm__
+            landingPad |= thumbBit;
+#endif
             if (actionEntry == 0)
             {
                 // Found a cleanup
@@ -610,7 +654,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
                     // Found a catch, does it actually catch?
                     // First check for catch (...)
                     const __shim_type_info* catchType =
-                        get_shim_type_info(static_cast<uint64_t>(ttypeIndex),
+                        get_shim_type_info(ttypeIndex,
                                            classInfo, ttypeEncoding,
                                            native_exception, unwind_exception);
                     if (catchType == 0)
@@ -773,7 +817,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
                 action += actionOffset;
             }  // there is no break out of this loop, only return
         }
-#if !__arm__
+#if 1||!__arm__
         else if (ipOffset < start)
         {
             // There is no call site for this ip
@@ -790,6 +834,45 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
 }
 
 // public API
+
+#if __arm__ && !CXXABI_SJLJ
+
+bool __cxa_begin_cleanup(_Unwind_Exception* unwind_exception) {
+  // Stash unwind_exception in the (TLS) globals so that we can get it back in
+  // __cxa_end_cleanup. See #8.4.2.
+  __cxa_get_globals()->cleanupException = unwind_exception;
+  return true;
+}
+
+_Unwind_Exception* get_saved_exception() {
+  return __cxa_get_globals()->cleanupException;
+}
+
+/*
+ * This is equivalent to:
+ *
+ * LIBCXXABI_NORETURN void __cxa_end_cleanup(void) {
+ *   _Unwind_Resume(get_saved_exception());
+ * }
+ *
+ * Except:
+ * 1- we don't set up a stack frame
+ * 2- we save "scratch" registers r1-r4 when calling get_saved_exception
+ *
+ * This is because we don't want to clobber any register modified by the cleanup
+ * (see #7.4.6).
+ */
+asm volatile(
+".section .text\n"
+".globl __cxa_end_cleanup\n"
+"__cxa_end_cleanup:\n"
+"  push {r1, r2, r3, r4}\n"
+"  bl get_saved_exception\n"
+"  pop {r1, r2, r3, r4}\n"
+"  bl _Unwind_Resume\n"
+);
+
+#endif
 
 /*
 The personality function branches on actions like so:
@@ -838,13 +921,10 @@ _UA_CLEANUP_PHASE
 */
 
 _Unwind_Reason_Code
-#if __USING_SJLJ_EXCEPTIONS__
-__gxx_personality_sj0
-#else
-__gxx_personality_v0
-#endif
+__gxx_personality_internal
                     (int version, _Unwind_Action actions, uint64_t exceptionClass,
-                     _Unwind_Exception* unwind_exception, _Unwind_Context* context)
+                     _Unwind_Exception* unwind_exception, _Unwind_Context* context,
+                     const uint8_t* lsda)
 {
     if (version != 1 || unwind_exception == 0 || context == 0)
         return _URC_FATAL_PHASE1_ERROR;
@@ -855,7 +935,7 @@ __gxx_personality_v0
     {
         // Phase 1 search:  All we're looking for in phase 1 is a handler that
         //   halts unwinding
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found one.  Can we cache the results somewhere to optimize phase 2?
@@ -867,14 +947,21 @@ __gxx_personality_v0
                 exception_header->languageSpecificData = results.languageSpecificData;
                 exception_header->catchTemp = reinterpret_cast<void*>(results.landingPad);
                 exception_header->adjustedPtr = results.adjustedPtr;
+#if __arm__ && !CXXABI_SJLJ
+                _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                                &unwind_exception->barrier_cache.sp);
+                // TODO(piman): cache data for phase 2?
+#endif
             }
             return _URC_HANDLER_FOUND;
         }
+
         // Did not find a catching-handler.  Return the results of the scan
         //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE1_ERROR
         //     if we were called improperly).
         return results.reason;
     }
+    // TODO(ajwong): else if?
     if (actions & _UA_CLEANUP_PHASE)
     {
         // Phase 2 search:
@@ -892,11 +979,12 @@ __gxx_personality_v0
                 results.languageSpecificData = exception_header->languageSpecificData;
                 results.landingPad = reinterpret_cast<uintptr_t>(exception_header->catchTemp);
                 results.adjustedPtr = exception_header->adjustedPtr;
+                // TODO(piman): is this data still correct?
             }
             else
             {
                 // No, do the scan again to reload the results.
-                scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+                scan_eh_tab(results, actions, native_exception, unwind_exception, context, lsda);
                 // Phase 1 told us we would find a handler.  Now in Phase 2 we
                 //   didn't find a handler.  The eh table should not be changing!
                 if (results.reason != _URC_HANDLER_FOUND)
@@ -904,18 +992,26 @@ __gxx_personality_v0
             }
             // Jump to the handler
             set_registers(unwind_exception, context, results);
+            // TODO(piman): save data for resume?
+#if __arm__ && !CXXABI_SJLJ
+            __cxa_begin_cleanup(unwind_exception);
+#endif
             return _URC_INSTALL_CONTEXT;
         }
         // Either we didn't do a phase 1 search (due to forced unwinding), or
         //   phase 1 reported no catching-handlers.
         // Search for a (non-catching) cleanup
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found a non-catching handler.  Jump to it:
             set_registers(unwind_exception, context, results);
+#if __arm__ && !CXXABI_SJLJ
+            __cxa_begin_cleanup(unwind_exception);
+#endif
             return _URC_INSTALL_CONTEXT;
         }
+
         // Did not find a cleanup.  Return the results of the scan
         //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE2_ERROR
         //     if we were called improperly).
@@ -924,6 +1020,71 @@ __gxx_personality_v0
     // We were called improperly: neither a phase 1 or phase 2 search
     return _URC_FATAL_PHASE1_ERROR;
 }
+
+#if __arm__ && !CXXABI_SJLJ
+_Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
+  int version = 1;
+  uint64_t exceptionClass = unwind_exception->exception_class;
+  int actions = 0;
+  uint32_t* unwinding_data = unwind_exception->pr_cache.ehtp + 1;
+  uint32_t first_data_word = *unwinding_data;
+  // MSB of first word is num extraWords.
+  size_t data_words = 1 + ((first_data_word >> 24) & 0xff);
+  size_t unwinding_data_len = (data_words * 4);
+
+  switch (state) {
+    default: {
+      return _URC_FAILURE;
+    }
+    case _US_VIRTUAL_UNWIND_FRAME: {
+      actions = _UA_SEARCH_PHASE;
+      break;
+    }
+    case _US_UNWIND_FRAME_STARTING: {
+      actions = _UA_CLEANUP_PHASE;
+      uint32_t sp;
+      _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+      if (unwind_exception->barrier_cache.sp == sp) {
+        actions |= _UA_HANDLER_FRAME;
+      }
+      break;
+    }
+    case _US_UNWIND_FRAME_RESUME: {
+      return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
+    }
+  }
+  // Dwarf Language specific data comes after unwinding op codes.
+  // Clobber pr_cache.additional with the lsda because in the generic handler,
+  // the additional data doesn't have anything of value.
+  const uint8_t* lsda = reinterpret_cast<uint8_t*>(unwinding_data + data_words);
+
+  // TODO(piman): helper_func_internal does this, is this needed?
+  // _Unwind_SetGR (context, UNWIND_POINTER_REG, reinterpret_cast<uint32_t>(unwind_exception));
+  _Unwind_Reason_Code result = __gxx_personality_internal(
+      version, static_cast<_Unwind_Action>(actions), exceptionClass,
+      unwind_exception, context, lsda);
+
+  if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
+    _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                    &unwind_exception->barrier_cache.sp);
+  }
+  if (result == _URC_CONTINUE_UNWIND)
+    return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
+  return result;
+}
+#else
+_Unwind_Reason_Code
+#if __arm__ && CXXABI_SJLJ
+__gxx_personality_sj0
+#else
+__gxx_personality_v0
+#endif
+                    (int version, _Unwind_Action actions, uint64_t exceptionClass,
+                     _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
+  return __gxx_personality_internal(version, actions, exceptionClass, unwind_exception, context,
+                                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
+}
+#endif
 
 __attribute__((noreturn))
 void

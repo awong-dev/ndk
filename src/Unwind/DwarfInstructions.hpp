@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include "dwarf2.h"
+#include "libunwind_ext.h"
 #include "AddressSpace.hpp"
 #include "Registers.hpp"
 #include "DwarfParser.hpp"
@@ -751,7 +752,6 @@ DwarfInstructions<A, R>::evaluateExpression(pint_t expression, A &addressSpace,
     fprintf(stderr, "expression evaluates to 0x%llX\n", (uint64_t) * sp);
   return *sp;
 }
-
 
 
 } // namespace libunwind

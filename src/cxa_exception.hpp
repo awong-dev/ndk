@@ -105,8 +105,9 @@ struct __cxa_eh_globals {
     unsigned int        uncaughtExceptions;
 #ifdef __ARM_EABI_UNWINDER__
     __cxa_exception* propagatingExceptions;
+    _Unwind_Exception* cleanupException;
 #endif
-};
+    };
 
 #pragma GCC visibility pop
 #pragma GCC visibility push(default)

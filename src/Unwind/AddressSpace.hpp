@@ -13,6 +13,8 @@
 #ifndef __ADDRESSSPACE_HPP__
 #define __ADDRESSSPACE_HPP__
 
+#include <dlfcn.h>
+#include <link.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +54,10 @@ struct UnwindInfoSections {
 #if _LIBUNWIND_SUPPORT_COMPACT_UNWIND
   uintptr_t       compact_unwind_section;
   uintptr_t       compact_unwind_section_length;
+#endif
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND
+  uintptr_t       arm_section;
+  uintptr_t       arm_section_length;
 #endif
 };
 
@@ -294,6 +300,10 @@ inline LocalAddressSpace::pint_t LocalAddressSpace::getEncodedP(pint_t &addr,
   #endif
 #endif
 
+typedef long unsigned int *_Unwind_Ptr;
+extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr,
+                                               int *length);
+
 inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
                                                   UnwindInfoSections &info) {
 #if __APPLE__
@@ -311,6 +321,15 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
 #else
   // TO DO
 
+#endif
+
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND
+  int length = 0;
+  info.arm_section = (uintptr_t) __gnu_Unwind_Find_exidx(
+      (_Unwind_Ptr) targetAddr, &length);
+  info.arm_section_length = length;
+  if (info.arm_section && info.arm_section_length)
+    return true;
 #endif
 
   return false;
@@ -340,6 +359,7 @@ inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
   }
 #endif
   return false;
+  */
 }
 
 

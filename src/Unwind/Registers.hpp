@@ -1055,10 +1055,6 @@ private:
 
   GPRs    _registers;
   double  _vectorHalfRegisters[32];
-  // Currently only the lower double in 128-bit vectore registers
-  // is perserved during unwinding.  We could define new register
-  // numbers (> 96) which mean whole vector registers, then this
-  // struct would need to change to contain whole vector registers.
 };
 
 inline Registers_arm64::Registers_arm64(const void *registers) {
@@ -1325,16 +1321,22 @@ private:
   };
 
   GPRs    _registers;
+  uint8_t _wmmxData[sizeof(uint64_t) * 16];
+  uint8_t _wmmxControl[sizeof(uint32_t) * 4];
 };
 
 inline Registers_arm::Registers_arm(const void *registers) {
   static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
                     "arm registers do not fit into unw_context_t");
   memcpy(&_registers, registers, sizeof(_registers));
+  memset(&_wmmxData, 0, sizeof(_wmmxData));
+  memset(&_wmmxControl, 0, sizeof(_wmmxControl));
 }
 
 inline Registers_arm::Registers_arm() {
   memset(&_registers, 0, sizeof(_registers));
+  memset(&_wmmxData, 0, sizeof(_wmmxData));
+  memset(&_wmmxControl, 0, sizeof(_wmmxControl));
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {

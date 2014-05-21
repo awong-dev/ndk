@@ -165,6 +165,11 @@ extern void __cxa_decrement_exception_refcount(void* primary_exception) throw();
 // Apple addition to support std::uncaught_exception()
 extern bool __cxa_uncaught_exception() throw();
 
+
+#if __arm__ && !CXXABI_SJLJ
+extern LIBCXXABI_NORETURN void __cxa_end_cleanup(void);
+#endif
+
   } // extern "C"
 } // namespace __cxxabiv1
 
