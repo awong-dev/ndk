@@ -154,7 +154,7 @@ case $TRIPLE in
   ;;
 esac
 
-#if [ -z $RC_XBS ]
-#then
-#    rm *.o
-#fi
+if [ -z $RC_XBS ]
+then
+    rm *.o
+fi
