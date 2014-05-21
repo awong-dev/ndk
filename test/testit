@@ -56,7 +56,7 @@ IMPLEMENTED_PASS=0
 function compile
 {
     echo "  [COMPILE] $1"
-    $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1
+    $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1 test_wrapper.cc
 }
 
 function run
@@ -64,7 +64,7 @@ function run
     echo "  [RUN    ] $1"
     case $TRIPLE in
     arm-none-eabi)
-        $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1
+        $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1 | | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
         ;;
     *)
         $1
