@@ -13,7 +13,6 @@
 #ifndef __ADDRESSSPACE_HPP__
 #define __ADDRESSSPACE_HPP__
 
-#include <dlfcn.h>
 #include <link.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +36,19 @@ namespace libunwind {
 #include "config.h"
 #include "dwarf2.h"
 #include "Registers.hpp"
+
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND && !__LINUX__ && !LIBCXXABI_HAS_DYLD
+// When statically linked on bare-metal, the symbols for the EH table are looked
+// up without going through the dynamic loader.
+// TODO(jroelofs): since Newlib on arm-none-eabi doesn't
+//                 have dl_unwind_find_exidx...
+struct EHTEntry {
+  uint32_t functionOffset;
+  uint32_t unwindOpcodes;
+};
+extern EHTEntry __exidx_start;
+extern EHTEntry __exidx_end;
+#endif
 
 namespace libunwind {
 
@@ -324,10 +336,21 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
 #endif
 
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
+#if __LINUX__
   int length = 0;
   info.arm_section = (uintptr_t) __gnu_Unwind_Find_exidx(
       (_Unwind_Ptr) targetAddr, &length);
   info.arm_section_length = length;
+#elif LIBCXXABI_HAS_DYLD
+  int length = 0;
+  info.arm_section = (uintptr_t) dl_unwind_find_exidx(
+      (_Unwind_Ptr) targetAddr, &length);
+  info.arm_section_length = length;
+#else
+  // Bare metal, statically linked
+  info.arm_section =        (uintptr_t)(&__exidx_start);
+  info.arm_section_length = (uintptr_t)(&__exidx_end - &__exidx_start);
+#endif
   if (info.arm_section && info.arm_section_length)
     return true;
 #endif
@@ -482,3 +505,4 @@ struct unw_addr_space_ppc : public unw_addr_space {
 } // namespace libunwind
 
 #endif // __ADDRESSSPACE_HPP__
+
