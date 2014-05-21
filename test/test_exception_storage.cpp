@@ -30,7 +30,9 @@ void *thread_code (void *parm) {
         std::cerr << "Got different globals!" << std::endl;
     
     *result = (size_t) glob1;
+#if !LIBCXXABI_SINGLE_THREADED
     sleep ( 1 );
+#endif
     return parm;
     }
 
