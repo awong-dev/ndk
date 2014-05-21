@@ -8,9 +8,29 @@
 # //
 # //===--------------------------------------------------------------------===//
 
+# TODO(jroelofs): port over my changes to libc++'s lit config to here,
+# and use that instead.
+
 if [ -z "$CC" ]
 then
-	CC=clang++
+	CC=clang
+fi
+
+if [ -z "$CXX" ]
+then
+	CXX=clang++
+fi
+
+if [ -z "$QEMU" ]
+then
+	case $TRIPLE in
+		arm-none-eabi)
+			QEMU=qemu-system-arm
+			;;
+		*)
+			QEMU=
+			;;
+	esac
 fi
 
 if [ -z "$OPTIONS" ]
@@ -20,10 +40,10 @@ fi
 
 case $TRIPLE in
   *-*-mingw* | *-*-cygwin* | *-*-win*)
-	TEST_EXE=test.exe
+    TEST_EXE_SUFFIX=.exe
     ;;
   *)
-    TEST_EXE=a.out
+    TEST_EXE_SUFFIX=.out
     ;;
 esac
 
@@ -33,6 +53,25 @@ UNIMPLEMENTED=0
 IMPLEMENTED_FAIL=0
 IMPLEMENTED_PASS=0
 
+function compile
+{
+    echo "  [COMPILE] $1"
+    $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1
+}
+
+function run
+{
+    echo "  [RUN    ] $1"
+    case $TRIPLE in
+    arm-none-eabi)
+        $QEMU -semihosting -M integratorcp -cpu arm922 -kernel $1
+        ;;
+    *)
+        $1
+        ;;
+    esac
+}
+
 afunc()
 {
 	fail=0
@@ -40,10 +79,10 @@ afunc()
 	if (ls *.fail.cpp > /dev/null 2>&1)
 	then
 		for FILE in $(ls *.fail.cpp); do
-			if $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE > /dev/null 2>&1
+			if compile $FILE &> /dev/null
 			then
-				rm ./$TEST_EXE
-				echo "$FILE should not compile"
+				rm $FILE$TEST_EXE_SUFFIX
+				echo "  [FAIL   ] $FILE should not compile"
 				fail=$(($fail + 1))
 			else
 				pass=$(($pass + 1))
@@ -54,19 +93,18 @@ afunc()
 	if (ls *.cpp > /dev/null 2>&1)
 	then
 		for FILE in $(ls *.cpp); do
-			if $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE
+			if compile $FILE
 			then
-				if ./$TEST_EXE
+				if run $FILE$TEST_EXE_SUFFIX
 				then
-					rm ./$TEST_EXE
+					rm $FILE$TEST_EXE_SUFFIX
 					pass=$(($pass + 1))
 				else
-					echo "$FILE failed at run time"
+					echo "  [FAIL   ] $FILE failed at run time"
 					fail=$(($fail + 1))
-					rm ./$TEST_EXE
 				fi
 			else
-				echo "$FILE failed to compile"
+				echo "   [FAIL   ] $FILE failed to compile"
 				fail=$(($fail + 1))
 			fi
 		done
@@ -109,7 +147,7 @@ afunc
 
 echo "****************************************************"
 echo "Results for `pwd`:"
-echo "using `$CC --version`"
+echo "using `$CXX --version`"
 echo "with $OPTIONS $HEADER_INCLUDE $SOURCE_LIB"
 echo "----------------------------------------------------"
 echo "sections without tests   : $UNIMPLEMENTED"
