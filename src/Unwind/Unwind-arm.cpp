@@ -192,7 +192,7 @@ _Unwind_Reason_Code unwindOneFrame(
   return _Unwind_VRS_Interpret(context, unwindingData, startOffset, len);
 }
 
-}
+} // end anonymous namespace
 
 extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
     _Unwind_Context* context,
