@@ -167,9 +167,9 @@ enum
     DW_EH_PE_omit     = 0xFF
 };
 
-/// Read a uleb128 encoded value and advance pointer 
-/// See Variable Length Data Appendix C in: 
-/// @link http://dwarfstd.org/Dwarf4.pdf @unlink
+/// Read a uleb128 encoded value and advance pointer
+/// See Variable Length Data Appendix C in:
+/// @link http://dwarfstd.org/doc/Dwarf4.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @returns decoded value
 static
@@ -190,9 +190,9 @@ readULEB128(const uint8_t** data)
     return result;
 }
 
-/// Read a sleb128 encoded value and advance pointer 
-/// See Variable Length Data Appendix C in: 
-/// @link http://dwarfstd.org/Dwarf4.pdf @unlink
+/// Read a sleb128 encoded value and advance pointer
+/// See Variable Length Data Appendix C in:
+/// @link http://dwarfstd.org/doc/Dwarf4.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @returns decoded value
 static
@@ -215,9 +215,9 @@ readSLEB128(const uint8_t** data)
     return static_cast<intptr_t>(result);
 }
 
-/// Read a pointer encoded value and advance pointer 
-/// See Variable Length Data in: 
-/// @link http://dwarfstd.org/Dwarf3.pdf @unlink
+/// Read a pointer encoded value and advance pointer
+/// See Variable Length Data in:
+/// @link http://dwarfstd.org/doc/Dwarf3.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @param encoding dwarf encoding type
 /// @returns decoded value
