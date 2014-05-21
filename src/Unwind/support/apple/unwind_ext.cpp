@@ -8,6 +8,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifdef __APPLE__
+
 #include "config.h"
 #include "DwarfParser.hpp"
 #include "unwind_ext.h"
@@ -200,6 +202,4 @@ void __Unwind_SjLj_SetTopOfFunctionStack(struct _Unwind_FunctionContext *fc) {
 }
 #endif
 
-
-
-
+#endif // __APPLE__
