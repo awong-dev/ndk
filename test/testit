@@ -64,7 +64,7 @@ function run
     echo "  [RUN    ] $1"
     case $TRIPLE in
     arm-none-eabi)
-        $QEMU -semihosting -M integratorcp -cpu arm922 -kernel $1
+        $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1
         ;;
     *)
         $1
