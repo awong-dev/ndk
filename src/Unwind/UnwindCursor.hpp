@@ -1174,7 +1174,9 @@ int UnwindCursor<A, R>::step() {
 #elif _LIBUNWIND_SUPPORT_ARM_UNWIND
   result = UNW_STEP_SUCCESS;
 #else
-  #error Need _LIBUNWIND_SUPPORT_COMPACT_UNWIND or _LIBUNWIND_SUPPORT_DWARF_UNWIND or _LIBUNWIND_SUPPORT_ARM_UNWIND
+  #error Need _LIBUNWIND_SUPPORT_COMPACT_UNWIND or \
+              _LIBUNWIND_SUPPORT_DWARF_UNWIND or \
+              _LIBUNWIND_SUPPORT_ARM_UNWIND
 #endif
 
   // update info based on new PC
