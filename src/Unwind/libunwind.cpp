@@ -12,6 +12,9 @@
 
 #include <libunwind.h>
 
+#ifndef NDEBUG
+#include <cstdlib> // getenv
+#endif
 #include <new>
 
 #include "libunwind_ext.h"
