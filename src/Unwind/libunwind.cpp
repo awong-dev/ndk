@@ -42,6 +42,10 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
                                      unw_context_t *context) {
   _LIBUNWIND_TRACE_API("unw_init_local(cursor=%p, context=%p)\n",
                               cursor, context);
+#ifndef NDEBUG
+  // Zero it out for easier debugging
+  memset(cursor, 0, sizeof(unw_cursor_t));
+#endif
   // Use "placement new" to allocate UnwindCursor in the cursor buffer.
 #if __i386__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_x86>(
