@@ -12,8 +12,8 @@
 #include <cstdlib>
 #include <algorithm>
 #include <iostream>
-#if LIBCXXABI_SINGLE_THREADED
-#include <pthread.h>
+#if !LIBCXXABI_SINGLE_THREADED
+#  include <pthread.h>
 #endif
 #include <unistd.h>
 
@@ -26,13 +26,17 @@ void *thread_code (void *parm) {
     globals_t *glob1, *glob2;
     
     glob1 = __cxxabiv1::__cxa_get_globals ();
-    if ( NULL == glob1 )
+    if ( NULL == glob1 ) {
         std::cerr << "Got null result from __cxa_get_globals" << std::endl;
+        return 0;
+    }
 
     glob2 = __cxxabiv1::__cxa_get_globals_fast ();
-    if ( glob1 != glob2 )
+    if ( glob1 != glob2 ) {
         std::cerr << "Got different globals!" << std::endl;
-    
+        return 0;
+    }
+
     *result = (size_t) glob1;
 #if !LIBCXXABI_SINGLE_THREADED
     sleep ( 1 );
@@ -40,10 +44,11 @@ void *thread_code (void *parm) {
     return parm;
     }
 
-
+#if !LIBCXXABI_SINGLE_THREADED
 #define NUMTHREADS  10
 size_t      thread_globals [ NUMTHREADS ] = { 0 };
 pthread_t   threads        [ NUMTHREADS ];
+#endif
 
 void print_sizes ( size_t *first, size_t *last ) {
     std::cout << "{ " << std::hex;
@@ -55,6 +60,10 @@ void print_sizes ( size_t *first, size_t *last ) {
 int main ( int argc, char *argv [] ) {
     int retVal = 0;
 
+#if LIBCXXABI_SINGLE_THREADED
+    size_t thread_globals;
+    retVal = thread_code(&thread_globals) != &thread_globals;
+#else
 //  Make the threads, let them run, and wait for them to finish
     for ( int i = 0; i < NUMTHREADS; ++i )
         pthread_create( threads + i, NULL, thread_code, (void *) (thread_globals + i));
@@ -75,6 +84,7 @@ int main ( int argc, char *argv [] ) {
             retVal = 2;
             }
 //  print_sizes ( thread_globals, thread_globals + NUMTHREADS );
-    
+
+#endif
     return retVal;
     }

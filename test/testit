@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # //===--------------------------- testit ---------------------------------===//
 # //
 # //                     The LLVM Compiler Infrastructure
@@ -8,34 +8,19 @@
 # //
 # //===--------------------------------------------------------------------===//
 
-# TODO(jroelofs): port over my changes to libc++'s lit config to here,
-# and use that instead.
-
-if [ -z "$CC" ]
-then
-	CC=clang
-fi
-
-if [ -z "$CXX" ]
+if [ -z $CXX ]
 then
 	CXX=clang++
-fi
-
-if [ -z "$QEMU" ]
-then
-	case $TRIPLE in
-		arm-none-eabi)
-			QEMU=qemu-system-arm
-			;;
-		*)
-			QEMU=
-			;;
-	esac
 fi
 
 if [ -z "$OPTIONS" ]
 then
 	OPTIONS="-std=c++0x -stdlib=libc++"
+fi
+
+if [ -z "$QEMU" ]
+then
+    QEMU=qemu-system-arm
 fi
 
 case $TRIPLE in
@@ -55,57 +40,70 @@ IMPLEMENTED_PASS=0
 
 function compile
 {
-    echo "  [COMPILE] $1"
-    $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1 test_wrapper.cc
+  echo "  [COMPILE] $1"
+  echo $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1 test_wrapper.cc
+  $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1 test_wrapper.cc
 }
 
 function run
 {
-    echo "  [RUN    ] $1"
-    case $TRIPLE in
-    arm-none-eabi)
-        $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
-        ;;
+  echo "  [RUN    ] $1"
+  case $TRIPLE in
+    armv4-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    thumbv4t-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu arm926 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    thumbv6m-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu cortex-m3 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu cortex-m3 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    thumbv7t-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu cortex-a8 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu cortex-a8 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
     *)
-        $1
-        ;;
-    esac
+      $1
+      ;;
+  esac
 }
 
-afunc()
+function afunc
 {
 	fail=0
 	pass=0
-	if (ls *.fail.cpp > /dev/null 2>&1)
+	if (ls *.fail.cpp &> /dev/null)
 	then
 		for FILE in $(ls *.fail.cpp); do
 			if compile $FILE &> /dev/null
 			then
 				rm $FILE$TEST_EXE_SUFFIX
 				echo "  [FAIL   ] $FILE should not compile"
-				fail=$(($fail + 1))
+				let "fail+=1"
 			else
-				pass=$(($pass + 1))
+				let "pass+=1"
 			fi
 		done
 	fi
 
-	if (ls *.cpp > /dev/null 2>&1)
+	if (ls *.cpp &> /dev/null)
 	then
 		for FILE in $(ls *.cpp); do
 			if compile $FILE
 			then
 				if run $FILE$TEST_EXE_SUFFIX
 				then
-					rm $FILE$TEST_EXE_SUFFIX
-					pass=$(($pass + 1))
+					let "pass+=1"
 				else
 					echo "  [FAIL   ] $FILE failed at run time"
-					fail=$(($fail + 1))
+					let "fail+=1"
 				fi
 			else
-				echo "   [FAIL   ] $FILE failed to compile"
-				fail=$(($fail + 1))
+				echo "  [FAIL   ] $FILE failed to compile"
+				let "fail+=1"
 			fi
 		done
 	fi
@@ -113,24 +111,24 @@ afunc()
 	if [ $fail -gt 0 ]
 	then
 		echo "failed $fail tests in `pwd`"
-		IMPLEMENTED_FAIL=$(($IMPLEMENTED_FAIL + 1))
+		let "IMPLEMENTED_FAIL+=1"
 	fi
 	if [ $pass -gt 0 ]
 	then
 		echo "passed $pass tests in `pwd`"
 		if [ $fail -eq 0 ]
 		then
-			IMPLEMENTED_PASS=$(($IMPLEMENTED_PASS + 1))
+			let "IMPLEMENTED_PASS+=1"
 		fi
 	fi
 	if [ $fail -eq 0 -a $pass -eq 0 ]
 	then
 		echo "not implemented:  `pwd`"
-		UNIMPLEMENTED=$(($UNIMPLEMENTED + 1))
+		let "UNIMPLEMENTED+=1"
 	fi
 
-	FAIL=$(($FAIL + $fail))
-	PASS=$(($PASS + $pass))
+	let "FAIL+=$fail"
+	let "PASS+=$pass"
 
 	for FILE in *
 	do

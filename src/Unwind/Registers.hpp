@@ -1330,14 +1330,14 @@ inline Registers_arm::Registers_arm(const void *registers) {
   static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
                     "arm registers do not fit into unw_context_t");
   memcpy(&_registers, registers, sizeof(_registers));
-  memset(&_wmmxData, 0, sizeof(_wmmxData));
-  memset(&_wmmxControl, 0, sizeof(_wmmxControl));
+  memset(_wmmxData, 0, sizeof(_wmmxData));
+  memset(_wmmxControl, 0, sizeof(_wmmxControl));
 }
 
 inline Registers_arm::Registers_arm() {
   memset(&_registers, 0, sizeof(_registers));
-  memset(&_wmmxData, 0, sizeof(_wmmxData));
-  memset(&_wmmxControl, 0, sizeof(_wmmxControl));
+  memset(_wmmxData, 0, sizeof(_wmmxData));
+  memset(_wmmxControl, 0, sizeof(_wmmxControl));
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {
