@@ -7,10 +7,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "../src/config.h"
+
 #include <cstdlib>
 #include <algorithm>
 #include <iostream>
+#if LIBCXXABI_SINGLE_THREADED
 #include <pthread.h>
+#endif
 #include <unistd.h>
 
 #include "../src/cxa_exception.hpp"
