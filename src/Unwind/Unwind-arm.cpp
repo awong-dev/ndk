@@ -11,7 +11,6 @@
 //===----------------------------------------------------------------------===//
 
 #include <unwind.h>
-#include <cxxabi.h>
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -27,7 +26,7 @@ namespace {
 // signinficant byte.
 uint8_t getByte(uint32_t* data, size_t offset) {
   uint8_t* byteData = reinterpret_cast<uint8_t*>(data);
-  return byteData[(offset & (uint32_t)~0x03) + (3 - (offset&0x03))];
+  return byteData[(offset & ~0x03) + (3 - (offset&0x03))];
 }
 
 const char* getNextWord(const char* data, uint32_t* out) {
@@ -98,8 +97,8 @@ _Unwind_Reason_Code ProcessDescriptors(
     Descriptor::Kind kind = static_cast<Descriptor::Kind>((length & 0x1) | ((offset & 0x1) << 1));
 
     // Clear off flag from last bit.
-    length &= (uint32_t)~1;
-    offset &= (uint32_t)~1;
+    length &= ~1;
+    offset &= ~1;
     uintptr_t scopeStart = ucbp->pr_cache.fnstart + offset;
     uintptr_t scopeEnd = scopeStart + length;
     uintptr_t pc = _Unwind_GetIP(context);
@@ -107,85 +106,11 @@ _Unwind_Reason_Code ProcessDescriptors(
 
     switch (kind) {
       case Descriptor::CLEANUP: {
-        if (isInScope && state != _US_VIRTUAL_UNWIND_FRAME) {
-          // See # 4.4.2
-          uint32_t landing_pad;
-          descriptor = getNextWord(descriptor, &landing_pad);
-          landing_pad = signExtendPrel31(landing_pad & ~0x80000000);  // R_ARM_TARGET2
-          if (!__cxxabiv1::__cxa_begin_cleanup(ucbp))
-            return _URC_FAILURE;
-          _Unwind_SetIP(context, landing_pad);
-          return _URC_INSTALL_CONTEXT;
-        }
+        // TODO(ajwong): Handle cleanup descriptors.
         break;
       }
       case Descriptor::FUNC: {
-        // # 9.2 The scope is followed by a sequence of words:
-        // [0| rtti_count ] [ type_info 1 ] ... [ type_info N ]
-        // [1| rtti_count ] [ type_info 1 ] ... [ type_info N ] [ landing_pad ]
-        uint32_t rtti_count;
-        descriptor = getNextWord(descriptor, &rtti_count);
-        bool has_landing_pad = rtti_count & 0x80000000;
-        rtti_count &= ~0x80000000;
-        const char* const first_rtti = descriptor;
-
-        uint32_t sp;
-        _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
-
-        if (state == _US_VIRTUAL_UNWIND_FRAME) {
-          void* matched_object;
-          bool match_found = false;
-          for (uint32_t i = 1; i <= rtti_count; ++i) {
-            matched_object = (void*)(ucbp + 1);
-            uint32_t type_info;
-            descriptor = getNextWord(descriptor, &type_info);
-            type_info = signExtendPrel31(type_info & ~0x80000000); // R_ARM_TARGET2
-            const std::type_info* rtti =
-              reinterpret_cast<const std::type_info*>(type_info);
-            __cxxabiv1::__cxa_type_match_result match_type =
-              __cxxabiv1::__cxa_type_match(ucbp, rtti, false, &matched_object);
-            if (match_type != __cxxabiv1::ctm_failed) {
-              match_found = true;
-              break;
-            }
-          }
-
-          if (!match_found) {
-            ucbp->barrier_cache.sp = sp;
-            ucbp->barrier_cache.bitpattern[0] = (uint32_t)matched_object;
-            ucbp->barrier_cache.bitpattern[1] = (uint32_t)first_rtti;
-            return _URC_HANDLER_FOUND;
-          } else if (has_landing_pad) {
-            uint32_t landing_pad;
-            descriptor = getNextWord(descriptor, &landing_pad);
-            (void)landing_pad;
-          }
-        } else if (ucbp->barrier_cache.sp == sp &&
-                   ucbp->barrier_cache.bitpattern[1] == (uint32_t)first_rtti) {
-          // # 8.2: Fill in the barrier_cache
-          ucbp->barrier_cache.bitpattern[1] = rtti_count;
-          ucbp->barrier_cache.bitpattern[2] = 0; // unused
-          ucbp->barrier_cache.bitpattern[3] = sizeof(std::type_info*);
-          ucbp->barrier_cache.bitpattern[4] = (uintptr_t)first_rtti;
-
-          descriptor += rtti_count * sizeof(std::type_info*);
-          if (has_landing_pad) {
-            descriptor += sizeof(void*);
-            uint32_t landing_pad;
-            descriptor = getNextWord(descriptor, &landing_pad);
-            landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
-            _Unwind_SetIP(context, landing_pad);
-            _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0, _UVRSD_UINT32, &ucbp);
-            return _URC_INSTALL_CONTEXT;
-          } else {
-            // # 9.2: the no match case should result in a call to __cxa_call_unexpected
-            uint32_t pc = _Unwind_GetIP(context);
-            _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_LR, _UVRSD_UINT32, &pc);
-            _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0, _UVRSD_UINT32, &ucbp);
-            _Unwind_SetIP(context, (uintptr_t)&__cxxabiv1::__cxa_call_unexpected);
-            return _URC_INSTALL_CONTEXT;
-          }
-        }
+        // TODO(ajwong): Handle function descriptors.
         break;
       }
       case Descriptor::CATCH: {
@@ -193,56 +118,27 @@ _Unwind_Reason_Code ProcessDescriptors(
         uint32_t landing_pad;
         descriptor = getNextWord(descriptor, &landing_pad);
 
-        uint32_t sp;
-        _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
-
-        if (state == _US_VIRTUAL_UNWIND_FRAME) {
-          if (isInScope) {
-            bool is_reference_type = landing_pad & 0x80000000;
-            landing_pad = signExtendPrel31(landing_pad & ~0x80000000); // R_ARM_TARGET2
-            void* matched_object = (void*)(ucbp + 1);
-            __cxxabiv1::__cxa_type_match_result match_type;
-            if (landing_pad == 0xfffffffe)
-              return _URC_FAILURE;
-            else if (landing_pad == 0xffffffff)
-              match_type = __cxxabiv1::ctm_succeeded;
-            else {
-              const std::type_info* rtti =
-                reinterpret_cast<const std::type_info*>(landing_pad);
-              match_type = __cxxabiv1::__cxa_type_match(ucbp, rtti,
-                                                        is_reference_type,
-                                                        &matched_object);
-            }
-
-            if (match_type != __cxxabiv1::ctm_failed) {
-              // # 8.2 and # 7.3.5: Fill in the barrier cache
-              ucbp->barrier_cache.sp = sp;
-              ucbp->barrier_cache.bitpattern[1] = (uintptr_t)descriptor;
-              if (match_type == __cxxabiv1::ctm_succeeded_with_ptr_to_base) {
-                ucbp->barrier_cache.bitpattern[2] = (uintptr_t)matched_object;
-                ucbp->barrier_cache.bitpattern[0] = (uintptr_t)
-                  &ucbp->barrier_cache.bitpattern[2];
-              } else if (match_type == __cxxabiv1::ctm_succeeded) {
-                ucbp->barrier_cache.bitpattern[2] = 0; // Unused
-                ucbp->barrier_cache.bitpattern[0] = (uintptr_t)matched_object;
-              } else
-                assert(false);
-              return _URC_HANDLER_FOUND;
-            }
-          }
-        } else if (ucbp->barrier_cache.sp == sp &&
-                   ucbp->barrier_cache.bitpattern[1] == (uintptr_t)descriptor) {
+        if (isInScope) {
+          // TODO(ajwong): This is only phase1 compatible logic. Implement
+          // phase2.
+          bool is_reference_type = landing_pad & 0x80000000;
           landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
-          _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0, _UVRSD_UINT32, &ucbp);
-          _Unwind_SetIP(context, landing_pad);
-          return _URC_INSTALL_CONTEXT;
+          if (landing_pad == 0xffffffff) {
+            return _URC_HANDLER_FOUND;
+          } else if (landing_pad == 0xfffffffe ) {
+            return _URC_FAILURE;
+          } else {
+            void* matched_object;
+            if (__cxxabiv1::__cxa_type_match(ucbp,
+                                             reinterpret_cast<const std::type_info*>(landing_pad),
+                                             is_reference_type, &matched_object) != __cxxabiv1::ctm_failed)
+                return _URC_HANDLER_FOUND;
+          }
         }
         break;
       }
-      default: {
+      default:
         _LIBUNWIND_ABORT("Invalid descriptor kind found.");
-        return _URC_FAILURE;
-      }
     };
 
     getNextWord(descriptor, &descriptorWord);
@@ -256,23 +152,6 @@ _Unwind_Reason_Code unwindOneFrame(
     _Unwind_Control_Block* ucbp,
     struct _Unwind_Context* context) {
   // TODO(piman): handle phase1/phase2.
-  switch (state) {
-    case _US_VIRTUAL_UNWIND_FRAME:   // phase1
-      // # 7.3.1: The UCB pr_cache is valid
-      break;
-    case _US_UNWIND_FRAME_STARTING:  // phase2
-      // # 7.4.1: The UCB pr_cache and barrier_cache are valid.
-      break;
-    case _US_UNWIND_FRAME_RESUME:    // phase2
-      // # 7.4.6: The UCB cleanup_cache and barrier_cache are valid
-      break;
-    default:
-      // 7.2: In order to support future or private extensions, it is
-      // recommended that the personality routine exits with a failure
-      // code if it is passed an unexpected value for its _Unwind_State
-      // argument
-      return _URC_FAILURE;
-  }
 
   // Read the compact model EHT entry's header # 6.3
   uint32_t* unwindingData = ucbp->pr_cache.ehtp;
