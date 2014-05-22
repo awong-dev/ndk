@@ -246,7 +246,7 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
 #endif
           // Phase 1 said we would stop at this frame, but we did not...
           _LIBUNWIND_ABORT("during phase1 personality function said it would "
-                           "stop here, but now if phase2 it did not stop here");
+                           "stop here, but now in phase2 it did not stop here");
         }
         break;
       case _URC_INSTALL_CONTEXT:
