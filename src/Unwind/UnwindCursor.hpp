@@ -529,14 +529,13 @@ UnwindCursor<A, R>::UnwindCursor(unw_context_t *context, A &as)
       _isSignalFrame(false) {
   static_assert(sizeof(UnwindCursor<A, R>) < sizeof(unw_cursor_t),
                 "UnwindCursor<> does not fit in unw_cursor_t");
-
-  bzero(&_info, sizeof(_info));
+  memset(&_info, 0, sizeof(_info));
 }
 
 template <typename A, typename R>
 UnwindCursor<A, R>::UnwindCursor(A &as, void *)
     : _addressSpace(as), _unwindInfoMissing(false), _isSignalFrame(false) {
-  bzero(&_info, sizeof(_info));
+  memset(&_info, 0, sizeof(_info));
   // FIXME
   // fill in _registers from thread arg
 }

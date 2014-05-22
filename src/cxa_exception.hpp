@@ -105,6 +105,8 @@ struct __cxa_eh_globals {
     unsigned int        uncaughtExceptions;
 #ifdef __ARM_EABI_UNWINDER__
     __cxa_exception* propagatingExceptions;
+#endif
+#if defined(__arm__) && !__USING_SJLJ_EXCEPTIONS__
     _Unwind_Exception* cleanupException;
 #endif
     };

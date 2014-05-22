@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include <unwind.h>
+#include <cxxabi.h>
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -111,10 +112,10 @@ _Unwind_Reason_Code ProcessDescriptors(
           uint32_t landing_pad;
           descriptor = getNextWord(descriptor, &landing_pad);
           landing_pad = signExtendPrel31(landing_pad & ~0x80000000);  // R_ARM_TARGET2
-          if (!__cxa_begin_cleanup(ucbp))
+          if (!__cxxabiv1::__cxa_begin_cleanup(ucbp))
             return _URC_FAILURE;
           _Unwind_SetIP(context, landing_pad);
-          return _URC_iNSTALL_CONTEXT;
+          return _URC_INSTALL_CONTEXT;
         }
         break;
       }
@@ -128,10 +129,13 @@ _Unwind_Reason_Code ProcessDescriptors(
         rtti_count &= ~0x80000000;
         const char* const first_rtti = descriptor;
 
+        uint32_t sp;
+        _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+
         if (state == _US_VIRTUAL_UNWIND_FRAME) {
           void* matched_object;
-          bool found_match = false;
-          for (int i = 1; i <= rtti_count; ++i) {
+          bool match_found = false;
+          for (uint32_t i = 1; i <= rtti_count; ++i) {
             matched_object = (void*)(ucbp + 1);
             uint32_t type_info;
             descriptor = getNextWord(descriptor, &type_info);
@@ -147,22 +151,22 @@ _Unwind_Reason_Code ProcessDescriptors(
           }
 
           if (!match_found) {
-            ucbp->barrier_cache.sp = _Unwind_GetSP(context);
-            ucbp->barrier_cache.bitpattern[0] = matched_object;
-            ucbp->barrier_cache.bitpattern[1] = first_rtti;
+            ucbp->barrier_cache.sp = sp;
+            ucbp->barrier_cache.bitpattern[0] = (uint32_t)matched_object;
+            ucbp->barrier_cache.bitpattern[1] = (uint32_t)first_rtti;
             return _URC_HANDLER_FOUND;
           } else if (has_landing_pad) {
             uint32_t landing_pad;
-            descriptor = getNextWord(descriptor, landing_pad);
+            descriptor = getNextWord(descriptor, &landing_pad);
             (void)landing_pad;
           }
-        } else if (ucbp->barrier_cache.sp == _Unwind_GetSP(context) &&
-                   ucbp->barrier_cache.bitpattern[1] == first_rtti) {
+        } else if (ucbp->barrier_cache.sp == sp &&
+                   ucbp->barrier_cache.bitpattern[1] == (uint32_t)first_rtti) {
           // # 8.2: Fill in the barrier_cache
           ucbp->barrier_cache.bitpattern[1] = rtti_count;
           ucbp->barrier_cache.bitpattern[2] = 0; // unused
           ucbp->barrier_cache.bitpattern[3] = sizeof(std::type_info*);
-          ucbp->barrier_cache.bitpattern[4] = first_rtti;
+          ucbp->barrier_cache.bitpattern[4] = (uintptr_t)first_rtti;
 
           descriptor += rtti_count * sizeof(std::type_info*);
           if (has_landing_pad) {
@@ -171,14 +175,14 @@ _Unwind_Reason_Code ProcessDescriptors(
             descriptor = getNextWord(descriptor, &landing_pad);
             landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
             _Unwind_SetIP(context, landing_pad);
-            _Unwind_SetGR(context, 0, ucbp);
+            _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0, _UVRSD_UINT32, &ucbp);
             return _URC_INSTALL_CONTEXT;
           } else {
             // # 9.2: the no match case should result in a call to __cxa_call_unexpected
             uint32_t pc = _Unwind_GetIP(context);
             _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_LR, _UVRSD_UINT32, &pc);
             _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0, _UVRSD_UINT32, &ucbp);
-            _Unwind_SetIP(context, &__cxa_call_unexpected);
+            _Unwind_SetIP(context, (uintptr_t)&__cxxabiv1::__cxa_call_unexpected);
             return _URC_INSTALL_CONTEXT;
           }
         }
@@ -188,6 +192,9 @@ _Unwind_Reason_Code ProcessDescriptors(
         // Catch descriptors require gobbling one more word.
         uint32_t landing_pad;
         descriptor = getNextWord(descriptor, &landing_pad);
+
+        uint32_t sp;
+        _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
 
         if (state == _US_VIRTUAL_UNWIND_FRAME) {
           if (isInScope) {
@@ -204,27 +211,27 @@ _Unwind_Reason_Code ProcessDescriptors(
                 reinterpret_cast<const std::type_info*>(landing_pad);
               match_type = __cxxabiv1::__cxa_type_match(ucbp, rtti,
                                                         is_reference_type,
-                                                        &matched_object)
+                                                        &matched_object);
             }
 
             if (match_type != __cxxabiv1::ctm_failed) {
               // # 8.2 and # 7.3.5: Fill in the barrier cache
-              ucbp->barrier_cache.sp = _Unwind_GetSP(context);
-              ucbp->barrier_cache.bitpattern[1] = descriptor;
+              ucbp->barrier_cache.sp = sp;
+              ucbp->barrier_cache.bitpattern[1] = (uintptr_t)descriptor;
               if (match_type == __cxxabiv1::ctm_succeeded_with_ptr_to_base) {
-                ucbp->barrier_cache.bitpattern[2] = matched_object;
-                ucbp->barrier_cache.bitpattern[0] =
+                ucbp->barrier_cache.bitpattern[2] = (uintptr_t)matched_object;
+                ucbp->barrier_cache.bitpattern[0] = (uintptr_t)
                   &ucbp->barrier_cache.bitpattern[2];
               } else if (match_type == __cxxabiv1::ctm_succeeded) {
                 ucbp->barrier_cache.bitpattern[2] = 0; // Unused
-                ucbp->barrier_cache.bitpattern[0] = matched_object;
+                ucbp->barrier_cache.bitpattern[0] = (uintptr_t)matched_object;
               } else
                 assert(false);
               return _URC_HANDLER_FOUND;
             }
           }
-        } else if (ucbp->barrier_cache.sp == _Unwind_GetSP(context) &&
-                   ucbp->barrier_cache.bitpattern[1] == descriptor) {
+        } else if (ucbp->barrier_cache.sp == sp &&
+                   ucbp->barrier_cache.bitpattern[1] == (uintptr_t)descriptor) {
           landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
           _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0, _UVRSD_UINT32, &ucbp);
           _Unwind_SetIP(context, landing_pad);

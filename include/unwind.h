@@ -150,31 +150,31 @@ extern _Unwind_Reason_Code
 extern void _Unwind_Resume(struct _Unwind_Exception *exception_object);
 #endif
 extern void _Unwind_DeleteException(struct _Unwind_Exception *exception_object);
-#if !(__arm__ && !CXXABI_SJLJ)
+#if !(defined(__arm__) && !__USING_SJLJ_EXCEPTIONS__)
 extern uintptr_t _Unwind_GetGR(struct _Unwind_Context *context, int index);
 extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                           uintptr_t new_value);
-#endif  // !(__arm__ && !CXXABI_SJLJ)
+#endif
 extern uintptr_t _Unwind_GetIP(struct _Unwind_Context *context);
 extern void _Unwind_SetIP(struct _Unwind_Context *, uintptr_t new_value);
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
-#ifndef __arm__  // TODO(ajwong): Collapse these if __arm__ blobs.
+#ifndef __arm__
 extern uintptr_t
     _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context);
 #endif
-#if __arm__
-#if CXXABI_SJLJ
+#ifndef __arm__
+#if __USING_SJLJ_EXCEPTIONS__
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(struct _Unwind_Exception *exception_object,
                               _Unwind_Stop_Fn stop, void *stop_parameter);
-#endif
 #else
 extern _Unwind_Reason_Code
     _Unwind_ForcedUnwind(struct _Unwind_Exception *exception_object,
                          _Unwind_Stop_Fn stop, void *stop_parameter);
 #endif
+#endif
 
-#if __arm__ && CXXABI_SJLJ
+#if __arm__ && __USING_SJLJ_EXCEPTIONS__
 typedef struct _Unwind_FunctionContext *_Unwind_FunctionContext_t;
 extern void _Unwind_SjLj_Register(_Unwind_FunctionContext_t fc);
 extern void _Unwind_SjLj_Unregister(_Unwind_FunctionContext_t fc);
@@ -184,7 +184,7 @@ extern void _Unwind_SjLj_Unregister(_Unwind_FunctionContext_t fc);
 // The following are semi-suppoted extensions to the C++ ABI
 //
 
-#if __arm__ && !CXXABI_SJLJ
+#if defined(__arm__) && !__USING_SJLJ_EXCEPTIONS__
 typedef enum {
   _UVRSC_CORE = 0, /* integer register */
   _UVRSC_VFP = 1, /* vfp */
@@ -234,7 +234,7 @@ extern _Unwind_Reason_Code _Unwind_VRS_Interpret(
 //
 //  called by __cxa_rethrow().
 //
-#if __arm__ && CXXABI_SJLJ
+#if __USING_SJLJ_EXCEPTIONS__
 extern _Unwind_Reason_Code
     _Unwind_SjLj_Resume_or_Rethrow(struct _Unwind_Exception *exception_object);
 #else

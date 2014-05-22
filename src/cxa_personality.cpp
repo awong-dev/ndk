@@ -20,9 +20,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#if __arm__ && !CXXABI_SJLJ
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
 #include "libunwind.h"
-#endif  // __arm__ && !CXXABI_SJLJ
+#endif  // __arm__ && !__USING_SJLJ_EXCEPTIONS__
 
 /*
     Exception Header Layout:
@@ -835,12 +835,13 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
 
 // public API
 
-#if __arm__ && !CXXABI_SJLJ
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
 
-bool __cxa_begin_cleanup(_Unwind_Exception* unwind_exception) {
+bool __cxa_begin_cleanup(void* unwind_exception) {
+//bool __cxa_begin_cleanup(_Unwind_Exception* unwind_exception) {
   // Stash unwind_exception in the (TLS) globals so that we can get it back in
   // __cxa_end_cleanup. See #8.4.2.
-  __cxa_get_globals()->cleanupException = unwind_exception;
+  __cxa_get_globals()->cleanupException = (_Unwind_Exception*)unwind_exception;
   return true;
 }
 
@@ -947,7 +948,7 @@ __gxx_personality_internal
                 exception_header->languageSpecificData = results.languageSpecificData;
                 exception_header->catchTemp = reinterpret_cast<void*>(results.landingPad);
                 exception_header->adjustedPtr = results.adjustedPtr;
-#if __arm__ && !CXXABI_SJLJ
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
                 _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
                                 &unwind_exception->barrier_cache.sp);
                 // TODO(piman): cache data for phase 2?
@@ -993,7 +994,7 @@ __gxx_personality_internal
             // Jump to the handler
             set_registers(unwind_exception, context, results);
             // TODO(piman): save data for resume?
-#if __arm__ && !CXXABI_SJLJ
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
             __cxa_begin_cleanup(unwind_exception);
 #endif
             return _URC_INSTALL_CONTEXT;
@@ -1006,7 +1007,7 @@ __gxx_personality_internal
         {
             // Found a non-catching handler.  Jump to it:
             set_registers(unwind_exception, context, results);
-#if __arm__ && !CXXABI_SJLJ
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
             __cxa_begin_cleanup(unwind_exception);
 #endif
             return _URC_INSTALL_CONTEXT;
@@ -1021,7 +1022,7 @@ __gxx_personality_internal
     return _URC_FATAL_PHASE1_ERROR;
 }
 
-#if __arm__ && !CXXABI_SJLJ
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
 _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
   int version = 1;
   uint64_t exceptionClass = unwind_exception->exception_class;
@@ -1074,7 +1075,7 @@ _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception*
 }
 #else
 _Unwind_Reason_Code
-#if __arm__ && CXXABI_SJLJ
+#if __arm__ && __USING_SJLJ_EXCEPTIONS__
 __gxx_personality_sj0
 #else
 __gxx_personality_v0
@@ -1088,7 +1089,12 @@ __gxx_personality_v0
 
 __attribute__((noreturn))
 void
+#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
 __cxa_call_unexpected(void* arg)
+//__cxa_call_unexpected(_Unwind_Control_Block* arg)
+#else
+__cxa_call_unexpected(void* arg)
+#endif
 {
     _Unwind_Exception* unwind_exception = static_cast<_Unwind_Exception*>(arg);
     if (unwind_exception == 0)

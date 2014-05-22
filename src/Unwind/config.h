@@ -64,19 +64,6 @@
     #define _LIBUNWIND_SUPPORT_ARM_UNWIND     0
   #endif
 
-#elif __arm__
-  // TODO: What's the correct way to detect eabi?
-  #define _LIBUNWIND_BUILD_ZERO_COST_APIS 0
-  #define _LIBUNWIND_BUILD_SJLJ_APIS 1
-  #define _LIBUNWIND_SUPPORT_FRAME_APIS 0
-  #define _LIBUNWIND_EXPORT               __attribute__((visibility("default")))
-  #define _LIBUNWIND_HIDDEN               __attribute__((visibility("hidden")))
-  #define _LIBUNWIND_LOG(msg, ...) do{}while(0)
-//  #define _LIBUNWIND_LOG(msg, ...) fprintf(stderr, "libuwind: " msg, __VA_ARGS__)
-  #define _LIBUNWIND_ABORT(msg) __builtin_unreachable()
-  #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
-  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
-  #define _LIBUNWIND_SUPPORT_DWARF_INDEX 0
 #else
   static inline void assert_rtn(const char* func, const char* file, int line, const char* msg)  __attribute__ ((noreturn));
   static inline void assert_rtn(const char* func, const char* file, int line, const char* msg) {
