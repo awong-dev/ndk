@@ -155,7 +155,11 @@ constexpr const char* float_data<double>::spec;
 template <>
 struct float_data<long double>
 {
+#if defined(__arm__)
+    static const size_t mangled_size = 16;
+#else
     static const size_t mangled_size = 20;  // May need to be adjusted to 16 or 24 on other platforms
+#endif
     static const size_t max_demangled_size = 40;
     static constexpr const char* spec = "%LaL";
 };
@@ -352,6 +356,7 @@ parse_substitution(const char* first, const char* last, C& db)
 //                ::= Di   # char32_t
 //                ::= Ds   # char16_t
 //                ::= Da   # auto (in dependent new-expressions)
+//                ::= Dc   # decltype(auto)
 //                ::= Dn   # std::nullptr_t (i.e., decltype(nullptr))
 //                ::= u <source-name>    # vendor extended type
 
@@ -485,6 +490,10 @@ parse_builtin_type(const char* first, const char* last, C& db)
                     break;
                 case 'a':
                     db.names.push_back("auto");
+                    first += 2;
+                    break;
+                case 'c':
+                    db.names.push_back("decltype(auto)");
                     first += 2;
                     break;
                 case 'n':
@@ -2277,6 +2286,7 @@ parse_type(const char* first, const char* last, C& db)
 //                   ::= gt    # >             
 //                   ::= ix    # []            
 //                   ::= le    # <=            
+//                   ::= li <source-name>  # operator ""
 //                   ::= ls    # <<            
 //                   ::= lS    # <<=           
 //                   ::= lt    # <             
@@ -2437,6 +2447,18 @@ parse_operator_name(const char* first, const char* last, C& db)
             case 'e':
                 db.names.push_back("operator<=");
                 first += 2;
+                break;
+            case 'i':
+                {
+                    const char* t = parse_source_name(first+2, last, db);
+                    if (t != first+2)
+                    {
+                        if (db.names.empty())
+                            return first;
+                        db.names.back().first.insert(0, "operator\"\" ");
+                        first = t;
+                    }
+                }
                 break;
             case 's':
                 db.names.push_back("operator<<");

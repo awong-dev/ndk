@@ -238,6 +238,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 ; On entry:
 ;  thread_state pointer is in x0
 ;
+  .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   stp    x0, x1,  [x0, #0x000]
   stp    x2, x3,  [x0, #0x010]
@@ -292,6 +293,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @ However #7.4.5 says in general all VRS registers should be restored..
 @ Do we need a dirty bit?
 @
+  .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   @ 32bit thumb-2 restrictions for stm:
   @ . the sp (r13) cannot be in the list

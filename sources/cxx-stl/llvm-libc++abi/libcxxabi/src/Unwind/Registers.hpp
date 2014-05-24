@@ -15,6 +15,7 @@
 
 #include <stdint.h>
 #include <strings.h>
+#include <string.h>
 
 #include "libunwind.h"
 #include "config.h"
@@ -43,6 +44,7 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
+  static int  lastDwarfRegNum() { return 8; }
 
   uint32_t  getSP() const          { return _registers.__esp; }
   void      setSP(uint32_t value)  { _registers.__esp = value; }
@@ -91,7 +93,7 @@ inline Registers_x86::Registers_x86(const void *registers) {
 }
 
 inline Registers_x86::Registers_x86() {
-  bzero(&_registers, sizeof(_registers));
+  memset(&_registers, 0, sizeof(_registers));
 }
 
 inline bool Registers_x86::validRegister(int regNum) const {
@@ -230,6 +232,7 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
+  static int  lastDwarfRegNum() { return 16; }
 
   uint64_t  getSP() const          { return _registers.__rsp; }
   void      setSP(uint64_t value)  { _registers.__rsp = value; }
@@ -282,7 +285,7 @@ inline Registers_x86_64::Registers_x86_64(const void *registers) {
 }
 
 inline Registers_x86_64::Registers_x86_64() {
-  bzero(&_registers, sizeof(_registers));
+  memset(&_registers, 0, sizeof(_registers));
 }
 
 inline bool Registers_x86_64::validRegister(int regNum) const {
@@ -477,6 +480,7 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
+  static int  lastDwarfRegNum() { return 112; }
 
   uint64_t  getSP() const         { return _registers.__r1; }
   void      setSP(uint32_t value) { _registers.__r1 = value; }
@@ -548,9 +552,9 @@ inline Registers_ppc::Registers_ppc(const void *registers) {
 }
 
 inline Registers_ppc::Registers_ppc() {
-  bzero(&_registers, sizeof(_registers));
-  bzero(&_floatRegisters, sizeof(_floatRegisters));
-  bzero(&_vectorRegisters, sizeof(_vectorRegisters));
+  memset(&_registers, 0, sizeof(_registers));
+  memset(&_floatRegisters, 0, sizeof(_floatRegisters));
+  memset(&_vectorRegisters, 0, sizeof(_vectorRegisters));
 }
 
 inline bool Registers_ppc::validRegister(int regNum) const {
@@ -1030,6 +1034,7 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
+  static int  lastDwarfRegNum() { return 95; }
 
   uint64_t  getSP() const         { return _registers.__sp; }
   void      setSP(uint64_t value) { _registers.__sp = value; }
@@ -1061,8 +1066,8 @@ inline Registers_arm64::Registers_arm64(const void *registers) {
 }
 
 inline Registers_arm64::Registers_arm64() {
-  bzero(&_registers, sizeof(_registers));
-  bzero(&_vectorHalfRegisters, sizeof(_vectorHalfRegisters));
+  memset(&_registers, 0, sizeof(_registers));
+  memset(&_vectorHalfRegisters, 0, sizeof(_vectorHalfRegisters));
 }
 
 inline bool Registers_arm64::validRegister(int regNum) const {
@@ -1301,6 +1306,7 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
+  static int  lastDwarfRegNum() { return 8; }
 
   uint32_t  getSP() const         { return _registers.__sp; }
   void      setSP(uint32_t value) { _registers.__sp = value; }
@@ -1323,16 +1329,15 @@ private:
 inline Registers_arm::Registers_arm(const void *registers) {
   static_assert(sizeof(Registers_arm) < sizeof(unw_context_t),
                     "arm registers do not fit into unw_context_t");
-  // See unw_getcontext() note about data.
   memcpy(&_registers, registers, sizeof(_registers));
-  bzero(_wmmxData, sizeof(_wmmxData));
-  bzero(_wmmxControl, sizeof(_wmmxControl));
+  memset(_wmmxData, 0, sizeof(_wmmxData));
+  memset(_wmmxControl, 0, sizeof(_wmmxControl));
 }
 
 inline Registers_arm::Registers_arm() {
-  bzero(&_registers, sizeof(_registers));
-  bzero(_wmmxData, sizeof(_wmmxData));
-  bzero(_wmmxControl, sizeof(_wmmxControl));
+  memset(&_registers, 0, sizeof(_registers));
+  memset(_wmmxData, 0, sizeof(_wmmxData));
+  memset(_wmmxControl, 0, sizeof(_wmmxControl));
 }
 
 inline bool Registers_arm::validRegister(int regNum) const {
@@ -1541,16 +1546,16 @@ inline const char *Registers_arm::getRegisterName(int regNum) {
   }
 }
 
-inline bool Registers_arm::validFloatRegister(int regNum) const {
+inline bool Registers_arm::validFloatRegister(int) const {
   // FIXME: Implement float register support.
   return false;
 }
 
-inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) const {
+inline unw_fpreg_t Registers_arm::getFloatRegister(int) const {
   _LIBUNWIND_ABORT("ARM float register support not yet implemented");
 }
 
-inline void Registers_arm::setFloatRegister(int regNum, unw_fpreg_t value) {
+inline void Registers_arm::setFloatRegister(int, unw_fpreg_t) {
   _LIBUNWIND_ABORT("ARM float register support not yet implemented");
 }
 

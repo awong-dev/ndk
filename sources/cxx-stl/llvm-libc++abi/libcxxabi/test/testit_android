@@ -182,7 +182,7 @@ if [ "$WITH_COMPILER_RT" = "yes" ]; then
     if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
       echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
       echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
---src-dir=/tmp/ndk-$USER/src/llvm-3.3/compiler-rt --llvm-version=3.3"
+--src-dir=/tmp/ndk-$USER/src/llvm-3.4/compiler-rt --llvm-version=3.4"
       exit 1
     fi
   done

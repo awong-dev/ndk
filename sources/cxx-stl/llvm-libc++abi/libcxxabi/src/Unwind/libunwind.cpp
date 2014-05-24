@@ -12,6 +12,9 @@
 
 #include <libunwind.h>
 
+#ifndef NDEBUG
+#include <cstdlib> // getenv
+#endif
 #include <new>
 
 #include "libunwind_ext.h"
@@ -39,6 +42,10 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
                                      unw_context_t *context) {
   _LIBUNWIND_TRACE_API("unw_init_local(cursor=%p, context=%p)\n",
                               cursor, context);
+#ifndef NDEBUG
+  // Zero it out for easier debugging
+  memset(cursor, 0, sizeof(unw_cursor_t));
+#endif
   // Use "placement new" to allocate UnwindCursor in the cursor buffer.
 #if __i386__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_x86>(
@@ -180,16 +187,8 @@ _LIBUNWIND_EXPORT int unw_set_reg(unw_cursor_t *cursor, unw_regnum_t regNum,
     co->setReg(regNum, (pint_t)value);
     // specical case altering IP to re-find info (being called by personality
     // function)
-    if (regNum == UNW_REG_IP) {
-      unw_proc_info_t info;
-      co->getInfo(&info);
-      pint_t orgArgSize = (pint_t)info.gp;
-      uint64_t orgFuncStart = info.start_ip;
+    if (regNum == UNW_REG_IP)
       co->setInfoBasedOnIPRegister(false);
-      // and adjust REG_SP if there was a DW_CFA_GNU_args_size
-      if ((orgFuncStart == info.start_ip) && (orgArgSize != 0))
-        co->setReg(UNW_REG_SP, co->getReg(UNW_REG_SP) + orgArgSize);
-    }
     return UNW_ESUCCESS;
   }
   return UNW_EBADREG;
@@ -338,6 +337,7 @@ void _unw_remove_dynamic_fde(unw_word_t fde) {
 
 // Add logging hooks in Debug builds only
 #ifndef NDEBUG
+#include <stdlib.h>
 
 _LIBUNWIND_HIDDEN
 bool logAPIs() {

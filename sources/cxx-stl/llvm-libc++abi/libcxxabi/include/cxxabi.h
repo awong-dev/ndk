@@ -44,11 +44,14 @@ extern LIBCXXABI_NORETURN void __cxa_throw(void * thrown_exception,
 extern void * __cxa_get_exception_ptr(void * exceptionObject) throw();
 extern void * __cxa_begin_catch(void * exceptionObject) throw();
 extern void __cxa_end_catch();
+#if __arm__
+extern bool __cxa_begin_cleanup(void * exceptionObject) throw();
+extern void __cxa_end_cleanup();
+#endif
 extern std::type_info * __cxa_current_exception_type();
 
 // 2.5.4 Rethrowing Exceptions
 extern LIBCXXABI_NORETURN void __cxa_rethrow();
-
 
 
 // 2.6 Auxiliary Runtime APIs
@@ -164,11 +167,6 @@ extern void __cxa_decrement_exception_refcount(void* primary_exception) throw();
 
 // Apple addition to support std::uncaught_exception()
 extern bool __cxa_uncaught_exception() throw();
-
-
-#if __arm__ && !CXXABI_SJLJ
-extern LIBCXXABI_NORETURN void __cxa_end_cleanup(void);
-#endif
 
   } // extern "C"
 } // namespace __cxxabiv1
