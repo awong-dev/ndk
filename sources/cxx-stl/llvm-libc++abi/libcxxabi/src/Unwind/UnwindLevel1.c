@@ -23,6 +23,10 @@
 #include "unwind.h"
 #include "config.h"
 
+#if !defined(PRIXPTR)
+#define PRIXPTR "%p"
+#endif
+
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
 
 static _Unwind_Reason_Code
@@ -242,7 +246,7 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
 #endif
           // Phase 1 said we would stop at this frame, but we did not...
           _LIBUNWIND_ABORT("during phase1 personality function said it would "
-                           "stop here, but now if phase2 it did not stop here");
+                           "stop here, but now in phase2 it did not stop here");
         }
         break;
       case _URC_INSTALL_CONTEXT:
@@ -496,7 +500,7 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
 }
 
 
-#if __arm__ && !CXXABI_SJLJ
+#if LIBCXXABI_ARM_EHABI
 
 _Unwind_VRS_Result _Unwind_VRS_Set(
     _Unwind_Context *context,
@@ -656,7 +660,9 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
   }
 }
 
-#else
+#else  // !LIBCXXABI_ARM_EHABI
+
+// ARM EHABI provides these as inline wrappers in the public header.
 
 /// Called by personality handler during phase 2 to get register values.
 _LIBUNWIND_EXPORT uintptr_t _Unwind_GetGR(struct _Unwind_Context *context,
@@ -670,8 +676,6 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetGR(struct _Unwind_Context *context,
   return (uintptr_t)result;
 }
 
-
-
 /// Called by personality handler during phase 2 to alter register values.
 _LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                                      uintptr_t new_value) {
@@ -682,8 +686,6 @@ _LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
   unw_set_reg(cursor, index, new_value);
 }
 
-#endif  // __arm__ && !CXXABI_SJLJ
-
 /// Called by personality handler during phase 2 to get instruction pointer.
 _LIBUNWIND_EXPORT uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
   unw_cursor_t *cursor = (unw_cursor_t *)context;
@@ -693,8 +695,6 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
                              (uint64_t) result);
   return (uintptr_t)result;
 }
-
-
 
 /// Called by personality handler during phase 2 to alter instruction pointer,
 /// such as setting where the landing pad is, so _Unwind_Resume() will
@@ -707,6 +707,7 @@ _LIBUNWIND_EXPORT void _Unwind_SetIP(struct _Unwind_Context *context,
   unw_set_reg(cursor, UNW_REG_IP, new_value);
 }
 
+#endif  // !LICXXABI_ARM_EHABI
 
 /// Called by personality handler during phase 2 to find the start of the
 /// function.
@@ -721,7 +722,6 @@ _Unwind_GetRegionStart(struct _Unwind_Context *context) {
                              context, result);
   return result;
 }
-
 
 /// Called by personality handler during phase 2 if a foreign exception
 // is caught.

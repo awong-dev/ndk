@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # //===--------------------------- testit ---------------------------------===//
 # //
 # //                     The LLVM Compiler Infrastructure
@@ -8,9 +8,9 @@
 # //
 # //===--------------------------------------------------------------------===//
 
-if [ -z "$CC" ]
+if [ -z $CXX ]
 then
-	CC=clang++
+	CXX=clang++
 fi
 
 if [ -z "$OPTIONS" ]
@@ -18,12 +18,17 @@ then
 	OPTIONS="-std=c++0x -stdlib=libc++"
 fi
 
+if [ -z "$QEMU" ]
+then
+    QEMU=qemu-system-arm
+fi
+
 case $TRIPLE in
   *-*-mingw* | *-*-cygwin* | *-*-win*)
-	TEST_EXE=test.exe
+    TEST_EXE_SUFFIX=.exe
     ;;
   *)
-    TEST_EXE=a.out
+    TEST_EXE_SUFFIX=.out
     ;;
 esac
 
@@ -33,41 +38,72 @@ UNIMPLEMENTED=0
 IMPLEMENTED_FAIL=0
 IMPLEMENTED_PASS=0
 
-afunc()
+function compile
+{
+  echo "  [COMPILE] $1"
+  echo $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1 test_wrapper.cc
+  $CXX $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $LIBS -o $1$TEST_EXE_SUFFIX $1 test_wrapper.cc
+}
+
+function run
+{
+  echo "  [RUN    ] $1"
+  case $TRIPLE in
+    armv4-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    thumbv4t-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu arm926 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu arm1026 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    thumbv6m-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu cortex-m3 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu cortex-m3 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    thumbv7t-none-eabi)
+      echo $QEMU -semihosting -M integratorcp -cpu cortex-a8 -kernel $1
+      $QEMU -semihosting -M integratorcp -cpu cortex-a8 -kernel $1 | awk 'BEGIN { f=0; } /PASS/ { next } /FAIL/ { f=1; print; next } { print } END { exit f }'
+      ;;
+    *)
+      $1
+      ;;
+  esac
+}
+
+function afunc
 {
 	fail=0
 	pass=0
-	if (ls *.fail.cpp > /dev/null 2>&1)
+	if (ls *.fail.cpp &> /dev/null)
 	then
 		for FILE in $(ls *.fail.cpp); do
-			if $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE > /dev/null 2>&1
+			if compile $FILE &> /dev/null
 			then
-				rm ./$TEST_EXE
-				echo "$FILE should not compile"
-				fail=$(($fail + 1))
+				rm $FILE$TEST_EXE_SUFFIX
+				echo "  [FAIL   ] $FILE should not compile"
+				let "fail+=1"
 			else
-				pass=$(($pass + 1))
+				let "pass+=1"
 			fi
 		done
 	fi
 
-	if (ls *.cpp > /dev/null 2>&1)
+	if (ls *.cpp &> /dev/null)
 	then
 		for FILE in $(ls *.cpp); do
-			if $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE
+			if compile $FILE
 			then
-				if ./$TEST_EXE
+				if run $FILE$TEST_EXE_SUFFIX
 				then
-					rm ./$TEST_EXE
-					pass=$(($pass + 1))
+					let "pass+=1"
 				else
-					echo "$FILE failed at run time"
-					fail=$(($fail + 1))
-					rm ./$TEST_EXE
+					echo "  [FAIL   ] $FILE failed at run time"
+					let "fail+=1"
 				fi
 			else
-				echo "$FILE failed to compile"
-				fail=$(($fail + 1))
+				echo "  [FAIL   ] $FILE failed to compile"
+				let "fail+=1"
 			fi
 		done
 	fi
@@ -75,24 +111,24 @@ afunc()
 	if [ $fail -gt 0 ]
 	then
 		echo "failed $fail tests in `pwd`"
-		IMPLEMENTED_FAIL=$(($IMPLEMENTED_FAIL + 1))
+		let "IMPLEMENTED_FAIL+=1"
 	fi
 	if [ $pass -gt 0 ]
 	then
 		echo "passed $pass tests in `pwd`"
 		if [ $fail -eq 0 ]
 		then
-			IMPLEMENTED_PASS=$(($IMPLEMENTED_PASS + 1))
+			let "IMPLEMENTED_PASS+=1"
 		fi
 	fi
 	if [ $fail -eq 0 -a $pass -eq 0 ]
 	then
 		echo "not implemented:  `pwd`"
-		UNIMPLEMENTED=$(($UNIMPLEMENTED + 1))
+		let "UNIMPLEMENTED+=1"
 	fi
 
-	FAIL=$(($FAIL + $fail))
-	PASS=$(($PASS + $pass))
+	let "FAIL+=$fail"
+	let "PASS+=$pass"
 
 	for FILE in *
 	do
@@ -109,7 +145,7 @@ afunc
 
 echo "****************************************************"
 echo "Results for `pwd`:"
-echo "using `$CC --version`"
+echo "using `$CXX --version`"
 echo "with $OPTIONS $HEADER_INCLUDE $SOURCE_LIB"
 echo "----------------------------------------------------"
 echo "sections without tests   : $UNIMPLEMENTED"
