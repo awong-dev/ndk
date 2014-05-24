@@ -1306,6 +1306,7 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
+  static int  lastDwarfRegNum() { return 8; }
 
   uint32_t  getSP() const         { return _registers.__sp; }
   void      setSP(uint32_t value) { _registers.__sp = value; }

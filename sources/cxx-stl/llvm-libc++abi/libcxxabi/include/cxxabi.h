@@ -10,6 +10,7 @@
 #ifndef __CXXABI_H
 #define __CXXABI_H 
 
+
 /*
  * This header provides the interface to the C++ ABI as defined at:
  *       http://www.codesourcery.com/cxx-abi/
@@ -52,7 +53,6 @@ extern std::type_info * __cxa_current_exception_type();
 
 // 2.5.4 Rethrowing Exceptions
 extern LIBCXXABI_NORETURN void __cxa_rethrow();
-
 
 
 // 2.6 Auxiliary Runtime APIs
