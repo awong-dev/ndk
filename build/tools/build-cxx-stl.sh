@@ -158,7 +158,7 @@ GABIXX_SRCDIR=$BUILD_DIR/ndk/$GABIXX_SUBDIR
 STLPORT_SRCDIR=$BUILD_DIR/ndk/$STLPORT_SUBDIR
 LIBCXX_SRCDIR=$BUILD_DIR/ndk/$LIBCXX_SUBDIR
 
-LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
+LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/cxx-stl/llvm-libc++abi/libcxxabi/include -I$ANDROID_NDK_ROOT/sources/android/support/include"
 
 # Determine GAbi++ build parameters. Note that GAbi++ is also built as part
 # of STLport and Libc++, in slightly different ways.
@@ -553,21 +553,23 @@ build_stl_libs_for_abi ()
 
     builder_set_dstdir "$DSTDIR"
 
-    # Always rebuild GAbi++, except for unknown archs.
-    builder_set_srcdir "$GABIXX_SRCDIR"
-    builder_reset_cflags DEFAULT_CFLAGS
-    builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
+    if [ "$CXX_STL" != "libc++" ]; then
+      # Always rebuild GAbi++, except for unknown archs.
+      builder_set_srcdir "$GABIXX_SRCDIR"
+      builder_reset_cflags DEFAULT_CFLAGS
+      builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
 
-    builder_reset_cxxflags DEFAULT_CXXFLAGS
-    builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
-    builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
-    if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-      builder_sources $GABIXX_SOURCES
-    elif [ "$CXX_STL" = "gabi++" ]; then
-      log "Could not build gabi++ with unknown arch!"
-      exit 1
-    else
-      builder_sources src/delete.cc src/new.cc
+      builder_reset_cxxflags DEFAULT_CXXFLAGS
+      builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
+      builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
+      if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+        builder_sources $GABIXX_SOURCES
+      elif [ "$CXX_STL" = "gabi++" ]; then
+        log "Could not build gabi++ with unknown arch!"
+        exit 1
+      else
+        builder_sources src/delete.cc src/new.cc
+      fi
     fi
 
     # Build the runtime sources, except if we're only building GAbi++
