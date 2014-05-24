@@ -222,6 +222,9 @@ bad_array_new_length::what() const _NOEXCEPT
 
 #endif // !_LIBCPPABI_VERSION
 
+
+#endif // !LIBSTDCXX
+
 void
 __throw_bad_alloc()
 {
@@ -229,7 +232,4 @@ __throw_bad_alloc()
     throw bad_alloc();
 #endif
 }
-
-#endif // !LIBSTDCXX
-
 }  // std

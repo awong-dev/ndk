@@ -374,7 +374,7 @@ builder_shared_library ()
         -lcompiler_rt_shared \
         -nodefaultlibs \
         $_BUILD_SHARED_LIBRARIES \
-        -lc $libm \
+        -lc $libm -ldl \
         $_BUILD_LDFLAGS \
         $_BUILD_LDFLAGS_END_SO \
         -o $lib
