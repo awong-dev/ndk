@@ -575,7 +575,7 @@ build_stl_libs_for_abi ()
     # Build the runtime sources, except if we're only building GAbi++
     if [ "$CXX_STL" != "gabi++" ]; then
       builder_set_srcdir "$CXX_STL_SRCDIR"
-      builder_reset_cflags
+      builder_reset_cflags DEFAULT_CFLAGS
       builder_cflags "$DEFAULT_CFLAGS $CXX_STL_CFLAGS $EXTRA_CFLAGS"
       builder_reset_cxxflags DEFAULT_CXXFLAGS
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
