@@ -12,6 +12,7 @@ export CXX=/Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/bin/clan
 rm libc++abi.a || true
 rm /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4t/libc++abi.a || true
 ./buildit
+cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/libcxxabi/test/../../build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4
 cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4t
 
 cd ../test

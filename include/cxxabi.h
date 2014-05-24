@@ -45,6 +45,10 @@ extern LIBCXXABI_NORETURN void __cxa_throw(void * thrown_exception,
 extern void * __cxa_get_exception_ptr(void * exceptionObject) throw();
 extern void * __cxa_begin_catch(void * exceptionObject) throw();
 extern void __cxa_end_catch();
+#if __arm__
+extern bool __cxa_begin_cleanup(void * exceptionObject) throw();
+extern void __cxa_end_cleanup();
+#endif
 extern std::type_info * __cxa_current_exception_type();
 
 // 2.5.4 Rethrowing Exceptions
@@ -164,14 +168,6 @@ extern void __cxa_decrement_exception_refcount(void* primary_exception) throw();
 
 // Apple addition to support std::uncaught_exception()
 extern bool __cxa_uncaught_exception() throw();
-
-
-#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
-extern LIBCXXABI_NORETURN bool __cxa_begin_cleanup(void* ucbp);
-extern LIBCXXABI_NORETURN void __cxa_end_cleanup(void);
-extern LIBCXXABI_NORETURN void __cxa_call_unexpected(void* ucbp);
-//extern LIBCXXABI_NORETURN void __cxa_call_terminate(_Unwind_Control_Block* ucbp);
-#endif
 
   } // extern "C"
 } // namespace __cxxabiv1
