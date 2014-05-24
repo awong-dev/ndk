@@ -1036,7 +1036,7 @@ __gxx_personality_v0
 }
 #else
 
-extern "C" _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Exception*, _Unwind_Context*);
+//extern "C" _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Exception*, _Unwind_Context*);
 
 // Helper function to unwind one frame.
 // ARM EHABI 7.3 and 7.4: If the personality function returns _URC_CONTINUE_UNWIND, the
@@ -1045,8 +1045,8 @@ extern "C" _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Exception*, _Unwind_Co
 static _Unwind_Reason_Code continue_unwind(_Unwind_Exception* unwind_exception,
                                            _Unwind_Context* context)
 {
-    if (__gnu_unwind_frame(unwind_exception, context) != _URC_OK)
-        return _URC_FAILURE;
+//    if (__gnu_unwind_frame(unwind_exception, context) != _URC_OK)
+//        return _URC_FAILURE;
     return _URC_CONTINUE_UNWIND;
 }
 
