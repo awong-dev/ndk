@@ -225,6 +225,8 @@ if [ -n "$LLVM_VERSION" ]; then
   if version_ge "$LLVM_VERSION" "3.4" ]; then
     COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
   fi
+else
+    COMMON_CFLAGS="$COMMON_CFLAGS -std=c99"
 fi
 
 if [ "$WITH_DEBUG_INFO" ]; then
