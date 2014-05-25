@@ -196,6 +196,14 @@ function version_ge {
 #COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
 COMMON_CFLAGS="-fPIC -O0 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
+if [ -n "$LLVM_VERSION" ]; then
+  COMMON_CFLAGS="$COMMON_CFLAGS -fcolor-diagnostics"
+  if version_ge "$LLVM_VERSION" "3.4" ]; then
+    COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+  fi
+else
+    COMMON_CFLAGS="$COMMON_CFLAGS -std=c99"
+fi
 
 if [ "$WITH_DEBUG_INFO" ]; then
     COMMON_CFLAGS="$COMMON_CFLAGS -g"
