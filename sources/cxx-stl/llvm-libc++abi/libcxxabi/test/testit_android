@@ -241,9 +241,9 @@ function version_ge {
     compare_minor=$(echo $compare_string | cut -d\. -f 2)
     true=0
     false=1
-    if [ $input_major -gt $compare_major ]; then return $true; fi
-    if [ $input_major -lt $compare_major ]; then return $false; fi
-    if [ $input_minor -ge $compare_minor ]; then return $true; fi
+    if [ "$input_major" -gt "$compare_major" ]; then return $true; fi
+    if [ "$input_major" -lt "$compare_major" ]; then return $false; fi
+    if [ "$input_minor" -ge "$compare_minor" ]; then return $true; fi
     return $false
 }
 
