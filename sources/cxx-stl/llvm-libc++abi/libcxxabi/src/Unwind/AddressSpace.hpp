@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if !defined(__has_include) || __has_include(<dlfcn.h>)
+#if false // !defined(__has_include) || __has_include(<dlfcn.h>)
 #include <link.h>
 #include <dlfcn.h>
 #define LIBCXXABI_HAS_DYLD 1

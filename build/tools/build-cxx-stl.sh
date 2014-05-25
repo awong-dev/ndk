@@ -83,7 +83,11 @@ register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is 
 EXPLICIT_COMPILER_VERSION=
 
 GCC_VERSION=
-register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version" "$GCC_VERSION"
+register_option "--gcc-version=<ver>" do_gcc_version "Specify GCC version"
+do_gcc_version() {
+    GCC_VERSION=$1
+    EXPLICIT_COMPILER_VERSION=true
+}
 
 LLVM_VERSION=
 register_option "--llvm-version=<ver>" do_llvm_version "Specify LLVM version"
@@ -194,11 +198,16 @@ function version_ge {
     return $false
 }
 
-#COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections -fcolor-diagnostics"
-COMMON_CFLAGS="-fPIC -O0 -g -ffunction-sections -fdata-sections -fcolor-diagnostics"
+#COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
+COMMON_CFLAGS="-fPIC -O0 -g -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
-if version_ge "$LLVM_VERSION" "3.4"; then
-  COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+if [ -n "$LLVM_VERSION" ]; then
+  COMMON_CFLAGS="$COMMON_CFLAGS -fcolor-diagnostics"
+  if version_ge "$LLVM_VERSION" "3.4" ]; then
+    COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+  fi
+else
+    COMMON_CFLAGS="$COMMON_CFLAGS -std=c99"
 fi
 
 if [ "$WITH_DEBUG_INFO" ]; then

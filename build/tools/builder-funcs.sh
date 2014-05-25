@@ -359,6 +359,17 @@ builder_shared_library ()
     fi
     builder_log "${_BUILD_PREFIX}SharedLibrary: $libname"
 
+    if [ -n "${LLVM_VERSION}" -a -n "${GCC_VERSION}" ]; then
+        echo "Cannot set both LLVM_VERSION and GCC_VERSION at the same time. Make up your mind!"
+        exit 1
+    fi
+    if [ -n "${LLVM_VERSION}" ]; then
+        _COMPILER_RUNTIME="-lcompiler_rt_shared"
+    fi
+    if [ -n "${GCC_VERSION}" ]; then
+        _COMPILER_RUNTIME="-lgcc"
+    fi
+
     # Important: -lgcc must appear after objects and static libraries,
     #            but before shared libraries for Android. It doesn't hurt
     #            for other platforms.
@@ -371,7 +382,7 @@ builder_shared_library ()
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -Lsources/android/compiler-rt/libs/armeabi-v7a \
-        -lcompiler_rt_shared \
+        $_COMPILER_RUNTIME \
         -nodefaultlibs \
         $_BUILD_SHARED_LIBRARIES \
         -lc $libm -ldl \

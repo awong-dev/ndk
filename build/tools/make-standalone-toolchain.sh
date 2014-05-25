@@ -28,6 +28,9 @@ make scripts."
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
+GCC_VERSION=
+register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify LLVM version"
+
 LLVM_VERSION=
 register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
@@ -474,6 +477,62 @@ EOF
     cp -a "$TMPDIR/bin/clang.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang.cmd"
     cp -a "$TMPDIR/bin/clang++.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++.cmd"
   fi
+fi
+
+echo "GCC_VERSION $GCC_VERSION"
+if [ -n "$GCC_VERSION" ]; then
+  # Prebuilts are part of default toolchain copy so no need for it here.
+#  run copy_directory "$GCC_TOOLCHAIN_PATH" "$TMPDIR"
+
+  case "$ARCH" in
+      arm) # NOte: -target may change by gcc based on the
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm
+          ;;
+      x86)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86
+          ;;
+      mips)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
+          ;;
+      arm64)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm64
+          ;;
+      x86_64)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86_64
+          ;;
+      mips64)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64
+          ;;
+      *)
+        dump "ERROR: Unsupported NDK architecture $ARCH!"
+  esac
+
+  EXTRA_GCC_FLAGS=
+  EXTRA_GCCXX_FLAGS=
+  if [ "$ARCH_STL" != "$ARCH" ]; then
+    EXTRA_GCCXX_FLAGS="$EXTRA_GCC_FLAGS -I\`dirname \$0\`/../include/c++/$GCC_BASE_VERSION"
+  fi
+
+  cat > "$TMPDIR/bin/gcc" <<EOF
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-gcc --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCC_FLAGS
+    $(dump_extra_compile_commands)
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-gcc --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCC_FLAGS
+fi
+EOF
+
+  cat > "$TMPDIR/bin/g++" <<EOF
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-g++ --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCCXX_FLAGS
+    $(dump_extra_compile_commands)
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-g++ --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCCXX_FLAGS
+fi
+EOF
+  chmod 0755 "$TMPDIR/bin/gcc" "$TMPDIR/bin/g++"
 fi
 
 dump "Copying sysroot headers and libraries..."
