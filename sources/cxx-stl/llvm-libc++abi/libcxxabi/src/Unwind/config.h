@@ -97,6 +97,7 @@
 
 
 // Macros that define away in non-Debug builds
+/*
 #ifdef NDEBUG
   #define _LIBUNWIND_DEBUG_LOG(msg, ...)
   #define _LIBUNWIND_TRACE_API(msg, ...)
@@ -104,6 +105,8 @@
   #define _LIBUNWIND_TRACE_UNWINDING(msg, ...)
   #define _LIBUNWIND_LOG_NON_ZERO(x) x
 #else
+*/
+#if 1
   #ifdef __cplusplus
     extern "C" {
   #endif
