@@ -893,11 +893,12 @@ _UA_CLEANUP_PHASE
 // ARM EHABI 7.3 and 7.4: If the personality function returns _URC_CONTINUE_UNWIND, the
 // personality routine should update the virtual register set (VRS) according to the
 // corresponding frame unwinding instructions (ARM EHABI 9.3.)
-static _Unwind_Reason_Code continue_unwind(_Unwind_Exception* unwind_exception,
-                                           _Unwind_Context* context)
+static _Unwind_Reason_Code continue_unwind(_Unwind_Context* context,
+		                           uint32_t* unwind_opcodes,
+		                           size_t opcode_words)
 {
-//    if (__gnu_unwind_frame(unwind_exception, context) != _URC_OK)
-//        return _URC_FAILURE;
+    if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) != _URC_OK)
+        return _URC_FAILURE;
     return _URC_CONTINUE_UNWIND;
 }
 
@@ -937,37 +938,37 @@ __gxx_personality_v0(_Unwind_State state,
                             (kOurExceptionClass & get_vendor_and_language);
 
     const uint8_t* lsda = 0;
-    {
+    
 #if LIBCXXABI_ARM_EHABI
-        // ARM EHABI # 9.2
-        //
-        //  +---- ehtp
-        //  v
-        // +--------------------------------------+
-        // | +--------+--------+--------+-------+ |
-        // | |0| prel31 to __gxx_personality_v0 | |
-        // | +--------+--------+--------+-------+ |
-        // | | NWords |      unwind opcodes     | |
-        // | +--------+--------+--------+-------+ |
-        // | | Word 1        unwind opcodes     | |
-        // | +--------+--------+--------+-------+ |
-        // | ...                                  |
-        // | +--------+--------+--------+-------+ |
-        // | | Word N        unwind opcodes     | |
-        // | +--------+--------+--------+-------+ |
-        // | | LSDA                             | |
-        // | | ...                              | |
-        // | +--------+--------+--------+-------+ |
-        // +--------------------------------------+
+    // ARM EHABI # 9.2
+    //
+    //  +---- ehtp
+    //  v
+    // +--------------------------------------+
+    // | +--------+--------+--------+-------+ |
+    // | |0| prel31 to __gxx_personality_v0 | |
+    // | +--------+--------+--------+-------+ |
+    // | | NWords |      unwind opcodes     | |
+    // | +--------+--------+--------+-------+ |
+    // | | Word 1        unwind opcodes     | |
+    // | +--------+--------+--------+-------+ |
+    // | ...                                  |
+    // | +--------+--------+--------+-------+ |
+    // | | Word N        unwind opcodes     | |
+    // | +--------+--------+--------+-------+ |
+    // | | LSDA                             | |
+    // | | ...                              | |
+    // | +--------+--------+--------+-------+ |
+    // +--------------------------------------+
 
-        uint32_t *UnwindData = unwind_exception->pr_cache.ehtp + 1;
-        uint32_t FirstDataWord = *UnwindData;
-        size_t NWords = (FirstDataWord >> 24) & 0xff;
-        lsda = reinterpret_cast<const uint8_t*>(UnwindData + 1 + NWords);
+    uint32_t *UnwindData = unwind_exception->pr_cache.ehtp + 1;
+    uint32_t FirstDataWord = *UnwindData;
+    size_t NWords = (FirstDataWord >> 24) & 0xff;
+    lsda = reinterpret_cast<const uint8_t*>(UnwindData + 1 + NWords);
 #else
-        lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
+    lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 #endif
-    }
+    
 
     // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLangauageSpecificData()
     // and _Unwind_GetRegionStart() can return correct address.
@@ -987,7 +988,7 @@ __gxx_personality_v0(_Unwind_State state,
         }
         // Did not find the catch handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(unwind_exception, context);
+            return continue_unwind(context, UnwindData, NWords);
         return results.reason;
 
     case _US_UNWIND_FRAME_STARTING:
@@ -1033,11 +1034,11 @@ __gxx_personality_v0(_Unwind_State state,
 
         // Did not find any handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(unwind_exception, context);
+            return continue_unwind(context, UnwindData, NWords);
         return results.reason;
 
     case _US_UNWIND_FRAME_RESUME:
-        return continue_unwind(unwind_exception, context);
+	return continue_unwind(context, UnwindData, NWords);
     }
 
     // We were called improperly: neither a phase 1 or phase 2 search

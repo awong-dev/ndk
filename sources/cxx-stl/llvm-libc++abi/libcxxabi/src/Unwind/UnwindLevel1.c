@@ -99,6 +99,12 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
       exception_object->pr_cache.additional = frameInfo.flags;
       _Unwind_Reason_Code personalityResult =
           (*p)(_US_VIRTUAL_UNWIND_FRAME, exception_object, context);
+      _LIBUNWIND_TRACE_UNWINDING("unwind_phase1(ex_ojb=%p): personality result %d "
+                            " start_ip %lx ehtp %lx additional %lx\n",
+                            exception_object, personalityResult,
+                            exception_object->pr_cache.fnstart,
+                            exception_object->pr_cache.ehtp,
+                            exception_object->pr_cache.additional);
 #else
       _Unwind_Reason_Code personalityResult =
           (*p)(1, _UA_SEARCH_PHASE, exception_object->exception_class,
