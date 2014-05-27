@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Temporary script for jroelofs's benefit. This probably doesn't belong upstream.
+#
+# TODO(jroelofs): delete this script!
+#
+
 set -e
 
 cd ../lib
