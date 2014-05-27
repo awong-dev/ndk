@@ -78,10 +78,10 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
       unw_word_t pc;
       unw_get_reg(&cursor1, UNW_REG_IP, &pc);
       _LIBUNWIND_TRACE_UNWINDING(
-          "unwind_phase1(ex_ojb=%p): pc=0x%llX, start_ip=0x%lX, func=%s, "
-          "lsda=0x%llX, personality=0x%llX\n",
-          exception_object, pc, frameInfo.start_ip, functionName,
-          frameInfo.lsda, frameInfo.handler);
+          "unwind_phase1(ex_ojb=%p): pc=0x%lX, start_ip=0x%lX, func=%s, "
+          "lsda=0x%lX, personality=0x%lX\n",
+          exception_object, (long)pc, (long)frameInfo.start_ip, functionName,
+          (long)frameInfo.lsda, (long)frameInfo.handler);
     }
 
     // If there is a personality routine, ask it if it will want to stop at
@@ -100,11 +100,11 @@ unwind_phase1(unw_context_t *uc, struct _Unwind_Exception *exception_object) {
       _Unwind_Reason_Code personalityResult =
           (*p)(_US_VIRTUAL_UNWIND_FRAME, exception_object, context);
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase1(ex_ojb=%p): personality result %d "
-                            " start_ip %lx ehtp %lx additional %lx\n",
-                            exception_object, personalityResult,
-                            exception_object->pr_cache.fnstart,
-                            exception_object->pr_cache.ehtp,
-                            exception_object->pr_cache.additional);
+                                 " start_ip %lx ehtp %lx additional %lx\n",
+                                 exception_object, personalityResult,
+                                 (long)exception_object->pr_cache.fnstart,
+                                 (long)exception_object->pr_cache.ehtp,
+                                 (long)exception_object->pr_cache.additional);
 #else
       _Unwind_Reason_Code personalityResult =
           (*p)(1, _UA_SEARCH_PHASE, exception_object->exception_class,
@@ -212,10 +212,10 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
            UNW_ESUCCESS) || (frameInfo.start_ip + offset > frameInfo.end_ip))
         strcpy(functionName, ".anonymous.");
       _LIBUNWIND_TRACE_UNWINDING(
-          "unwind_phase2(ex_ojb=%p): start_ip=0x%llX, func=%s, sp=0x%llX, "
-          "lsda=0x%llX, personality=0x%llX\n",
-          exception_object, frameInfo.start_ip, functionName, sp,
-          frameInfo.lsda, frameInfo.handler);
+          "unwind_phase2(ex_ojb=%p): start_ip=0x%lX, func=%s, sp=0x%lX, "
+          "lsda=0x%lX, personality=0x%lX\n",
+          exception_object, (long)frameInfo.start_ip, functionName, (long)sp,
+          (long)frameInfo.lsda, (long)frameInfo.handler);
     }
 
     // If there is a personality routine, tell it we are unwinding.
@@ -266,8 +266,8 @@ unwind_phase2(unw_context_t *uc, struct _Unwind_Exception *exception_object, boo
           unw_get_reg(&cursor2, UNW_REG_IP, &pc);
           unw_get_reg(&cursor2, UNW_REG_SP, &sp);
           _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p): re-entering  "
-                                     "user code with ip=0x%llX, sp=0x%llX\n",
-                                    exception_object, pc, sp);
+                                     "user code with ip=0x%lX, sp=0x%lX\n",
+                                     exception_object, (long)pc, (long)sp);
         }
 
 #ifdef __arm__
@@ -571,8 +571,8 @@ _Unwind_VRS_Result _Unwind_VRS_Get(
     _Unwind_VRS_DataRepresentation representation,
     void *valuep) {
   _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, regclass=%d reg=%d, rep=%d, "
-                             "value=0x%0llX)\n", context, regclass,
-                             regno, representation, *((uint32_t*)valuep));
+                       "value=0x%0lX)\n", context, regclass,
+                       regno, representation, (long)*((uint32_t*)valuep));
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   switch (regclass) {
     case _UVRSC_CORE: {
