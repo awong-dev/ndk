@@ -584,7 +584,7 @@ copy_abi_headers () {
   shift
 
   for header in $@; do
-    (set -e; cd $ABI_STL_INCLUDE && cp -ar ../../$ABI_NAME/include/$header $header) || exit 1
+    (set -e; cd $ABI_STL_INCLUDE && cp -aR ../../$ABI_NAME/include/$header $header) || exit 1
   done
 }
 
