@@ -456,8 +456,12 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
 {
 #if __arm__
 #warning Verify hardcoded registers against arm eh-abi.
+    // FIXME: Regarding the above warning:  ARM EHABI # 9.4 says the UCB is
+    // passed in r0. What about ttypeIndex?
     // FIXME: Check return value.
-    // FIXME: Is this cast right?
+    assert( INT32_MIN <= results.ttypeIndex &&
+            INT32_MAX >= results.ttypeIndex &&
+            "ttypeIndex out of range of register to pass UCB to landing pad");
     uintptr_t tmp = static_cast<uintptr_t>(results.ttypeIndex);
     _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0,
                     _UVRSD_UINT32, &unwind_exception);
