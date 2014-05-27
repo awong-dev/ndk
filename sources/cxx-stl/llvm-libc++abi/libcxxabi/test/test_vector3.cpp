@@ -40,10 +40,11 @@ struct A {
 void my_terminate() { exit(0); }
 
 template <class T>
-void destroy(void* v)
+__cxxabiv1::__cxa_vec_ctor_return_type destroy(void* v)
 {
   T* t = static_cast<T*>(v);
   t->~T();
+  return (__cxxabiv1::__cxa_vec_ctor_return_type)v;
 }
 
 int main( int argc, char *argv [])
