@@ -128,6 +128,7 @@ builder_set_binprefix_llvm ()
     _BUILD_BINPREFIX=$1
     _BUILD_CC=${1}clang
     _BUILD_CXX=${1}clang++
+    _BUILD_AR=${2}ar
 }
 
 builder_set_builddir ()
@@ -535,8 +536,8 @@ builder_begin_android ()
         BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION)
         # override GCC_VERSION to pick $DEFAULT_LLVM_GCC_VERSION instead
         GCC_VERSION=$DEFAULT_LLVM_GCC_VERSION
-        GCC_TOOLCHAIN=`dirname $NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)`
-        GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
+        GCC_BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
+        GCC_TOOLCHAIN=$(dirname $(dirname $GCC_BINPREFIX))
     fi
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
@@ -559,7 +560,7 @@ builder_begin_android ()
     if [ -z "$LLVM_VERSION" ]; then
         builder_set_binprefix "$BINPREFIX"
     else
-        builder_set_binprefix_llvm "$BINPREFIX"
+        builder_set_binprefix_llvm "$BINPREFIX" "$GCC_BINPREFIX"
         case $ABI in
             armeabi)
                 LLVM_TRIPLE=armv5te-none-linux-androideabi
