@@ -1043,8 +1043,8 @@ __gxx_personality_v0
 // personality routine should update the virtual register set (VRS) according to the
 // corresponding frame unwinding instructions (ARM EHABI 9.3.)
 static _Unwind_Reason_Code continue_unwind(_Unwind_Context* context,
-		                           uint32_t* unwind_opcodes,
-		                           size_t opcode_words)
+                                           uint32_t* unwind_opcodes,
+                                           size_t opcode_words)
 {
     if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) != _URC_OK)
         return _URC_FAILURE;
