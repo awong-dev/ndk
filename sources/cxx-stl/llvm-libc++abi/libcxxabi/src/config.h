@@ -22,6 +22,14 @@
 #  define LIBCXXABI_SINGLE_THREADED 1
 #endif
 
+#ifndef LIBCXXABI_USE_LIBGCC
+#  if __clang__
+#    define LIBCXXABI_USE_LIBGCC 0
+#  else
+#    define LIBCXXABI_USE_LIBGCC 1
+#  endif
+#endif
+
 // -- BEGIN Taken from gabixx_config.h for gcc compat
 // Clang provides __sync_swap(), but GCC does not.
 // IMPORTANT: For GCC, __sync_lock_test_and_set has acquire semantics only
