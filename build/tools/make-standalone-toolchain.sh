@@ -579,9 +579,12 @@ ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
 
 # $1: filenames of headers
-copy_gabixx_headers () {
+copy_abi_headers () {
+  local ABI_NAME=$1
+  shift
+
   for header in $@; do
-    (cd $ABI_STL_INCLUDE && cp -a ../../gabi++/include/$header $header)
+    (set -e; cd $ABI_STL_INCLUDE && cp -ar ../../$ABI_NAME/include/$header $header) || exit 1
   done
 }
 
@@ -594,13 +597,13 @@ copy_stl_common_headers () {
         libcxx|libc++)
             copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
             copy_directory "$SUPPORT_DIR/include" "$ABI_STL_INCLUDE"
-            copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
+            copy_directory "$LIBCXX_DIR/../llvm-libc++abi/libcxxabi/include" "$ABI_STL_INCLUDE/../../llvm-libc++abi/include"
+            copy_abi_headers llvm-libc++abi cxxabi.h  libunwind.h  mach-o  unwind.h
             ;;
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
             copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
+            copy_abi_headers gabi++ cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
             ;;
     esac
 }
