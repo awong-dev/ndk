@@ -29,42 +29,25 @@ void my_dealloc3 ( void *p, size_t   sz   ) {
     std::free ( p ); 
     }
 
-__cxxabiv1::__cxa_vec_ctor_return_type my_construct ( void *p ) {
+void my_construct ( void *p ) {
 //  std::printf ( "Constructing %lx\n", (unsigned long) p );
-    return (__cxxabiv1::__cxa_vec_ctor_return_type)p;
     }
 
-__cxxabiv1::__cxa_vec_ctor_return_type my_destruct ( void *p ) {
+void my_destruct  ( void *p ) {
 //  std::printf ( "Destructing  %lx\n", (unsigned long) p );
-    return (__cxxabiv1::__cxa_vec_ctor_return_type)p;
     }
 
 int gCounter;
-__cxxabiv1::__cxa_vec_ctor_return_type count_construct ( void *p ) {
-    ++gCounter;
-    return (__cxxabiv1::__cxa_vec_ctor_return_type)p;
-    }
-__cxxabiv1::__cxa_vec_ctor_return_type count_destruct ( void *p ) {
-    --gCounter;
-    return (__cxxabiv1::__cxa_vec_ctor_return_type)p;
-    }
+void count_construct ( void *p ) { ++gCounter; }
+void count_destruct  ( void *p ) { --gCounter; }
 
 
 int gConstructorCounter;
 int gConstructorThrowTarget;
 int gDestructorCounter;
 int gDestructorThrowTarget;
-__cxxabiv1::__cxa_vec_ctor_return_type throw_construct ( void *p ) {
-    if ( gConstructorCounter == gConstructorThrowTarget )
-        throw 1;
-    ++gConstructorCounter;
-    return (__cxxabiv1::__cxa_vec_ctor_return_type)p;
-}
-__cxxabiv1::__cxa_vec_ctor_return_type throw_destruct ( void *p ) {
-    if ( ++gDestructorCounter == gDestructorThrowTarget )
-        throw 2;
-    return (__cxxabiv1::__cxa_vec_ctor_return_type)p;
-}
+void throw_construct ( void *p ) { if ( gConstructorCounter   == gConstructorThrowTarget ) throw 1; ++gConstructorCounter; }
+void throw_destruct  ( void *p ) { if ( ++gDestructorCounter  == gDestructorThrowTarget  ) throw 2; }
 
 #if __cplusplus >= 201103L
 #   define CAN_THROW noexcept(false)
