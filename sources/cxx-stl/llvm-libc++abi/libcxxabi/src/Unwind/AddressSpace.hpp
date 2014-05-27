@@ -17,12 +17,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if false // !defined(__has_include) || __has_include(<dlfcn.h>)
-#include <link.h>
-#include <dlfcn.h>
-#define LIBCXXABI_HAS_DYLD 1
+
+#if __ANDROID__ || LIBCXXABI_USE_LIBGCC
+ #if __ANDROID__
+  #include <link.h>  // For dl_unwind_find_exidx.
+ #else
+  typedef long unsigned int *_Unwind_Ptr;
+  extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
+  _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
+      __gnu_Unwind_Find_exidx;
+ #endif
+ #define LIBCXXABI_HAS_FIND_EXIDX 1
 #else
-#define LIBCXXABI_HAS_DYLD 0
+ #define LIBCXXABI_HAS_FIND_EXIDX 0
+#endif
+
+#if (__clang__ && !defined(__has_include) || __has_include(<dlfcn.h>)) || LIBCXXABI_USE_LIBGCC
+ #include <dlfcn.h>
+ #define LIBCXXABI_HAS_DLADDR 1
+#else
+ #define LIBCXXABI_HAS_DLADDR 0
 #endif
 
 #if __APPLE__
@@ -37,7 +51,7 @@ namespace libunwind {
 #include "dwarf2.h"
 #include "Registers.hpp"
 
-#if _LIBUNWIND_SUPPORT_ARM_UNWIND && !__LINUX__ && !LIBCXXABI_HAS_DYLD
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND && !LIBCXXABI_HAS_FIND_EXIDX
 // When statically linked on bare-metal, the symbols for the EH table are looked
 // up without going through the dynamic loader.
 // TODO(jroelofs): since Newlib on arm-none-eabi doesn't
@@ -312,10 +326,6 @@ inline LocalAddressSpace::pint_t LocalAddressSpace::getEncodedP(pint_t &addr,
   #endif
 #endif
 
-typedef long unsigned int *_Unwind_Ptr;
-extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr,
-                                               int *length);
-
 inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
                                                   UnwindInfoSections &info) {
 #if __APPLE__
@@ -330,27 +340,19 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
     info.compact_unwind_section_length = dyldInfo.compact_unwind_section_length;
     return true;
   }
-#else
-  // TO DO
-
-#endif
-
-#if _LIBUNWIND_SUPPORT_ARM_UNWIND
-#if __LINUX__
-  int length = 0;
-  info.arm_section = (uintptr_t) __gnu_Unwind_Find_exidx(
-      (_Unwind_Ptr) targetAddr, &length);
-  info.arm_section_length = length;
-#elif LIBCXXABI_HAS_DYLD
+#elif _LIBUNWIND_SUPPORT_ARM_UNWIND
+ #if LIBCXXABI_HAS_FIND_EXIDX
   int length = 0;
   info.arm_section = (uintptr_t) dl_unwind_find_exidx(
       (_Unwind_Ptr) targetAddr, &length);
   info.arm_section_length = length;
-#else
+ #else
   // Bare metal, statically linked
   info.arm_section =        (uintptr_t)(&__exidx_start);
   info.arm_section_length = (uintptr_t)(&__exidx_end - &__exidx_start);
-#endif
+ #endif
+  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %X length %x\n",
+                             info.arm_section, info.arm_section_length);
   if (info.arm_section && info.arm_section_length)
     return true;
 #endif
@@ -371,7 +373,7 @@ inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
 inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
                                                 size_t bufLen,
                                                 unw_word_t *offset) {
-#if LIBCXXABI_HAS_DYLD
+#if LIBCXXABI_HAS_DLADDR
   Dl_info dyldInfo;
   if (dladdr((void *)addr, &dyldInfo)) {
     if (dyldInfo.dli_sname != NULL) {
