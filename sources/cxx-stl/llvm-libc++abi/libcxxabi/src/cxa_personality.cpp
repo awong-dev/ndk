@@ -1088,7 +1088,7 @@ __gxx_personality_v0(_Unwind_State state,
 
     // TODO(ajwong): This was upstream...do we actually need this in arm? Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
     const uint8_t* lsda = 0;
-    
+
 #if LIBCXXABI_ARM_EHABI
     // ARM EHABI # 9.2
     //
@@ -1118,7 +1118,7 @@ __gxx_personality_v0(_Unwind_State state,
 #else
     lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 #endif
-    
+
 
     // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLangauageSpecificData()
     // and _Unwind_GetRegionStart() can return correct address.
@@ -1188,7 +1188,7 @@ __gxx_personality_v0(_Unwind_State state,
         return results.reason;
 
     case _US_UNWIND_FRAME_RESUME:
-	return continue_unwind(context, UnwindData, NWords);
+        return continue_unwind(context, UnwindData, NWords);
     }
 
     // We were called improperly: neither a phase 1 or phase 2 search
