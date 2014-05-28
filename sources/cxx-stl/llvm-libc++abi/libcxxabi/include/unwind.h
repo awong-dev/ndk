@@ -230,11 +230,11 @@ static inline void _Unwind_SetIP(struct _Unwind_Context* context,
   uintptr_t thumb_bit = _Unwind_GetGR(context, 15) & ((uintptr_t)0x1);
   _Unwind_SetGR(context, 15, new_value | thumb_bit);
 }
-#else // LIBCXX_ARM_EABI
+#else // LIBCXXABI_ARM_EHABI
 extern uintptr_t _Unwind_GetGR(struct _Unwind_Context *context, int index);
 extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                           uintptr_t new_value);
-#endif // LIBCXX_ARM_EABI
+#endif // LIBCXXABI_ARM_EHABI
 
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
 
