@@ -494,8 +494,7 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
               const scan_results& results)
 {
 #if __arm__
-    // FIXME: Regarding the above warning:  ARM EHABI # 9.4 says the UCB is
-    // passed in r0. What about ttypeIndex?
+    // FIXME: ARM EHABI # 9.4 says the UCB is passed in r0. What about ttypeIndex?
     // FIXME: Check return value.
     assert( INT32_MIN <= results.ttypeIndex &&
             INT32_MAX >= results.ttypeIndex &&
