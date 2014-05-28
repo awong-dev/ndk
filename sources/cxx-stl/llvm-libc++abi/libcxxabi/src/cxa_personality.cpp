@@ -631,6 +631,9 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
                 return;
             }
             landingPad = (uintptr_t)lpStart + landingPad;
+#if __arm__
+            landingPad |= thumbBit;
+#endif
 #else  // __USING_SJLJ_EXCEPTIONS__
             ++landingPad;
 #endif  // __USING_SJLJ_EXCEPTIONS__
