@@ -1020,11 +1020,18 @@ __gxx_personality_v0(_Unwind_State state,
                     call_terminate(native_exception, unwind_exception);
             }
 
+            // ARM EHABI 8.4.2: Before we can jump to the cleanup handler, we have to setup some
+            // internal data structures, so that __cxa_end_cleanup() can get unwind_exception from
+            // __cxa_get_globals().
+            __cxa_begin_cleanup(unwind_exception);
+
             // Install the context for the catching handler
             set_registers(unwind_exception, context, results);
             return _URC_INSTALL_CONTEXT;
         }
 
+        // Either we didn't do a phase 1 search (due to forced unwinding), or
+        //  phase 1 reported no catching-handlers.
         // Search for a (non-catching) cleanup
         scan_eh_tab(results, _UA_CLEANUP_PHASE, native_exception, unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
