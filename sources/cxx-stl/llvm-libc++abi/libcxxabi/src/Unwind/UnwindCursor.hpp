@@ -655,6 +655,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   //   isSingleWordEHT -- whether the entry is in the index.
   unw_word_t personalityRoutine = 0xbadf00d;
   bool scope32 = false;
+  uintptr_t lsda = 0xbadf00d;
 
   // If the high bit in the exception handling table entry is set, the entry is
   // in compact form (section 6.3 EHABI).
@@ -694,13 +695,40 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
     pint_t personalityAddr =
         exceptionTableAddr + signExtendPrel31(exceptionTableData);
     personalityRoutine = personalityAddr;
+
+    // ARM EHABI # 6.2, # 9.2
+    //
+    //  +---- ehtp
+    //  v
+    // +--------------------------------------+
+    // | +--------+--------+--------+-------+ |
+    // | |0| prel31 to personalityRoutine   | |
+    // | +--------+--------+--------+-------+ |
+    // | |      N |      unwind opcodes     | |  <-- UnwindData
+    // | +--------+--------+--------+-------+ |
+    // | | Word 2        unwind opcodes     | |
+    // | +--------+--------+--------+-------+ |
+    // | ...                                  |
+    // | +--------+--------+--------+-------+ |
+    // | | Word N        unwind opcodes     | |
+    // | +--------+--------+--------+-------+ |
+    // | | LSDA                             | |  <-- lsda
+    // | | ...                              | |
+    // | +--------+--------+--------+-------+ |
+    // +--------------------------------------+
+
+    uint32_t *UnwindData = reinterpret_cast<uint32_t*>(exceptionTableAddr) + 1;
+    uint32_t FirstDataWord = *UnwindData;
+    size_t N = ((FirstDataWord >> 24) & 0xff);
+    size_t NDataWords = N + 1;
+    lsda = reinterpret_cast<uintptr_t>(UnwindData + NDataWords);
   }
 
   _info.start_ip = thisPC;
   _info.end_ip = nextPC;
   _info.handler = personalityRoutine;
   _info.unwind_info = exceptionTableAddr;
-  _info.lsda = 0xbadf00d;  // lsda is DWARF only.
+  _info.lsda = lsda;
   // flags is pr_cache.additional. See EHABI #7.2 for definition of bit 0.
   _info.flags = isSingleWordEHT ? 1 : 0 | scope32 ? 0x2 : 0;  // Use enum?
 
