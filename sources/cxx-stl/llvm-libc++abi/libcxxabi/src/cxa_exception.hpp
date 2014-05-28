@@ -106,9 +106,6 @@ struct __cxa_eh_globals {
 #if LIBCXXABI_ARM_EHABI
     __cxa_exception* propagatingExceptions;
 #endif
-#if defined(__arm__) && !__USING_SJLJ_EXCEPTIONS__
-    _Unwind_Exception* cleanupException;
-#endif
     };
 
 #pragma GCC visibility pop
