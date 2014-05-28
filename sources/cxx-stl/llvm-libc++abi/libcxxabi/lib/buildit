@@ -88,7 +88,6 @@ case $TRIPLE in
         -lsupc++ -lpthread -lmingw32 -lgcc_s -lgcc -lmoldname -lmingwex -lmsvcr100 -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc_s -lgcc -lmoldname -lmingwex -lmsvcrt"
 	;;
   *-none-eabi*)
-    echo "EABI-ing"
     RC_CFLAGS="-fPIC"
     SOEXT=so
     EXTRA_FLAGS+=" -target $TRIPLE --sysroot=$SYSROOT -no-integrated-as -funwind-tables"
