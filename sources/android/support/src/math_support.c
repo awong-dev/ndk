@@ -29,9 +29,14 @@
 #include <math.h>
 #include <assert.h>
 
+/* Any 64-bit Android math library should provide these functions,
+ * so these wrappers are only needed for 32-bit systems.
+ */
+#ifndef __LP64__
+
 /*
- * On Android, long double and double are identical, hence nexttoward is the
- * same as nextafter.
+ * On 32-bit Android, long double and double are identical, hence
+ * nexttoward is the same as nextafter.
  */
 
 double nexttoward(double d, long double td) {
@@ -84,3 +89,5 @@ __attribute__((weak)) long int lrintl(long double x) { return lrint((double)x); 
 __attribute__((weak)) long double tgammal(long double x) { return tgamma((double)x); }
 __attribute__((weak)) long double modfl(long double x, long double* y) { return modf((double)x, (double *)y); }
 __attribute__((weak)) long double exp2l(long double x) { return exp2((double)x); }
+
+#endif  // !__LP64__

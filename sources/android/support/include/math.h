@@ -34,12 +34,15 @@
 extern "C" {
 #endif
 
+// 64-bit Android math library should provide all declarations.
+#ifndef __LP64__
+
 // TODO(digit): Check that this is not needed for Clang.
 typedef double      double_t;
 typedef float       float_t;
 
 // Missing long double functions. Note that 'long double' is the same
-// than 'double' on Android, so this will define stubs.
+// as 'double' on 32-bit Android, so this will define stubs.
 #define LLVM_LIBCXX_LONG_DOUBLE_FUNCTIONS
 
 long double     acosl(long double);
@@ -87,6 +90,8 @@ float           nanf(const char*);
 
 float           log2f(float);
 double          log2(double);
+
+#endif  // !__LP64__
 
 #ifdef __cplusplus
 }  // extern "C"
