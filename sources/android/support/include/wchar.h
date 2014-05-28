@@ -162,7 +162,7 @@ unsigned long wcstoul (const wchar_t *__restrict__, wchar_t **__restrict__, int)
 
 long long wcstoll (const wchar_t *__restrict__, wchar_t **__restrict__, int);
 unsigned long long wcstoull (const wchar_t *__restrict__, wchar_t **__restrict__, int);
-#if defined(__cplusplus) && __cplusplus > 201103L
+#if defined(__cplusplus) && __cplusplus >= 201103L
 intmax_t wcstoimax (const wchar_t * nptr, wchar_t** endptr , int base);
 uintmax_t wcstoumax (const wchar_t * nptr, wchar_t** endptr , int base);
 #endif
