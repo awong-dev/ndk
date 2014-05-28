@@ -30,6 +30,14 @@
 #  endif
 #endif
 
+#ifndef LIBCXXABI_BARE_METAL
+#  if !defined(__linux__)
+#    define LIBCXXABI_BARE_METAL 1
+#  else
+#    define LIBCXXABI_BARE_METAL 0
+#  endif
+#endif
+
 // -- BEGIN Taken from gabixx_config.h for gcc compat
 // Clang provides __sync_swap(), but GCC does not.
 // IMPORTANT: For GCC, __sync_lock_test_and_set has acquire semantics only

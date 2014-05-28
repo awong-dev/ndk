@@ -12,6 +12,7 @@
 //  
 //===----------------------------------------------------------------------===//
 
+#include "config.h"
 #include "unwind.h"
 #include "cxa_exception.hpp"
 #include "cxa_handlers.hpp"
@@ -313,7 +314,16 @@ static const void* read_target2_value(const void* ptr)
     uintptr_t offset = *reinterpret_cast<const uintptr_t*>(ptr);
     if (!offset)
         return 0;
+    // "ARM EABI provides a TARGET2 relocation to describe these typeinfo
+    // pointers. The reason being it allows their precise semantics to be
+    // deferred to the linker. For bare-metal they turn into absolute
+    // relocations. For linux they turn into GOT-REL relocations."
+    // https://gcc.gnu.org/ml/gcc-patches/2009-08/msg00264.html
+#if LIBCXXABI_BARE_METAL
+    return reinterpret_cast<const void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
+#else
     return *reinterpret_cast<const void**>(reinterpret_cast<uintptr_t>(ptr) + offset);
+#endif
 }
 
 static const __shim_type_info*
@@ -333,7 +343,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     const uint8_t* ttypePtr = classInfo - ttypeIndex * sizeof(uintptr_t);
     return reinterpret_cast<const __shim_type_info*>(read_target2_value(ttypePtr));
 }
-#else
+#else // !LIBCXXABI_ARM_EHABI
 static
 const __shim_type_info*
 get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
@@ -369,7 +379,7 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     classInfo -= ttypeIndex;
     return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
 }
-#endif
+#endif // !LIBCXXABI_ARM_EHABI
 
 /*
     This is checking a thrown exception type, excpType, against a possibly empty
