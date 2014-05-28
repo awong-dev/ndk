@@ -25,10 +25,6 @@
 ///  Called by __cxa_rethrow().
 _LIBUNWIND_EXPORT _Unwind_Reason_Code
 _Unwind_Resume_or_Rethrow(struct _Unwind_Exception *exception_object) {
-#ifdef __arm__
-  // TODO(piman): do we need to do anything? I don't see this called from
-  // __cxa_rethrow().
-#else
   _LIBUNWIND_TRACE_API("_Unwind_Resume_or_Rethrow(ex_obj=%p), "
                              "private_1=%ld\n",
                               exception_object, exception_object->private_1);
@@ -40,7 +36,6 @@ _Unwind_Resume_or_Rethrow(struct _Unwind_Exception *exception_object) {
     // Will return if there is no catch clause, so that __cxa_rethrow can call
     // std::terminate().
   }
-#endif
 
   // Call through to _Unwind_Resume() which distiguishes between forced and
   // regular exceptions.

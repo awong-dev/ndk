@@ -12,15 +12,10 @@
 
 #include <libunwind.h>
 
-#ifndef NDEBUG
-#include <cstdlib> // getenv
-#endif
 #include <new>
 
 #include "libunwind_ext.h"
 #include "config.h"
-
-#include <stdlib.h>
 
 
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
@@ -42,10 +37,6 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
                                      unw_context_t *context) {
   _LIBUNWIND_TRACE_API("unw_init_local(cursor=%p, context=%p)\n",
                               cursor, context);
-#ifndef NDEBUG
-  // Zero it out for easier debugging
-  memset(cursor, 0, sizeof(unw_cursor_t));
-#endif
   // Use "placement new" to allocate UnwindCursor in the cursor buffer.
 #if __i386__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_x86>(
@@ -58,9 +49,6 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
                                  context, LocalAddressSpace::sThisAddressSpace);
 #elif __arm64__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm64>(
-                                 context, LocalAddressSpace::sThisAddressSpace);
-#elif __arm__
-  new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm>(
                                  context, LocalAddressSpace::sThisAddressSpace);
 #endif
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
@@ -99,9 +87,6 @@ _LIBUNWIND_EXPORT int unw_init_remote_thread(unw_cursor_t *cursor,
         UnwindCursor<OtherAddressSpace<Pointer32<BigEndian> >, Registers_ppc>(
             ((unw_addr_space_ppc *)as)->oas, arg);
     break;
-#ifdef __arm__
-#warning TODO(danakj): Support ARM/NEON here.
-#endif
   default:
     return UNW_EUNSPEC;
   }
@@ -127,8 +112,6 @@ _LIBUNWIND_EXPORT unw_addr_space_t unw_create_addr_space_for_task(task_t task) {
     as->cpuType = CPU_TYPE_I386;
     //as->oas
   }
-#elif __arm___
-#warning TODO(danakj): Support ARM/NEON here.
 #else
 // FIXME
 #endif
@@ -149,8 +132,6 @@ _LIBUNWIND_EXPORT void unw_destroy_addr_space(unw_addr_space_t asp) {
     delete as;
   }
   break;
-#elif __arm__
-#warning TODO(danakj): Support ARM/NEON here.
 #endif
   case CPU_TYPE_POWERPC: {
     unw_addr_space_ppc *as = (unw_addr_space_ppc *)asp;
@@ -179,8 +160,8 @@ _LIBUNWIND_EXPORT int unw_get_reg(unw_cursor_t *cursor, unw_regnum_t regNum,
 /// Set value of specified register at cursor position in stack frame.
 _LIBUNWIND_EXPORT int unw_set_reg(unw_cursor_t *cursor, unw_regnum_t regNum,
                                   unw_word_t value) {
-  _LIBUNWIND_TRACE_API("unw_set_reg(cursor=%p, regNum=%d, value=0x%lX)\n",
-                       cursor, regNum, (long)value);
+  _LIBUNWIND_TRACE_API("unw_set_reg(cursor=%p, regNum=%d, value=0x%llX)\n",
+                             cursor, regNum, value);
   typedef LocalAddressSpace::pint_t pint_t;
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->validReg(regNum)) {
@@ -212,10 +193,8 @@ _LIBUNWIND_EXPORT int unw_get_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
 /// Set value of specified float register at cursor position in stack frame.
 _LIBUNWIND_EXPORT int unw_set_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
                                     unw_fpreg_t value) {
-  /*
   _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%g)\n",
                              cursor, regNum, value);
-                             */
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->validFloatReg(regNum)) {
     co->setFloatReg(regNum, value);
@@ -260,7 +239,7 @@ _LIBUNWIND_EXPORT int unw_resume(unw_cursor_t *cursor) {
 _LIBUNWIND_EXPORT int unw_get_proc_name(unw_cursor_t *cursor, char *buf,
                                         size_t bufLen, unw_word_t *offset) {
   _LIBUNWIND_TRACE_API("unw_get_proc_name(cursor=%p, &buf=%p,"
-                             "bufLen=%zu)\n", cursor, buf, bufLen);
+                             "bufLen=%ld)\n", cursor, buf, bufLen);
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->getFunctionName(buf, bufLen, offset))
     return UNW_ESUCCESS;

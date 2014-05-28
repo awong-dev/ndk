@@ -26,21 +26,15 @@ void *thread_code (void *parm) {
     globals_t *glob1, *glob2;
     
     glob1 = __cxxabiv1::__cxa_get_globals ();
-    if ( NULL == glob1 ) {
+    if ( NULL == glob1 )
         std::cerr << "Got null result from __cxa_get_globals" << std::endl;
-        return 0;
-    }
 
     glob2 = __cxxabiv1::__cxa_get_globals_fast ();
-    if ( glob1 != glob2 ) {
+    if ( glob1 != glob2 )
         std::cerr << "Got different globals!" << std::endl;
-        return 0;
-    }
-
+    
     *result = (size_t) glob1;
-#if !LIBCXXABI_SINGLE_THREADED
     sleep ( 1 );
-#endif
     return parm;
     }
 
@@ -62,7 +56,7 @@ int main ( int argc, char *argv [] ) {
 
 #if LIBCXXABI_SINGLE_THREADED
     size_t thread_globals;
-    retVal = thread_code(&thread_globals) != &thread_globals;
+    retVal = thread_code(&thread_globals) != 0;
 #else
 //  Make the threads, let them run, and wait for them to finish
     for ( int i = 0; i < NUMTHREADS; ++i )

@@ -41,7 +41,7 @@ typedef enum {
   _URC_HANDLER_FOUND = 6,
   _URC_INSTALL_CONTEXT = 7,
   _URC_CONTINUE_UNWIND = 8,
-  _URC_FAILURE = 9,
+  _URC_FAILURE = 9
 } _Unwind_Reason_Code;
 
 typedef enum {
@@ -52,7 +52,6 @@ typedef enum {
   _UA_END_OF_STACK = 16 // gcc extension to C++ ABI
 } _Unwind_Action;
 
-typedef struct _Unwind_Context _Unwind_Context;   // opaque
 
 #if LIBCXXABI_ARM_EHABI
 typedef uint32_t _Unwind_State;
@@ -63,50 +62,52 @@ static const _Unwind_State _US_UNWIND_FRAME_RESUME    = 2;
 
 typedef uint32_t _Unwind_EHT_Header;
 
-typedef struct _Unwind_Exception {
-#if 0
-  // TODO(piman): EHABI says char[8], but cxa_default_handlers expects uint64_t.
-  char exception_class[8];
-#else
+struct _Unwind_Control_Block;
+typedef struct _Unwind_Control_Block _Unwind_Control_Block;
+typedef struct _Unwind_Control_Block _Unwind_Exception; /* Alias */
+
+struct _Unwind_Control_Block {
   uint64_t exception_class;
-#endif
-  void (*exception_cleanup)(_Unwind_Reason_Code, struct _Unwind_Exception *);
-  /* Unwinder cache, private fields for the unwinder's use */
+  void (*exception_cleanup)(_Unwind_Reason_Code, _Unwind_Control_Block*);
+
   struct {
-    uint32_t reserved1; /* init reserved1 to 0, then don't touch */
+    uint32_t reserved1;
     uint32_t reserved2;
     uint32_t reserved3;
     uint32_t reserved4;
     uint32_t reserved5;
   } unwinder_cache;
-  /* Propagation barrier cache (valid after phase 1): */
+
   struct {
     uint32_t sp;
     uint32_t bitpattern[5];
   } barrier_cache;
-  /* Cleanup cache (preserved over cleanup): */
+
   struct {
     uint32_t bitpattern[4];
   } cleanup_cache;
-  /* Pr cache (for pr's benefit): */
+
   struct {
-    uint32_t fnstart; /* function start address */
-    _Unwind_EHT_Header *ehtp; /* pointer to EHT entry header word */
-    uint32_t additional; /* additional data */
+    uint32_t fnstart;
+    _Unwind_EHT_Header* ehtp;
+    uint32_t additional;
     uint32_t reserved1;
   } pr_cache;
-  long long int :0; /* Force alignment of next item to 8-byte boundary */
-} _Unwind_Exception;
 
-typedef struct _Unwind_Exception _Unwind_Control_Block;
+  long long int :0; /* Enforce the 8-byte alignment */
+};
+
+typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn)
+      (_Unwind_State state,
+       _Unwind_Exception* exceptionObject,
+       struct _Unwind_Context* context);
 
 typedef _Unwind_Reason_Code (*__personality_routine)
       (_Unwind_State state,
-       _Unwind_Control_Block* ucb,
+       _Unwind_Exception* exceptionObject,
        struct _Unwind_Context* context);
-
 #else
-
+struct _Unwind_Context;   // opaque
 struct _Unwind_Exception; // forward declaration
 typedef struct _Unwind_Exception _Unwind_Exception;
 
@@ -160,15 +161,11 @@ extern void _Unwind_Resume(_Unwind_Exception *exception_object);
 extern void _Unwind_DeleteException(_Unwind_Exception *exception_object);
 
 #if LIBCXXABI_ARM_EHABI
-//
-// The following are semi-suppoted extensions to the C++ ABI
-//
-
 typedef enum {
-  _UVRSC_CORE = 0, /* integer register */
-  _UVRSC_VFP = 1, /* vfp */
-  _UVRSC_WMMXD = 3, /* Intel WMMX data register */
-  _UVRSC_WMMXC = 4 /* Intel WMMX control register */
+  _UVRSC_CORE = 0,
+  _UVRSC_VFP = 1,
+  _UVRSC_WMMXD = 3,
+  _UVRSC_WMMXC = 4
 } _Unwind_VRS_RegClass;
 
 typedef enum {
@@ -197,16 +194,6 @@ extern _Unwind_VRS_Result _Unwind_VRS_Set(_Unwind_Context* context,
                                           _Unwind_VRS_DataRepresentation representation,
                                           void *valuep);
 
-extern _Unwind_VRS_Result _Unwind_VRS_Pop(_Unwind_Context *context,
-                                          _Unwind_VRS_RegClass regclass,
-                                          uint32_t discriminator,
-                                          _Unwind_VRS_DataRepresentation representation);
-
-extern _Unwind_Reason_Code _Unwind_VRS_Interpret(_Unwind_Context* context,
-                                                 uint32_t* data,
-                                                 size_t offset,
-                                                 size_t len);
-
 static inline uintptr_t _Unwind_GetGR(struct _Unwind_Context* context,
                                       int index) {
   uintptr_t value = 0;
@@ -230,33 +217,36 @@ static inline void _Unwind_SetIP(struct _Unwind_Context* context,
   uintptr_t thumb_bit = _Unwind_GetGR(context, 15) & ((uintptr_t)0x1);
   _Unwind_SetGR(context, 15, new_value | thumb_bit);
 }
-#else // LIBCXX_ARM_EABI
+#else
 extern uintptr_t _Unwind_GetGR(struct _Unwind_Context *context, int index);
 extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                           uintptr_t new_value);
-#endif // LIBCXX_ARM_EABI
+extern uintptr_t _Unwind_GetIP(struct _Unwind_Context *context);
+extern void _Unwind_SetIP(struct _Unwind_Context *, uintptr_t new_value);
+#endif
 
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
-
-#if !defined(__arm__)
 extern uintptr_t
     _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context);
 #if __USING_SJLJ_EXCEPTIONS__
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(_Unwind_Exception *exception_object,
                               _Unwind_Stop_Fn stop, void *stop_parameter);
-#else // !__USING_SJLJ_EXCEPTIONS__
+#else
 extern _Unwind_Reason_Code
     _Unwind_ForcedUnwind(_Unwind_Exception *exception_object,
                          _Unwind_Stop_Fn stop, void *stop_parameter);
-#endif // !__USING_SJLJ_EXCEPTIONS__
-#endif // !defined(__arm__)
+#endif
 
 #if __USING_SJLJ_EXCEPTIONS__
 typedef struct _Unwind_FunctionContext *_Unwind_FunctionContext_t;
 extern void _Unwind_SjLj_Register(_Unwind_FunctionContext_t fc);
 extern void _Unwind_SjLj_Unregister(_Unwind_FunctionContext_t fc);
 #endif
+
+//
+// The following are semi-suppoted extensions to the C++ ABI
+//
 
 //
 //  called by __cxa_rethrow().

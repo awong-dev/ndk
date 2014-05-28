@@ -20,10 +20,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
-#include "libunwind.h"
-#endif  // __arm__ && !__USING_SJLJ_EXCEPTIONS__
-
 /*
     Exception Header Layout:
 
@@ -167,9 +163,9 @@ enum
     DW_EH_PE_omit     = 0xFF
 };
 
-/// Read a uleb128 encoded value and advance pointer
-/// See Variable Length Data Appendix C in:
-/// @link http://dwarfstd.org/doc/Dwarf4.pdf @unlink
+/// Read a uleb128 encoded value and advance pointer 
+/// See Variable Length Data Appendix C in: 
+/// @link http://dwarfstd.org/Dwarf4.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @returns decoded value
 static
@@ -190,9 +186,9 @@ readULEB128(const uint8_t** data)
     return result;
 }
 
-/// Read a sleb128 encoded value and advance pointer
-/// See Variable Length Data Appendix C in:
-/// @link http://dwarfstd.org/doc/Dwarf4.pdf @unlink
+/// Read a sleb128 encoded value and advance pointer 
+/// See Variable Length Data Appendix C in: 
+/// @link http://dwarfstd.org/Dwarf4.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @returns decoded value
 static
@@ -215,9 +211,9 @@ readSLEB128(const uint8_t** data)
     return static_cast<intptr_t>(result);
 }
 
-/// Read a pointer encoded value and advance pointer
-/// See Variable Length Data in:
-/// @link http://dwarfstd.org/doc/Dwarf3.pdf @unlink
+/// Read a pointer encoded value and advance pointer 
+/// See Variable Length Data in: 
+/// @link http://dwarfstd.org/Dwarf3.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @param encoding dwarf encoding type
 /// @returns decoded value
@@ -311,15 +307,33 @@ call_terminate(bool native_exception, _Unwind_Exception* unwind_exception)
     std::terminate();
 }
 
-#if __arm__
-const void* decode_target2_relocation(const uint8_t* ptr) {
-  uint32_t value = *reinterpret_cast<const uint32_t*>(ptr);
-  if (!value)
-    return NULL;
-  return *reinterpret_cast<const void* const *>(ptr + value);
+#if LIBCXXABI_ARM_EHABI
+static const void* read_target2_value(const void* ptr)
+{
+    uintptr_t offset = *reinterpret_cast<const uintptr_t*>(ptr);
+    if (!offset)
+        return 0;
+    return *reinterpret_cast<const void**>(reinterpret_cast<uintptr_t>(ptr) + offset);
 }
-#endif
 
+static const __shim_type_info*
+get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
+                   uint8_t ttypeEncoding, bool native_exception,
+                   _Unwind_Exception* unwind_exception)
+{
+    if (classInfo == 0)
+    {
+        // this should not happen.  Indicates corrupted eh_table.
+        call_terminate(native_exception, unwind_exception);
+    }
+
+    assert(ttypeEncoding == DW_EH_PE_absptr && "Unexpected TTypeEncoding");
+    (void)ttypeEncoding;
+
+    const uint8_t* ttypePtr = classInfo - ttypeIndex * sizeof(uintptr_t);
+    return reinterpret_cast<const __shim_type_info*>(read_target2_value(ttypePtr));
+}
+#else
 static
 const __shim_type_info*
 get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
@@ -331,8 +345,6 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
         // this should not happen.  Indicates corrupted eh_table.
         call_terminate(native_exception, unwind_exception);
     }
-    // TODO(ajwong): Why is ARM different here? Why only decodeRelocTarget2?
-#if !__arm__
     switch (ttypeEncoding & 0x0F)
     {
     case DW_EH_PE_absptr:
@@ -356,11 +368,8 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     }
     classInfo -= ttypeIndex;
     return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
-#else
-    const uint8_t* ptr = classInfo - ttypeIndex * 4;
-    return (const __shim_type_info*)decode_target2_relocation(ptr);
-#endif
 }
+#endif
 
 /*
     This is checking a thrown exception type, excpType, against a possibly empty
@@ -371,6 +380,49 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     the list will catch a excpType.  If any catchType in the list can catch an
     excpType, then this exception spec does not catch the excpType.
 */
+#if LIBCXXABI_ARM_EHABI
+static
+bool
+exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
+                         uint8_t ttypeEncoding, const __shim_type_info* excpType,
+                         void* adjustedPtr, _Unwind_Exception* unwind_exception)
+{
+    if (classInfo == 0)
+    {
+        // this should not happen.   Indicates corrupted eh_table.
+        call_terminate(false, unwind_exception);
+    }
+
+    assert(ttypeEncoding == DW_EH_PE_absptr && "Unexpected TTypeEncoding");
+    (void)ttypeEncoding;
+
+    // specIndex is negative of 1-based byte offset into classInfo;
+    specIndex = -specIndex;
+    --specIndex;
+    const void** temp = reinterpret_cast<const void**>(
+        reinterpret_cast<uintptr_t>(classInfo) +
+        static_cast<uintptr_t>(specIndex) * sizeof(uintptr_t));
+    // If any type in the spec list can catch excpType, return false, else return true
+    //    adjustments to adjustedPtr are ignored.
+    while (true)
+    {
+        // ARM EHABI exception specification table (filter table) consists of
+        // several pointers which will directly point to the type info object
+        // (instead of ttypeIndex).  The table will be terminated with 0.
+        const void** ttypePtr = temp++;
+        if (*ttypePtr == 0)
+            break;
+        // We can get the __shim_type_info simply by performing a
+        // R_ARM_TARGET2 relocation, and cast the result to __shim_type_info.
+        const __shim_type_info* catchType =
+            static_cast<const __shim_type_info*>(read_target2_value(ttypePtr));
+        void* tempPtr = adjustedPtr;
+        if (catchType->can_catch(excpType, tempPtr))
+            return false;
+    }
+    return true;
+}
+#else
 static
 bool
 exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
@@ -390,19 +442,6 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
     //    adjustments to adjustedPtr are ignored.
     while (true)
     {
-#if __arm__
-        // On ARM, catch clauses are 0-delimited runs of TARGET2 relocation
-        // pointers to TypeInfo objects.
-        // Reverse-engineered from llvm/lib/CodeGen/AsmPrinter/ARMException.cpp @ r201423
-        const __shim_type_info* catchType = (const __shim_type_info*)
-                                            decode_target2_relocation(temp);
-        temp += sizeof(void *);
-        if (catchType == 0)
-            break;
-#else
-        // In the Itanium-ABI, catch-clauses are 0-delimited runs of uleb128
-        // indexes into the type table.
-        // Section 7.4 of http://mentorembedded.github.io/cxx-abi/exceptions.pdf
         uint64_t ttypeIndex = readULEB128(&temp);
         if (ttypeIndex == 0)
             break;
@@ -411,13 +450,13 @@ exception_spec_can_catch(int64_t specIndex, const uint8_t* classInfo,
                                                                ttypeEncoding,
                                                                true,
                                                                unwind_exception);
-#endif
         void* tempPtr = adjustedPtr;
         if (catchType->can_catch(excpType, tempPtr))
             return false;
     }
     return true;
 }
+#endif
 
 static
 void*
@@ -455,18 +494,8 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
               const scan_results& results)
 {
 #if __arm__
-#warning Verify hardcoded registers against arm eh-abi.
-    // FIXME: Regarding the above warning:  ARM EHABI # 9.4 says the UCB is
-    // passed in r0. What about ttypeIndex?
-    // FIXME: Check return value.
-    assert( INT32_MIN <= results.ttypeIndex &&
-            INT32_MAX >= results.ttypeIndex &&
-            "ttypeIndex out of range of register to pass UCB to landing pad");
-    uintptr_t tmp = static_cast<uintptr_t>(results.ttypeIndex);
-    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0,
-                    _UVRSD_UINT32, &unwind_exception);
-    _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R1,
-                    _UVRSD_UINT32, &tmp);
+    _Unwind_SetGR(context, 0, reinterpret_cast<uintptr_t>(unwind_exception));
+    _Unwind_SetGR(context, 1, static_cast<uintptr_t>(results.ttypeIndex));
 #else
     _Unwind_SetGR(context, __builtin_eh_return_data_regno(0),
                                  reinterpret_cast<uintptr_t>(unwind_exception));
@@ -500,8 +529,7 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
 static
 void
 scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception,
-            _Unwind_Exception* unwind_exception, _Unwind_Context* context,
-            const uint8_t* lsda)
+            _Unwind_Exception* unwind_exception, _Unwind_Context* context)
 {
     // Initialize results to found nothing but an error
     results.ttypeIndex = 0;
@@ -510,7 +538,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.landingPad = 0;
     results.adjustedPtr = 0;
     results.reason = _URC_FATAL_PHASE1_ERROR;
-
     // Check for consistent actions
     if (actions & _UA_SEARCH_PHASE)
     {
@@ -542,6 +569,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         return;
     }
     // Start scan by getting exception table address
+    const uint8_t* lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
     if (lsda == 0)
     {
         // There is no exception table
@@ -551,18 +579,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     results.languageSpecificData = lsda;
     // Get the current instruction pointer and offset it before next
     // instruction in the current frame which threw the exception.
-    uintptr_t ip = _Unwind_GetIP(context);
-#if __arm__
-    // Clear thumb bit.
-    uintptr_t thumbBit = ip & 1;
-    ip &= ~1;
-#endif
-    // The ip is one past the throwing instruction. Move it backwards.
-    // TODO(ajwong): This should decrement 2 instead of 4 based on thumbBit,
-    // but _Unwind_GetIP() is returning a thumb address in at least one
-    // instance when it shouldn't be.
-    ip -= 4;
-
+    uintptr_t ip = _Unwind_GetIP(context) - 1;
     // Get beginning current frame's code (as defined by the 
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
@@ -576,9 +593,9 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     else if (ip == 0)
         call_terminate(native_exception, unwind_exception);
     // ip is 1-based index into call site table
-#else  // __arm__
+#else  // !__USING_SJLJ_EXCEPTIONS__
     uintptr_t ipOffset = ip - funcStart;
-#endif  // __arm__
+#endif  // !defined(_USING_SLJL_EXCEPTIONS__)
     const uint8_t* classInfo = NULL;
     // Note: See JITDwarfEmitter::EmitExceptionTable(...) for corresponding
     //       dwarf emission
@@ -596,7 +613,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
         uintptr_t classInfoOffset = readULEB128(&lsda);
         classInfo = lsda + classInfoOffset;
     }
-    // TODO(ajwong): Should this terminate?
     // Walk call-site table looking for range that 
     // includes current PC. 
     uint8_t callSiteEncoding = *lsda++;
@@ -666,7 +682,7 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
                     // Found a catch, does it actually catch?
                     // First check for catch (...)
                     const __shim_type_info* catchType =
-                        get_shim_type_info(ttypeIndex,
+                        get_shim_type_info(static_cast<uint64_t>(ttypeIndex),
                                            classInfo, ttypeEncoding,
                                            native_exception, unwind_exception);
                     if (catchType == 0)
@@ -845,6 +861,8 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
     call_terminate(native_exception, unwind_exception);
 }
 
+// public API
+
 /*
 The personality function branches on actions like so:
 
@@ -891,18 +909,107 @@ _UA_CLEANUP_PHASE
         Else a cleanup is not found: return _URC_CONTINUE_UNWIND
 */
 
-//extern "C" _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Exception*, _Unwind_Context*);
+#if !LIBCXXABI_ARM_EHABI
+_Unwind_Reason_Code
+#if __USING_SJLJ_EXCEPTIONS__
+__gxx_personality_sj0
+#else
+__gxx_personality_v0
+#endif
+                    (int version, _Unwind_Action actions, uint64_t exceptionClass,
+                     _Unwind_Exception* unwind_exception, _Unwind_Context* context)
+{
+    if (version != 1 || unwind_exception == 0 || context == 0)
+        return _URC_FATAL_PHASE1_ERROR;
+
+    bool native_exception = (exceptionClass     & get_vendor_and_language) ==
+                            (kOurExceptionClass & get_vendor_and_language);
+    scan_results results;
+    if (actions & _UA_SEARCH_PHASE)
+    {
+        // Phase 1 search:  All we're looking for in phase 1 is a handler that
+        //   halts unwinding
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        if (results.reason == _URC_HANDLER_FOUND)
+        {
+            // Found one.  Can we cache the results somewhere to optimize phase 2?
+            if (native_exception)
+            {
+                __cxa_exception* exception_header = (__cxa_exception*)(unwind_exception+1) - 1;
+                exception_header->handlerSwitchValue = static_cast<int>(results.ttypeIndex);
+                exception_header->actionRecord = results.actionRecord;
+                exception_header->languageSpecificData = results.languageSpecificData;
+                exception_header->catchTemp = reinterpret_cast<void*>(results.landingPad);
+                exception_header->adjustedPtr = results.adjustedPtr;
+            }
+            return _URC_HANDLER_FOUND;
+        }
+        // Did not find a catching-handler.  Return the results of the scan
+        //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE1_ERROR
+        //     if we were called improperly).
+        return results.reason;
+    }
+    if (actions & _UA_CLEANUP_PHASE)
+    {
+        // Phase 2 search:
+        //  Did we find a catching handler in phase 1?
+        if (actions & _UA_HANDLER_FRAME)
+        {
+            // Yes, phase 1 said we have a catching handler here.
+            // Did we cache the results of the scan?
+            if (native_exception)
+            {
+                // Yes, reload the results from the cache.
+                __cxa_exception* exception_header = (__cxa_exception*)(unwind_exception+1) - 1;
+                results.ttypeIndex = exception_header->handlerSwitchValue;
+                results.actionRecord = exception_header->actionRecord;
+                results.languageSpecificData = exception_header->languageSpecificData;
+                results.landingPad = reinterpret_cast<uintptr_t>(exception_header->catchTemp);
+                results.adjustedPtr = exception_header->adjustedPtr;
+            }
+            else
+            {
+                // No, do the scan again to reload the results.
+                scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+                // Phase 1 told us we would find a handler.  Now in Phase 2 we
+                //   didn't find a handler.  The eh table should not be changing!
+                if (results.reason != _URC_HANDLER_FOUND)
+                    call_terminate(native_exception, unwind_exception);
+            }
+            // Jump to the handler
+            set_registers(unwind_exception, context, results);
+            return _URC_INSTALL_CONTEXT;
+        }
+        // Either we didn't do a phase 1 search (due to forced unwinding), or
+        //   phase 1 reported no catching-handlers.
+        // Search for a (non-catching) cleanup
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        if (results.reason == _URC_HANDLER_FOUND)
+        {
+            // Found a non-catching handler.  Jump to it:
+            set_registers(unwind_exception, context, results);
+            return _URC_INSTALL_CONTEXT;
+        }
+        // Did not find a cleanup.  Return the results of the scan
+        //    (normally _URC_CONTINUE_UNWIND, but could have been _URC_FATAL_PHASE2_ERROR
+        //     if we were called improperly).
+        return results.reason;
+    }
+    // We were called improperly: neither a phase 1 or phase 2 search
+    return _URC_FATAL_PHASE1_ERROR;
+}
+#else
+
+extern "C" _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Exception*, _Unwind_Context*);
 
 // Helper function to unwind one frame.
 // ARM EHABI 7.3 and 7.4: If the personality function returns _URC_CONTINUE_UNWIND, the
 // personality routine should update the virtual register set (VRS) according to the
 // corresponding frame unwinding instructions (ARM EHABI 9.3.)
-static _Unwind_Reason_Code continue_unwind(_Unwind_Context* context,
-                                           uint32_t* unwind_opcodes,
-                                           size_t opcode_words)
+static _Unwind_Reason_Code continue_unwind(_Unwind_Exception* unwind_exception,
+                                           _Unwind_Context* context)
 {
-    if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) !=
-        _URC_CONTINUE_UNWIND)
+    if (__gnu_unwind_frame(unwind_exception, context) != _URC_OK)
         return _URC_FAILURE;
     return _URC_CONTINUE_UNWIND;
 }
@@ -942,41 +1049,7 @@ __gxx_personality_v0(_Unwind_State state,
     bool native_exception = (unwind_exception->exception_class & get_vendor_and_language) ==
                             (kOurExceptionClass & get_vendor_and_language);
 
-    const uint8_t* lsda = 0;
-
-#if LIBCXXABI_ARM_EHABI
-    // ARM EHABI # 9.2
-    //
-    //  +---- ehtp
-    //  v
-    // +--------------------------------------+
-    // | +--------+--------+--------+-------+ |
-    // | |0| prel31 to __gxx_personality_v0 | |
-    // | +--------+--------+--------+-------+ |
-    // | |      N |      unwind opcodes     | |  <-- UnwindData
-    // | +--------+--------+--------+-------+ |
-    // | | Word 2        unwind opcodes     | |
-    // | +--------+--------+--------+-------+ |
-    // | ...                                  |
-    // | +--------+--------+--------+-------+ |
-    // | | Word N        unwind opcodes     | |
-    // | +--------+--------+--------+-------+ |
-    // | | LSDA                             | |  <-- lsda
-    // | | ...                              | |
-    // | +--------+--------+--------+-------+ |
-    // +--------------------------------------+
-
-    uint32_t *UnwindData = unwind_exception->pr_cache.ehtp + 1;
-    uint32_t FirstDataWord = *UnwindData;
-    size_t N = ((FirstDataWord >> 24) & 0xff);
-    size_t NDataWords = N + 1;
-    lsda = reinterpret_cast<const uint8_t*>(UnwindData + NDataWords);
-#else
-    lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
-#endif
-
-
-    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLangauageSpecificData()
+    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
     // and _Unwind_GetRegionStart() can return correct address.
     _Unwind_SetGR(context, REG_UCB, reinterpret_cast<uint32_t>(unwind_exception));
 
@@ -984,7 +1057,7 @@ __gxx_personality_v0(_Unwind_State state,
     switch (state) {
     case _US_VIRTUAL_UNWIND_FRAME:
         // Phase 1 search:  All we're looking for in phase 1 is a handler that halts unwinding
-        scan_eh_tab(results, _UA_SEARCH_PHASE, native_exception, unwind_exception, context, lsda);
+        scan_eh_tab(results, _UA_SEARCH_PHASE, native_exception, unwind_exception, context);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, REG_SP);
@@ -994,7 +1067,7 @@ __gxx_personality_v0(_Unwind_State state,
         }
         // Did not find the catch handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(context, UnwindData, NDataWords);
+            return continue_unwind(unwind_exception, context);
         return results.reason;
 
     case _US_UNWIND_FRAME_STARTING:
@@ -1012,7 +1085,7 @@ __gxx_personality_v0(_Unwind_State state,
             {
                 // Search for the catching handler again for the foreign exception.
                 scan_eh_tab(results, static_cast<_Unwind_Action>(_UA_CLEANUP_PHASE | _UA_HANDLER_FRAME),
-                            native_exception, unwind_exception, context, lsda);
+                            native_exception, unwind_exception, context);
                 if (results.reason != _URC_HANDLER_FOUND)  // phase1 search should guarantee to find one
                     call_terminate(native_exception, unwind_exception);
             }
@@ -1023,7 +1096,7 @@ __gxx_personality_v0(_Unwind_State state,
         }
 
         // Search for a (non-catching) cleanup
-        scan_eh_tab(results, _UA_CLEANUP_PHASE, native_exception, unwind_exception, context, lsda);
+        scan_eh_tab(results, _UA_CLEANUP_PHASE, native_exception, unwind_exception, context);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found a non-catching handler
@@ -1040,25 +1113,22 @@ __gxx_personality_v0(_Unwind_State state,
 
         // Did not find any handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(context, UnwindData, NDataWords);
+            return continue_unwind(unwind_exception, context);
         return results.reason;
 
     case _US_UNWIND_FRAME_RESUME:
-        return continue_unwind(context, UnwindData, NDataWords);
+        return continue_unwind(unwind_exception, context);
     }
 
     // We were called improperly: neither a phase 1 or phase 2 search
     return _URC_FATAL_PHASE1_ERROR;
 }
+#endif
+
 
 __attribute__((noreturn))
 void
-#if __arm__ && !__USING_SJLJ_EXCEPTIONS__
 __cxa_call_unexpected(void* arg)
-//__cxa_call_unexpected(_Unwind_Control_Block* arg)
-#else
-__cxa_call_unexpected(void* arg)
-#endif
 {
     _Unwind_Exception* unwind_exception = static_cast<_Unwind_Exception*>(arg);
     if (unwind_exception == 0)
