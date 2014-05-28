@@ -456,8 +456,12 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
 {
 #if __arm__
 #warning Verify hardcoded registers against arm eh-abi.
+    // FIXME: Regarding the above warning:  ARM EHABI # 9.4 says the UCB is
+    // passed in r0. What about ttypeIndex?
     // FIXME: Check return value.
-    // FIXME: Is this cast right?
+    assert( INT32_MIN <= results.ttypeIndex &&
+            INT32_MAX >= results.ttypeIndex &&
+            "ttypeIndex out of range of register to pass UCB to landing pad");
     uintptr_t tmp = static_cast<uintptr_t>(results.ttypeIndex);
     _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0,
                     _UVRSD_UINT32, &unwind_exception);
@@ -894,10 +898,11 @@ _UA_CLEANUP_PHASE
 // personality routine should update the virtual register set (VRS) according to the
 // corresponding frame unwinding instructions (ARM EHABI 9.3.)
 static _Unwind_Reason_Code continue_unwind(_Unwind_Context* context,
-		                           uint32_t* unwind_opcodes,
-		                           size_t opcode_words)
+                                           uint32_t* unwind_opcodes,
+                                           size_t opcode_words)
 {
-    if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) != _URC_OK)
+    if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) !=
+        _URC_CONTINUE_UNWIND)
         return _URC_FAILURE;
     return _URC_CONTINUE_UNWIND;
 }
@@ -938,7 +943,7 @@ __gxx_personality_v0(_Unwind_State state,
                             (kOurExceptionClass & get_vendor_and_language);
 
     const uint8_t* lsda = 0;
-    
+
 #if LIBCXXABI_ARM_EHABI
     // ARM EHABI # 9.2
     //
@@ -948,27 +953,28 @@ __gxx_personality_v0(_Unwind_State state,
     // | +--------+--------+--------+-------+ |
     // | |0| prel31 to __gxx_personality_v0 | |
     // | +--------+--------+--------+-------+ |
-    // | | NWords |      unwind opcodes     | |
+    // | |      N |      unwind opcodes     | |  <-- UnwindData
     // | +--------+--------+--------+-------+ |
-    // | | Word 1        unwind opcodes     | |
+    // | | Word 2        unwind opcodes     | |
     // | +--------+--------+--------+-------+ |
     // | ...                                  |
     // | +--------+--------+--------+-------+ |
     // | | Word N        unwind opcodes     | |
     // | +--------+--------+--------+-------+ |
-    // | | LSDA                             | |
+    // | | LSDA                             | |  <-- lsda
     // | | ...                              | |
     // | +--------+--------+--------+-------+ |
     // +--------------------------------------+
 
     uint32_t *UnwindData = unwind_exception->pr_cache.ehtp + 1;
     uint32_t FirstDataWord = *UnwindData;
-    size_t NWords = (FirstDataWord >> 24) & 0xff;
-    lsda = reinterpret_cast<const uint8_t*>(UnwindData + 1 + NWords);
+    size_t N = ((FirstDataWord >> 24) & 0xff);
+    size_t NDataWords = N + 1;
+    lsda = reinterpret_cast<const uint8_t*>(UnwindData + NDataWords);
 #else
     lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 #endif
-    
+
 
     // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLangauageSpecificData()
     // and _Unwind_GetRegionStart() can return correct address.
@@ -988,7 +994,7 @@ __gxx_personality_v0(_Unwind_State state,
         }
         // Did not find the catch handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(context, UnwindData, NWords);
+            return continue_unwind(context, UnwindData, NDataWords);
         return results.reason;
 
     case _US_UNWIND_FRAME_STARTING:
@@ -1034,11 +1040,11 @@ __gxx_personality_v0(_Unwind_State state,
 
         // Did not find any handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(context, UnwindData, NWords);
+            return continue_unwind(context, UnwindData, NDataWords);
         return results.reason;
 
     case _US_UNWIND_FRAME_RESUME:
-	return continue_unwind(context, UnwindData, NWords);
+        return continue_unwind(context, UnwindData, NDataWords);
     }
 
     // We were called improperly: neither a phase 1 or phase 2 search

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Temporary script for jroelofs's benefit. This probably doesn't belong upstream.
+#
+# TODO(jroelofs): delete this script!
+#
+
 set -e
 
 cd ../lib
@@ -9,10 +14,11 @@ export RANLIB=arm-none-eabi-ranlib
 export TRIPLE=armv4-none-eabi
 export CC=/Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/bin/clang
 export CXX=/Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/bin/clang++
+export SYSROOT=/Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm
 rm libc++abi.a || true
 rm /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4t/libc++abi.a || true
 ./buildit
-cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/libcxxabi/test/../../build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4
+cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4
 cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4t
 
 cd ../test
