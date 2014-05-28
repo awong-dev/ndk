@@ -1070,7 +1070,7 @@ __gxx_personality_v0(_Unwind_State state,
     const uint8_t* lsda = 0;
 
 #if LIBCXXABI_ARM_EHABI
-    // ARM EHABI # 9.2
+    // ARM EHABI # 6.2, # 9.2
     //
     //  +---- ehtp
     //  v
@@ -1095,10 +1095,9 @@ __gxx_personality_v0(_Unwind_State state,
     uint32_t FirstDataWord = *UnwindData;
     size_t N = ((FirstDataWord >> 24) & 0xff);
     size_t NDataWords = N + 1;
-    lsda = reinterpret_cast<const uint8_t*>(UnwindData + NDataWords);
-#else
-    lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 #endif
+
+    const uint8_t *lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 
 
     // TODO(ajwong): _Unwind_GetLanguageSpecificData() doesn't work.
