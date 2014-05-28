@@ -22,11 +22,11 @@
 #  define LIBCXXABI_SINGLE_THREADED 1
 #endif
 
-#ifndef LIBCXXABI_USE_LIBGCC
+#ifndef LIBCXXABI_USE_GLIBC
 #  if __clang__
-#    define LIBCXXABI_USE_LIBGCC 0
+#    define LIBCXXABI_USE_GLIBC 0
 #  else
-#    define LIBCXXABI_USE_LIBGCC 1
+#    define LIBCXXABI_USE_GLIBC 1
 #  endif
 #endif
 

@@ -27,6 +27,7 @@
   #define __has_feature(__x) 0
 #endif
 #if !(__has_feature(cxx_static_assert)) && !defined(static_assert)
+// TODO(ajwong): This caused some compile failures on gcc.
 //  #define static_assert(__b, __m) \
 //      extern int compile_time_assert_failed[ ( __b ) ? 1 : -1 ]  \
 //                                                  __attribute__( ( unused ) );
@@ -97,7 +98,6 @@
 
 
 // Macros that define away in non-Debug builds
-/*
 #ifdef NDEBUG
   #define _LIBUNWIND_DEBUG_LOG(msg, ...)
   #define _LIBUNWIND_TRACE_API(msg, ...)
@@ -105,8 +105,6 @@
   #define _LIBUNWIND_TRACE_UNWINDING(msg, ...)
   #define _LIBUNWIND_LOG_NON_ZERO(x) x
 #else
-*/
-#if 1
   #ifdef __cplusplus
     extern "C" {
   #endif
