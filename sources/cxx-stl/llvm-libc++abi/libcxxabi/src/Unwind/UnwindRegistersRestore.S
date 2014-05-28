@@ -325,7 +325,11 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm6jumptoEv)
   ldm lr, {r0-r12}
   ldr sp, [lr, #52]
   ldr lr, [lr, #60]  @ restore pc into lr
+#if _ARM_ARCH > 4
   bx lr
+#else
+  mov pc, lr
+#endif
 
 @ extern int unw_getcontext(unw_context_t* thread_state)
   .globl unw_getcontext
