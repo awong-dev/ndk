@@ -316,7 +316,7 @@ const void* decode_target2_relocation(const uint8_t* ptr) {
   uint32_t value = *reinterpret_cast<const uint32_t*>(ptr);
   if (!value)
     return NULL;
-  return reinterpret_cast<const void*>(ptr + value);
+  return *reinterpret_cast<const void* const *>(ptr + value);
 }
 #endif
 
