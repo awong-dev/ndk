@@ -175,6 +175,7 @@ class String {
   MINITEST_OPERATOR_LL_(unsigned long long);
   MINITEST_OPERATOR_LL_(float);
   MINITEST_OPERATOR_LL_(double);
+  MINITEST_OPERATOR_LL_(long double);
   MINITEST_OPERATOR_LL_(const void*);
 
 #undef MINITEST_OPERATOR_LL_
