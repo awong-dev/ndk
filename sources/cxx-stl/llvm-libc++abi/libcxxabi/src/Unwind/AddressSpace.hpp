@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if __ANDROID__ || LIBCXXABI_USE_LIBGCC
+#if __ANDROID__ || LIBCXXABI_USE_GLIBC
  #if __ANDROID__
   #include <link.h>  // For dl_unwind_find_exidx.
  #else
@@ -32,7 +32,7 @@
  #define LIBCXXABI_HAS_FIND_EXIDX 0
 #endif
 
-#if (__clang__ && !defined(__has_include) || __has_include(<dlfcn.h>)) || LIBCXXABI_USE_LIBGCC
+#if (__clang__ && !defined(__has_include) || __has_include(<dlfcn.h>)) || LIBCXXABI_USE_GLIBC
  #include <dlfcn.h>
  #define LIBCXXABI_HAS_DLADDR 1
 #else

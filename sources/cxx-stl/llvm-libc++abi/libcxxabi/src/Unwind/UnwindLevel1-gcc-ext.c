@@ -24,7 +24,7 @@
 
 ///  Called by __cxa_rethrow().
 _LIBUNWIND_EXPORT _Unwind_Reason_Code
-_Unwind_Resume_or_Rethrow(struct _Unwind_Exception *exception_object) {
+_Unwind_Resume_or_Rethrow(_Unwind_Exception *exception_object) {
 #ifdef __arm__
   // TODO(piman): do we need to do anything? I don't see this called from
   // __cxa_rethrow().
@@ -121,7 +121,8 @@ _Unwind_Backtrace(_Unwind_Trace_Fn callback, void *ref) {
       unw_get_proc_info(&cursor, &frameInfo);
       _LIBUNWIND_TRACE_UNWINDING(
           " _backtrace: start_ip=0x%llX, func=%s, lsda=0x%llX, context=%p\n",
-          frameInfo.start_ip, functionName, frameInfo.lsda, &cursor);
+          (long long)frameInfo.start_ip, functionName, (long long)frameInfo.lsda,
+          &cursor);
     }
 
     // call trace function with this frame
