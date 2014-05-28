@@ -129,10 +129,13 @@ _Unwind_Reason_Code ProcessDescriptors(
             return _URC_FAILURE;
           } else {
             void* matched_object;
+            /*
             if (__cxxabiv1::__cxa_type_match(ucbp,
                                              reinterpret_cast<const std::type_info*>(landing_pad),
                                              is_reference_type, &matched_object) != __cxxabiv1::ctm_failed)
                 return _URC_HANDLER_FOUND;
+                */
+            _LIBUNWIND_ABORT("Type matching not implemented");
           }
         }
         break;

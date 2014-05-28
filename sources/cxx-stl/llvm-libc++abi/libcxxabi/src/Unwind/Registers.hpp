@@ -1055,6 +1055,10 @@ private:
 
   GPRs    _registers;
   double  _vectorHalfRegisters[32];
+  // Currently only the lower double in 128-bit vectore registers
+  // is perserved during unwinding.  We could define new register
+  // numbers (> 96) which mean whole vector registers, then this
+  // struct would need to change to contain whole vector registers.
 };
 
 inline Registers_arm64::Registers_arm64(const void *registers) {
@@ -1306,7 +1310,6 @@ public:
   void        setVectorRegister(int num, v128 value);
   const char *getRegisterName(int num);
   void        jumpto();
-  static int  lastDwarfRegNum() { return 8; }
 
   uint32_t  getSP() const         { return _registers.__sp; }
   void      setSP(uint32_t value) { _registers.__sp = value; }
