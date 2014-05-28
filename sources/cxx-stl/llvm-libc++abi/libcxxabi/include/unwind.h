@@ -65,14 +65,13 @@ static const _Unwind_State _US_UNWIND_FRAME_RESUME    = 2;
 
 typedef uint32_t _Unwind_EHT_Header;
 
-typedef struct _Unwind_Exception {
-#if 0
-  // TODO(piman): EHABI says char[8], but cxa_default_handlers expects uint64_t.
-  char exception_class[8];
-#else
+struct _Unwind_Control_Block;
+typedef struct _Unwind_Control_Block _Unwind_Control_Block;
+typedef struct _Unwind_Control_Block _Unwind_Exception; /* Alias */
+
+struct _Unwind_Control_Block {
   uint64_t exception_class;
-#endif
-  void (*exception_cleanup)(_Unwind_Reason_Code, struct _Unwind_Exception *);
+  void (*exception_cleanup)(_Unwind_Reason_Code, _Unwind_Control_Block *);
   /* Unwinder cache, private fields for the unwinder's use */
   struct {
     uint32_t reserved1; /* init reserved1 to 0, then don't touch */
@@ -98,9 +97,7 @@ typedef struct _Unwind_Exception {
     uint32_t reserved1;
   } pr_cache;
   long long int :0; /* Force alignment of next item to 8-byte boundary */
-} _Unwind_Exception;
-
-typedef struct _Unwind_Exception _Unwind_Control_Block;
+};
 
 typedef _Unwind_Reason_Code (*__personality_routine)
       (_Unwind_State state,
@@ -204,11 +201,14 @@ extern _Unwind_VRS_Result _Unwind_VRS_Pop(_Unwind_Context *context,
                                           uint32_t discriminator,
                                           _Unwind_VRS_DataRepresentation representation);
 
+// TODO(ajwong): This is not part of the EHABI. Decide if the name is right.
 extern _Unwind_Reason_Code _Unwind_VRS_Interpret(_Unwind_Context* context,
                                                  uint32_t* data,
                                                  size_t offset,
                                                  size_t len);
 
+// TODO(ajwong) Should these {Set,Get}/{GR,IP} be removed in favor of
+// VRS_Get/VRS_Set? Is the thumb bit inference in SetIP correct?
 static inline uintptr_t _Unwind_GetGR(struct _Unwind_Context* context,
                                       int index) {
   uintptr_t value = 0;
@@ -240,9 +240,9 @@ extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
 
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
 
-#if !defined(__arm__)
 extern uintptr_t
     _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context);
+#if !defined(__arm__)
 #if __USING_SJLJ_EXCEPTIONS__
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(_Unwind_Exception *exception_object,

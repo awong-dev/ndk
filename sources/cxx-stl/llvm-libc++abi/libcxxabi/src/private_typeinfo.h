@@ -241,20 +241,6 @@ public:
     __attribute__ ((__visibility__("hidden"))) virtual ~__pointer_to_member_type_info();
 };
 
-#ifdef __arm__
-    typedef enum {
-     ctm_failed = 0,
-     ctm_succeeded = 1,
-     ctm_succeeded_with_ptr_to_base = 2
-    } __cxa_type_match_result;
-
-    extern "C" __cxa_type_match_result
-    __cxa_type_match(_Unwind_Control_Block* ucbp,
-                     const std::type_info* rttip,
-                     bool is_reference_type,
-                     void** matched_object);
-#endif
-
 #pragma GCC visibility pop
 
 }  // __cxxabiv1
