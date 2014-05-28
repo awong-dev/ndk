@@ -177,7 +177,7 @@ int main()
     static_assert(std::is_same<std::aligned_storage_t<17>, T1>::value, "" );
 #endif
     static_assert(std::alignment_of<T1>::value == alignof(T1), "");
-    static_assert(((sizeof(T1) + alignof(T1) - 1) / alignof(T1)) * alignof(T1), "");
+    static_assert(sizeof(T1) == 16 + alignof(T1), "");
     }
     {
     typedef std::aligned_storage<10>::type T1;
