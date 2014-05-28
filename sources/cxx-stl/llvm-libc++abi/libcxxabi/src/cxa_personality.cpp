@@ -1050,7 +1050,8 @@ static _Unwind_Reason_Code continue_unwind(_Unwind_Context* context,
                                            uint32_t* unwind_opcodes,
                                            size_t opcode_words)
 {
-    if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) != _URC_OK)
+    if (_Unwind_VRS_Interpret(context, unwind_opcodes, 1, opcode_words * 4) !=
+        _URC_CONTINUE_UNWIND)
         return _URC_FAILURE;
     return _URC_CONTINUE_UNWIND;
 }
@@ -1102,23 +1103,24 @@ __gxx_personality_v0(_Unwind_State state,
     // | +--------+--------+--------+-------+ |
     // | |0| prel31 to __gxx_personality_v0 | |
     // | +--------+--------+--------+-------+ |
-    // | | NWords |      unwind opcodes     | |
+    // | |      N |      unwind opcodes     | |  <-- UnwindData
     // | +--------+--------+--------+-------+ |
-    // | | Word 1        unwind opcodes     | |
+    // | | Word 2        unwind opcodes     | |
     // | +--------+--------+--------+-------+ |
     // | ...                                  |
     // | +--------+--------+--------+-------+ |
     // | | Word N        unwind opcodes     | |
     // | +--------+--------+--------+-------+ |
-    // | | LSDA                             | |
+    // | | LSDA                             | |  <-- lsda
     // | | ...                              | |
     // | +--------+--------+--------+-------+ |
     // +--------------------------------------+
 
     uint32_t *UnwindData = unwind_exception->pr_cache.ehtp + 1;
     uint32_t FirstDataWord = *UnwindData;
-    size_t NWords = (FirstDataWord >> 24) & 0xff;
-    lsda = reinterpret_cast<const uint8_t*>(UnwindData + 1 + NWords);
+    size_t N = ((FirstDataWord >> 24) & 0xff);
+    size_t NDataWords = N + 1;
+    lsda = reinterpret_cast<const uint8_t*>(UnwindData + NDataWords);
 #else
     lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 #endif
@@ -1142,7 +1144,7 @@ __gxx_personality_v0(_Unwind_State state,
         }
         // Did not find the catch handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(context, UnwindData, NWords);
+            return continue_unwind(context, UnwindData, NDataWords);
         return results.reason;
 
     case _US_UNWIND_FRAME_STARTING:
@@ -1188,11 +1190,11 @@ __gxx_personality_v0(_Unwind_State state,
 
         // Did not find any handler
         if (results.reason == _URC_CONTINUE_UNWIND)
-            return continue_unwind(context, UnwindData, NWords);
+            return continue_unwind(context, UnwindData, NDataWords);
         return results.reason;
 
     case _US_UNWIND_FRAME_RESUME:
-        return continue_unwind(context, UnwindData, NWords);
+        return continue_unwind(context, UnwindData, NDataWords);
     }
 
     // We were called improperly: neither a phase 1 or phase 2 search
