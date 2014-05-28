@@ -656,9 +656,6 @@ scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception
                 return;
             }
             landingPad = (uintptr_t)lpStart + landingPad;
-#if __arm__
-            landingPad |= thumbBit;
-#endif
 #else  // __USING_SJLJ_EXCEPTIONS__
             ++landingPad;
 #endif  // __USING_SJLJ_EXCEPTIONS__
@@ -1176,7 +1173,6 @@ __gxx_personality_v0(_Unwind_State state,
     return _URC_FATAL_PHASE1_ERROR;
 }
 #endif
-
 
 #if __arm__ && !CXXABI_SJLJ
 _Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
