@@ -1,4 +1,4 @@
-//===---------------------- catch_class_04.cpp ----------------------------===//
+//===---------------------- catch_pointer_referece.cpp --------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
