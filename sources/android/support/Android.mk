@@ -95,6 +95,7 @@ android_support_sources := \
     src/musl-math/scalbln.c \
     src/musl-math/scalblnf.c \
     src/musl-math/scalblnl.c \
+    src/musl-math/scalbnl.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
     src/musl-multibyte/mblen.c \
@@ -119,6 +120,11 @@ android_support_sources := \
     src/musl-stdio/swprintf.c \
     src/musl-stdio/vwprintf.c \
     src/musl-stdio/wprintf.c \
+    src/wcstox/floatscan.c \
+    src/wcstox/intscan.c \
+    src/wcstox/shgetc.c \
+    src/wcstox/wcstol.c \
+    src/wcstox/wcstod.c \
 
 # This is only available as a static library for now.
 include $(CLEAR_VARS)
