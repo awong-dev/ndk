@@ -31,7 +31,7 @@
 #endif
 
 #ifndef LIBCXXABI_BARE_METAL
-#  if !defined(__linux__)
+#  if !defined(__linux__) && !defined(__ANDROID__)
 #    define LIBCXXABI_BARE_METAL 1
 #  else
 #    define LIBCXXABI_BARE_METAL 0
