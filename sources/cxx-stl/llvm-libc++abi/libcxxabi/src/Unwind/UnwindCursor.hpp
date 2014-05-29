@@ -1041,16 +1041,17 @@ bool UnwindCursor<A, R>::getInfoFromCompactEncodingSection(pint_t pc,
 template <typename A, typename R>
 void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
   pint_t pc = (pint_t)this->getReg(UNW_REG_IP);
+#if __arm__
+  // Remove the thumb bit so the IP represents the actual instruction address.
+  // This matches the behaviour of _Unwind_GetIP on arm.
+  pc &= (pint_t)~0x1;
+#endif
 
   // If the last line of a function is a "throw" the compiler sometimes
   // emits no instructions after the call to __cxa_throw.  This means
   // the return address is actually the start of the next function.
   // To disambiguate this, back up the pc when we know it is a return
   // address.
-  //
-  // TODO(ajwong): On ARM, this should go back by 2 if thumb-bit, by 4 if not
-  // assuming the pc is at the next instruction.  We should also verify the
-  // pc offsetting code in AddressSpace doesn't double-adjust this address.
   if (isReturnAddress)
     --pc;
 
