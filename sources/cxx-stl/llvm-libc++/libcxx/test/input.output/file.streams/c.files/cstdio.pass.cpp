@@ -133,6 +133,7 @@ int main()
     static_assert((std::is_same<decltype(std::ftell(fp)), long>::value), "");
     static_assert((std::is_same<decltype(std::rewind(fp)), void>::value), "");
     static_assert((std::is_same<decltype(std::clearerr(fp)), void>::value), "");
+<<<<<<< HEAD
 #if !defined(feof)
     //check return type of feof only if it's not an macro which may be a compound expression
     static_assert((std::is_same<decltype(std::feof(fp)), int>::value), "");
@@ -141,5 +142,9 @@ int main()
     //check return type of ferror only if it's not an macro which may be a compound expression
     static_assert((std::is_same<decltype(std::ferror(fp)), int>::value), "");
 #endif
+=======
+    static_assert((std::is_same<decltype(std::feof(fp)), int>::value), "");
+    static_assert((std::is_same<decltype(std::ferror(fp)), int>::value), "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     static_assert((std::is_same<decltype(std::perror("")), void>::value), "");
 }

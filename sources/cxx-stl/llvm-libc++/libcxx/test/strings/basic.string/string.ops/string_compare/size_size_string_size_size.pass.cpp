@@ -10,7 +10,12 @@
 // <string>
 
 // int compare(size_type pos1, size_type n1, const basic_string& str,
+<<<<<<< HEAD
 //             size_type pos2, size_type n2) const;
+=======
+//             size_type pos2, size_type n2=npos) const;
+//  the "=npos" was added in C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 #include <string>
 #include <stdexcept>
@@ -45,6 +50,26 @@ test(const S& s, typename S::size_type pos1, typename S::size_type n1,
 }
 
 template <class S>
+<<<<<<< HEAD
+=======
+void
+test_npos(const S& s, typename S::size_type pos1, typename S::size_type n1,
+     const S& str, typename S::size_type pos2, int x)
+{
+    try
+    {
+        assert(sign(s.compare(pos1, n1, str, pos2)) == sign(x));
+        assert(pos1 <= s.size());
+        assert(pos2 <= str.size());
+    }
+    catch (std::out_of_range&)
+    {
+        assert(pos1 > s.size() || pos2 > str.size());
+    }
+}
+
+template <class S>
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 void test0()
 {
     test(S(""), 0, 0, S(""), 0, 0, 0);
@@ -5795,6 +5820,19 @@ void test54()
     test(S("abcdefghijklmnopqrst"), 21, 0, S("abcdefghijklmnopqrst"), 21, 0, 0);
 }
 
+<<<<<<< HEAD
+=======
+template<class S>
+void test55()
+{
+    test_npos(S(""), 0, 0, S(""), 0, 0);
+    test_npos(S(""), 0, 0, S("abcde"), 0, -5);
+    test_npos(S("abcde"), 0, 0, S("abcdefghij"), 0, -10);
+    test_npos(S("abcde"), 0, 0, S("abcdefghij"), 1, -9);
+    test_npos(S("abcde"), 0, 0, S("abcdefghij"), 5, -5);
+}
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 int main()
 {
     {
@@ -5854,6 +5892,10 @@ int main()
     test52<S>();
     test53<S>();
     test54<S>();
+<<<<<<< HEAD
+=======
+    test55<S>();
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #if __cplusplus >= 201103L
     {
@@ -5913,6 +5955,10 @@ int main()
     test52<S>();
     test53<S>();
     test54<S>();
+<<<<<<< HEAD
+=======
+    test55<S>();
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #endif
 }

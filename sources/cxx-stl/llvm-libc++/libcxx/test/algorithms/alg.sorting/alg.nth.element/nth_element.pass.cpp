@@ -29,6 +29,10 @@ test_one(unsigned N, unsigned M)
     std::random_shuffle(array, array+N);
     std::nth_element(array, array+M, array+N);
     assert(array[M] == M);
+<<<<<<< HEAD
+=======
+    std::nth_element(array, array+N, array+N); // begin, end, end
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     delete [] array;
 }
 

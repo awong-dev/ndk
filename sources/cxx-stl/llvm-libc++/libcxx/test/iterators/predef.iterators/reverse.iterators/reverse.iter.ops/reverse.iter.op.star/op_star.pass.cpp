@@ -15,6 +15,11 @@
 
 // Be sure to respect LWG 198:
 //    http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#198
+<<<<<<< HEAD
+=======
+// LWG 198 was superseded by LWG 2360
+//    http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2360
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 #include <iterator>
 #include <cassert>
@@ -31,6 +36,7 @@ public:
 };
 
 template <class It>
+<<<<<<< HEAD
 class weird_iterator
 {
     It it_;
@@ -51,6 +57,8 @@ public:
 };
 
 template <class It>
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 void
 test(It i, typename std::iterator_traits<It>::value_type x)
 {
@@ -60,7 +68,10 @@ test(It i, typename std::iterator_traits<It>::value_type x)
 
 int main()
 {
+<<<<<<< HEAD
     test(weird_iterator<A>(A()), A());
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     A a;
     test(&a+1, A());
 }

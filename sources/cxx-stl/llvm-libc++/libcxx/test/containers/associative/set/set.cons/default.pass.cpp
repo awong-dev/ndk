@@ -31,5 +31,13 @@ int main()
     assert(m.empty());
     assert(m.begin() == m.end());
     }
+<<<<<<< HEAD
+=======
+    {
+    std::set<int> m = {};
+    assert(m.empty());
+    assert(m.begin() == m.end());
+    }
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif
 }

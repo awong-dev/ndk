@@ -15,6 +15,10 @@
 #include <cassert>
 #include "../../../stack_allocator.h"
 #include "min_allocator.h"
+<<<<<<< HEAD
+=======
+#include "asan_testing.h"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 int main()
 {
@@ -27,6 +31,10 @@ int main()
         v.resize(200, 1);
         assert(v.size() == 200);
         assert(v.capacity() >= 200);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (unsigned i = 0; i < 50; ++i)
             assert(v[i] == 0);
         for (unsigned i = 50; i < 200; ++i)
@@ -40,6 +48,10 @@ int main()
         v.resize(200, 1);
         assert(v.size() == 200);
         assert(v.capacity() >= 200);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #if __cplusplus >= 201103L
     {
@@ -47,10 +59,18 @@ int main()
         v.resize(50, 1);
         assert(v.size() == 50);
         assert(v.capacity() == 100);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert((v == std::vector<int, min_allocator<int>>(50)));
         v.resize(200, 1);
         assert(v.size() == 200);
         assert(v.capacity() >= 200);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (unsigned i = 0; i < 50; ++i)
             assert(v[i] == 0);
         for (unsigned i = 50; i < 200; ++i)
@@ -61,9 +81,17 @@ int main()
         v.resize(50, 1);
         assert(v.size() == 50);
         assert(v.capacity() == 100);
+<<<<<<< HEAD
         v.resize(200, 1);
         assert(v.size() == 200);
         assert(v.capacity() >= 200);
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+        v.resize(200, 1);
+        assert(v.size() == 200);
+        assert(v.capacity() >= 200);
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #endif
 }

@@ -19,6 +19,10 @@
 #include <cassert>
 #include "../../../stack_allocator.h"
 #include "min_allocator.h"
+<<<<<<< HEAD
+=======
+#include "asan_testing.h"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 int main()
 {
@@ -26,6 +30,10 @@ int main()
         std::vector<int> v(100);
         std::vector<int>::iterator i = v.insert(v.cbegin() + 10, 1);
         assert(v.size() == 101);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(i == v.begin() + 10);
         int j;
         for (j = 0; j < 10; ++j)
@@ -38,6 +46,10 @@ int main()
         std::vector<int, stack_allocator<int, 300> > v(100);
         std::vector<int, stack_allocator<int, 300> >::iterator i = v.insert(v.cbegin() + 10, 1);
         assert(v.size() == 101);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(i == v.begin() + 10);
         int j;
         for (j = 0; j < 10; ++j)
@@ -60,6 +72,10 @@ int main()
         std::vector<int, min_allocator<int>> v(100);
         std::vector<int, min_allocator<int>>::iterator i = v.insert(v.cbegin() + 10, 1);
         assert(v.size() == 101);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(i == v.begin() + 10);
         int j;
         for (j = 0; j < 10; ++j)

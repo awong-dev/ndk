@@ -15,6 +15,10 @@
 #include <cassert>
 #include "../../../stack_allocator.h"
 #include "min_allocator.h"
+<<<<<<< HEAD
+=======
+#include "asan_testing.h"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 int main()
 {
@@ -22,22 +26,42 @@ int main()
         std::vector<int> c;
         c.push_back(0);
         assert(c.size() == 1);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(1);
         assert(c.size() == 2);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(2);
         assert(c.size() == 3);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(3);
         assert(c.size() == 4);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(4);
         assert(c.size() == 5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
     }
@@ -45,22 +69,42 @@ int main()
         std::vector<int, stack_allocator<int, 15> > c;
         c.push_back(0);
         assert(c.size() == 1);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(1);
         assert(c.size() == 2);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(2);
         assert(c.size() == 3);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(3);
         assert(c.size() == 4);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(4);
         assert(c.size() == 5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
     }
@@ -69,22 +113,42 @@ int main()
         std::vector<int, min_allocator<int>> c;
         c.push_back(0);
         assert(c.size() == 1);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(1);
         assert(c.size() == 2);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(2);
         assert(c.size() == 3);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(3);
         assert(c.size() == 4);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
         c.push_back(4);
         assert(c.size() == 5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         for (int j = 0; j < c.size(); ++j)
             assert(c[j] == j);
     }

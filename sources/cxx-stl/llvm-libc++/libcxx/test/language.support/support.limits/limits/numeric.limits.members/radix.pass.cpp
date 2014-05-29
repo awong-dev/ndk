@@ -43,6 +43,13 @@ int main()
     test<unsigned long, 2>();
     test<long long, 2>();
     test<unsigned long long, 2>();
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t, 2>();
+    test<__uint128_t, 2>();
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float, FLT_RADIX>();
     test<double, FLT_RADIX>();
     test<long double, FLT_RADIX>();

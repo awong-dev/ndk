@@ -159,16 +159,23 @@ int main()
     static_assert(std::alignment_of<T1>::value == 8, "");
     static_assert(sizeof(T1) == 16, "");
     }
+<<<<<<< HEAD
     // The expected values for the tests below (modulo the last one) are
     // platform-specific which alignof deals with. In particular, the maximum
     // alignment value on ARM is 8 bytes as opposed to 16 bytes on some other
     // architectures that support 128 bit memory accesses.
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     {
     typedef std::aligned_storage<16>::type T1;
 #if _LIBCPP_STD_VER > 11
     static_assert(std::is_same<std::aligned_storage_t<16>, T1>::value, "" );
 #endif
+<<<<<<< HEAD
     static_assert(std::alignment_of<T1>::value == alignof(T1), "");
+=======
+    static_assert(std::alignment_of<T1>::value == 16, "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     static_assert(sizeof(T1) == 16, "");
     }
     {
@@ -176,8 +183,13 @@ int main()
 #if _LIBCPP_STD_VER > 11
     static_assert(std::is_same<std::aligned_storage_t<17>, T1>::value, "" );
 #endif
+<<<<<<< HEAD
     static_assert(std::alignment_of<T1>::value == alignof(T1), "");
     static_assert(sizeof(T1) == 16 + alignof(T1), "");
+=======
+    static_assert(std::alignment_of<T1>::value == 16, "");
+    static_assert(sizeof(T1) == 32, "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
     {
     typedef std::aligned_storage<10>::type T1;

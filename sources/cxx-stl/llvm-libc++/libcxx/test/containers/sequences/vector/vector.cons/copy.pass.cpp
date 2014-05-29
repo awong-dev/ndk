@@ -15,6 +15,10 @@
 #include <cassert>
 #include "test_allocator.h"
 #include "min_allocator.h"
+<<<<<<< HEAD
+=======
+#include "asan_testing.h"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 template <class C>
 void
@@ -25,6 +29,10 @@ test(const C& x)
     assert(c.__invariants());
     assert(c.size() == s);
     assert(c == x);
+<<<<<<< HEAD
+=======
+    assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 int main()
@@ -37,15 +45,33 @@ int main()
     {
         std::vector<int, test_allocator<int> > v(3, 2, test_allocator<int>(5));
         std::vector<int, test_allocator<int> > v2 = v;
+<<<<<<< HEAD
         assert(v2 == v);
         assert(v2.get_allocator() == v.get_allocator());
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+        assert(is_contiguous_container_asan_correct(v2)); 
+        assert(v2 == v);
+        assert(v2.get_allocator() == v.get_allocator());
+        assert(is_contiguous_container_asan_correct(v)); 
+        assert(is_contiguous_container_asan_correct(v2)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #ifndef _LIBCPP_HAS_NO_ADVANCED_SFINAE
     {
         std::vector<int, other_allocator<int> > v(3, 2, other_allocator<int>(5));
         std::vector<int, other_allocator<int> > v2 = v;
+<<<<<<< HEAD
         assert(v2 == v);
         assert(v2.get_allocator() == other_allocator<int>(-2));
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+        assert(is_contiguous_container_asan_correct(v2)); 
+        assert(v2 == v);
+        assert(v2.get_allocator() == other_allocator<int>(-2));
+        assert(is_contiguous_container_asan_correct(v)); 
+        assert(is_contiguous_container_asan_correct(v2)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #endif  // _LIBCPP_HAS_NO_ADVANCED_SFINAE
 #if __cplusplus >= 201103L
@@ -57,8 +83,17 @@ int main()
     {
         std::vector<int, min_allocator<int> > v(3, 2, min_allocator<int>());
         std::vector<int, min_allocator<int> > v2 = v;
+<<<<<<< HEAD
         assert(v2 == v);
         assert(v2.get_allocator() == v.get_allocator());
+=======
+        assert(is_contiguous_container_asan_correct(v)); 
+        assert(is_contiguous_container_asan_correct(v2)); 
+        assert(v2 == v);
+        assert(v2.get_allocator() == v.get_allocator());
+        assert(is_contiguous_container_asan_correct(v)); 
+        assert(is_contiguous_container_asan_correct(v2)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #endif
 }

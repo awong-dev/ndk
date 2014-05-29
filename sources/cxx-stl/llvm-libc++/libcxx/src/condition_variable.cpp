@@ -32,7 +32,11 @@ condition_variable::notify_all() _NOEXCEPT
 }
 
 void
+<<<<<<< HEAD
 condition_variable::wait(unique_lock<mutex>& lk)
+=======
+condition_variable::wait(unique_lock<mutex>& lk) _NOEXCEPT
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     if (!lk.owns_lock())
         __throw_system_error(EPERM,
@@ -44,7 +48,11 @@ condition_variable::wait(unique_lock<mutex>& lk)
 
 void
 condition_variable::__do_timed_wait(unique_lock<mutex>& lk,
+<<<<<<< HEAD
                chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
+=======
+     chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp) _NOEXCEPT
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     using namespace chrono;
     if (!lk.owns_lock())

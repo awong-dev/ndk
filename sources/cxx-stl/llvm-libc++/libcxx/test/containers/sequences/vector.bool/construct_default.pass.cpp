@@ -26,6 +26,15 @@ test0()
     assert(c.__invariants());
     assert(c.empty());
     assert(c.get_allocator() == typename C::allocator_type());
+<<<<<<< HEAD
+=======
+#if __cplusplus >= 201103L
+    C c1 = {};
+    assert(c1.__invariants());
+    assert(c1.empty());
+    assert(c1.get_allocator() == typename C::allocator_type());
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template <class C>

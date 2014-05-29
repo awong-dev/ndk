@@ -28,6 +28,7 @@ bool is_skipws ( const std::wistream *is ) {
     }
 
 void both_ways ( const char *p ) {
+<<<<<<< HEAD
 	std::string str(p);
 	auto q = std::quoted(str);
 
@@ -35,6 +36,15 @@ void both_ways ( const char *p ) {
     bool skippingws = is_skipws ( &ss );
 	ss << q;
 	ss >> q;
+=======
+    std::string str(p);
+    auto q = std::quoted(str);
+
+    std::stringstream ss;
+    bool skippingws = is_skipws ( &ss );
+    ss << q;
+    ss >> q;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 
 void round_trip ( const char *p ) {
@@ -92,6 +102,23 @@ std::string unquote ( const char *p, char delim='"', char escape='\\' ) {
     return s;
 }
 
+<<<<<<< HEAD
+=======
+void test_padding () {
+    {
+    std::stringstream ss;
+    ss << std::left << std::setw(10) << std::setfill('!') << std::quoted("abc", '`');
+    assert ( ss.str() == "`abc`!!!!!" );
+    }
+    
+    {
+    std::stringstream ss;
+    ss << std::right << std::setw(10) << std::setfill('!') << std::quoted("abc", '`');
+    assert ( ss.str() == "!!!!!`abc`" );
+    }
+}
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 void round_trip ( const wchar_t *p ) {
     std::wstringstream ss;
@@ -197,6 +224,10 @@ int main()
 
     assert ( unquote (  "" ) ==  "" ); // nothing there
     assert ( unquote ( L"" ) == L"" ); // nothing there
+<<<<<<< HEAD
+=======
+    test_padding ();
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 
 #else

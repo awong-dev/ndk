@@ -190,8 +190,13 @@ void test_fabs()
     static_assert((std::is_same<decltype(std::fabs((unsigned long long)0)), double>::value), "");
     static_assert((std::is_same<decltype(std::fabs((double)0)), double>::value), "");
     static_assert((std::is_same<decltype(std::fabs((long double)0)), long double>::value), "");
+<<<<<<< HEAD
     static_assert((std::is_same<decltype(std::fabsf(0)), float>::value), "");
     static_assert((std::is_same<decltype(std::fabsl(0)), long double>::value), "");
+=======
+    static_assert((std::is_same<decltype(std::fabsf(0.0f)), float>::value), "");
+    static_assert((std::is_same<decltype(std::fabsl(0.0L)), long double>::value), "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     assert(std::fabs(-1) == 1);
 }
 
@@ -493,6 +498,7 @@ void test_isnan()
 #error isnan defined
 #endif
     static_assert((std::is_same<decltype(std::isnan((float)0)), bool>::value), "");
+<<<<<<< HEAD
 #if !defined(__ANDROID__)
  // bionic isnan(double) returns int.  Not sure how isnan(float) and isnan(long double) pass.
  // Mask this check to reveal/fix more seirous one: eg. lack of log2 and nettoward, etc
@@ -500,6 +506,10 @@ void test_isnan()
     static_assert((std::is_same<decltype(std::isnan((double)0)), bool>::value), "");
     static_assert((std::is_same<decltype(std::isnan(0)), bool>::value), "");
 #endif
+=======
+    static_assert((std::is_same<decltype(std::isnan((double)0)), bool>::value), "");
+    static_assert((std::is_same<decltype(std::isnan(0)), bool>::value), "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     static_assert((std::is_same<decltype(std::isnan((long double)0)), bool>::value), "");
     assert(std::isnan(-1.0) == false);
 }

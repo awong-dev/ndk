@@ -21,6 +21,25 @@
 
 #include "min_allocator.h"
 
+<<<<<<< HEAD
+=======
+#if __cplusplus >= 201103L
+template <typename Unordered>
+bool only_deletions ( const Unordered &whole, const Unordered &part ) {
+    typename Unordered::const_iterator w = whole.begin();
+    typename Unordered::const_iterator p = part.begin();
+    
+    while ( w != whole.end () && p != part.end()) {
+        if ( *w == *p )
+            p++;
+        w++;
+        }
+
+    return p == part.end();
+}
+#endif
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 int main()
 {
     {
@@ -347,5 +366,29 @@ int main()
         assert(std::distance(c.begin(), c.end()) == c.size());
         assert(std::distance(c.cbegin(), c.cend()) == c.size());
     }
+<<<<<<< HEAD
+=======
+    {
+    typedef std::unordered_multimap<int, int> C;
+    C m, m2;
+    for ( int i = 0; i < 10; ++i ) {
+        for (int j = 0; j < 2; ++j ) {
+            m.insert (std::make_pair(i,j));
+            m2.insert(std::make_pair(i,j));
+            }
+        }
+    
+    C::iterator i = m2.begin();
+    int ctr = 0;
+    while (i != m2.end()) {
+        if (ctr++ % 2 == 0)
+            m2.erase(i++);
+        else
+            ++i;
+        }
+
+    assert (only_deletions (m, m2));
+    }
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif
 }

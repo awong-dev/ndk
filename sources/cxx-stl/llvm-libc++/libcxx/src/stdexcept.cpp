@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+<<<<<<< HEAD
 #include "stdexcept"
 #include "new"
 #include "string"
@@ -14,12 +15,19 @@
 #include <cstring>
 #include <cstdint>
 #include <cstddef>
+=======
+#include "__refstring"
+#include "stdexcept"
+#include "new"
+#include "string"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #include "system_error"
 
 #ifndef __has_include
 #define __has_include(inc) 0
 #endif
 
+<<<<<<< HEAD
 #ifdef __APPLE__
 #include <cxxabi.h>
 #elif defined(LIBCXXRT) || __has_include(<cxxabi.h>) || defined(__ANDROID__)
@@ -96,10 +104,19 @@ __libcpp_nmstr::~__libcpp_nmstr()
 #if ! defined(_LIBCPP_MSVC)
 #pragma GCC visibility pop
 #endif
+=======
+/* For _LIBCPPABI_VERSION */
+#if __has_include(<cxxabi.h>) || defined(__APPLE_) || defined(LIBCXXRT)
+#include <cxxabi.h>
+#endif
+
+static_assert(sizeof(std::__libcpp_refstring) == sizeof(const char *), "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 namespace std  // purposefully not using versioning namespace
 {
 
+<<<<<<< HEAD
 logic_error::logic_error(const string& msg)
 {
     __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
@@ -117,14 +134,30 @@ logic_error::logic_error(const logic_error& le) _NOEXCEPT
     __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
     const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
     ::new(s) __libcpp_nmstr(*s2);
+=======
+logic_error::logic_error(const string& msg) : __imp_(msg.c_str())
+{
+}
+
+logic_error::logic_error(const char* msg) : __imp_(msg)
+{
+}
+
+logic_error::logic_error(const logic_error& le) _NOEXCEPT : __imp_(le.__imp_)
+{
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 logic_error&
 logic_error::operator=(const logic_error& le) _NOEXCEPT
 {
+<<<<<<< HEAD
     __libcpp_nmstr *s1 = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
     const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
     *s1 = *s2;
+=======
+    __imp_ = le.__imp_;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return *this;
 }
 
@@ -132,19 +165,27 @@ logic_error::operator=(const logic_error& le) _NOEXCEPT
 
 logic_error::~logic_error() _NOEXCEPT
 {
+<<<<<<< HEAD
     __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
     s->~__libcpp_nmstr();
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 const char*
 logic_error::what() const _NOEXCEPT
 {
+<<<<<<< HEAD
     const __libcpp_nmstr *s = reinterpret_cast<const __libcpp_nmstr *>(&__imp_);
     return s->c_str();
+=======
+    return __imp_.c_str();
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 #endif
 
+<<<<<<< HEAD
 runtime_error::runtime_error(const string& msg)
 {
     __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
@@ -162,14 +203,31 @@ runtime_error::runtime_error(const runtime_error& le) _NOEXCEPT
     __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
     const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
     ::new(s) __libcpp_nmstr(*s2);
+=======
+runtime_error::runtime_error(const string& msg) : __imp_(msg.c_str())
+{
+}
+
+runtime_error::runtime_error(const char* msg) : __imp_(msg)
+{
+}
+
+runtime_error::runtime_error(const runtime_error& le) _NOEXCEPT
+  : __imp_(le.__imp_)
+{
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 runtime_error&
 runtime_error::operator=(const runtime_error& le) _NOEXCEPT
 {
+<<<<<<< HEAD
     __libcpp_nmstr *s1 = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
     const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
     *s1 = *s2;
+=======
+    __imp_ = le.__imp_;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return *this;
 }
 
@@ -177,15 +235,22 @@ runtime_error::operator=(const runtime_error& le) _NOEXCEPT
 
 runtime_error::~runtime_error() _NOEXCEPT
 {
+<<<<<<< HEAD
     __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
     s->~__libcpp_nmstr();
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 const char*
 runtime_error::what() const _NOEXCEPT
 {
+<<<<<<< HEAD
     const __libcpp_nmstr *s = reinterpret_cast<const __libcpp_nmstr *>(&__imp_);
     return s->c_str();
+=======
+    return __imp_.c_str();
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 domain_error::~domain_error() _NOEXCEPT {}

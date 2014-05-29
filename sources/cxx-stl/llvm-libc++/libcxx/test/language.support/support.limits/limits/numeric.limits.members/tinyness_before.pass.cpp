@@ -42,6 +42,13 @@ int main()
     test<unsigned long, false>();
     test<long long, false>();
     test<unsigned long long, false>();
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t, false>();
+    test<__uint128_t, false>();
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float, false>();
     test<double, false>();
     test<long double, false>();

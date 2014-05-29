@@ -15,6 +15,10 @@
 
 #include <iterator>
 #include <vector>
+<<<<<<< HEAD
+=======
+#include "nasty_containers.hpp"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 template <class C>
 void
@@ -26,4 +30,8 @@ test(C c)
 int main()
 {
     test(std::vector<int>());
+<<<<<<< HEAD
+=======
+    test(nasty_vector<int>());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

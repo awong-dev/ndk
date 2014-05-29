@@ -44,6 +44,13 @@ int main()
     test<unsigned long>(0);
     test<long long>(0);
     test<unsigned long long>(0);
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t>(0);
+    test<__uint128_t>(0);
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float>(FLT_EPSILON);
     test<double>(DBL_EPSILON);
     test<long double>(LDBL_EPSILON);

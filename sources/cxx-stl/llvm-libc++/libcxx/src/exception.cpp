@@ -29,7 +29,11 @@
     #define __terminate_handler  __cxxabiapple::__cxa_terminate_handler
     #define __unexpected_handler __cxxabiapple::__cxa_unexpected_handler
   #endif  // _LIBCPPABI_VERSION
+<<<<<<< HEAD
 #elif defined(LIBCXXRT) || __has_include(<cxxabi.h>) || defined(__ANDROID__)
+=======
+#elif defined(LIBCXXRT) || __has_include(<cxxabi.h>)
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
   #include <cxxabi.h>
   using namespace __cxxabiv1;
   #if defined(LIBCXXRT) || defined(_LIBCPPABI_VERSION)

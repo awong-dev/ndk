@@ -16,6 +16,10 @@
 
 #include "../../../stack_allocator.h"
 #include "min_allocator.h"
+<<<<<<< HEAD
+=======
+#include "asan_testing.h"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 template <class C>
 void
@@ -24,6 +28,10 @@ test(typename C::size_type n, const typename C::value_type& x)
     C c(n, x);
     assert(c.__invariants());
     assert(c.size() == n);
+<<<<<<< HEAD
+=======
+    assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     for (typename C::const_iterator i = c.cbegin(), e = c.cend(); i != e; ++i)
         assert(*i == x);
 }

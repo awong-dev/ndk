@@ -765,7 +765,11 @@ template<class _CharT, class _Traits>
 basic_ostream<_CharT, _Traits>&
 operator<<(basic_ostream<_CharT, _Traits>& __os, _CharT __c)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, &__c, 1);
+=======
+    return _VSTD::__put_character_sequence(__os, &__c, 1);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits>
@@ -805,28 +809,44 @@ template<class _Traits>
 basic_ostream<char, _Traits>&
 operator<<(basic_ostream<char, _Traits>& __os, char __c)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, &__c, 1);
+=======
+    return _VSTD::__put_character_sequence(__os, &__c, 1);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _Traits>
 basic_ostream<char, _Traits>&
 operator<<(basic_ostream<char, _Traits>& __os, signed char __c)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, (char *) &__c, 1);
+=======
+    return _VSTD::__put_character_sequence(__os, (char *) &__c, 1);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _Traits>
 basic_ostream<char, _Traits>&
 operator<<(basic_ostream<char, _Traits>& __os, unsigned char __c)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, (char *) &__c, 1);
+=======
+    return _VSTD::__put_character_sequence(__os, (char *) &__c, 1);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits>
 basic_ostream<_CharT, _Traits>&
 operator<<(basic_ostream<_CharT, _Traits>& __os, const _CharT* __str)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, __str, _Traits::length(__str));
+=======
+    return _VSTD::__put_character_sequence(__os, __str, _Traits::length(__str));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits>
@@ -879,23 +899,37 @@ template<class _Traits>
 basic_ostream<char, _Traits>&
 operator<<(basic_ostream<char, _Traits>& __os, const char* __str)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, __str, _Traits::length(__str));
+=======
+    return _VSTD::__put_character_sequence(__os, __str, _Traits::length(__str));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _Traits>
 basic_ostream<char, _Traits>&
 operator<<(basic_ostream<char, _Traits>& __os, const signed char* __str)
 {
+<<<<<<< HEAD
 	const char *__s = (const char *) __str;
 	return _VSTD::__put_character_sequence(__os, __s, _Traits::length(__s));
+=======
+    const char *__s = (const char *) __str;
+    return _VSTD::__put_character_sequence(__os, __s, _Traits::length(__s));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _Traits>
 basic_ostream<char, _Traits>&
 operator<<(basic_ostream<char, _Traits>& __os, const unsigned char* __str)
 {
+<<<<<<< HEAD
 	const char *__s = (const char *) __str;
 	return _VSTD::__put_character_sequence(__os, __s, _Traits::length(__s));
+=======
+    const char *__s = (const char *) __str;
+    return _VSTD::__put_character_sequence(__os, __s, _Traits::length(__s));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template <class _CharT, class _Traits>
@@ -1065,7 +1099,11 @@ basic_ostream<_CharT, _Traits>&
 operator<<(basic_ostream<_CharT, _Traits>& __os,
            const basic_string<_CharT, _Traits, _Allocator>& __str)
 {
+<<<<<<< HEAD
 	return _VSTD::__put_character_sequence(__os, __str.data(), __str.size());
+=======
+    return _VSTD::__put_character_sequence(__os, __str.data(), __str.size());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template <class _CharT, class _Traits>

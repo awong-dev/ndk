@@ -31,5 +31,15 @@ int main()
     assert(i == 1);
     i = std::min({1, 3, 2});
     assert(i == 1);
+<<<<<<< HEAD
+=======
+#if _LIBCPP_STD_VER > 11
+    {
+    static_assert(std::min({1, 3, 2}) == 1, "");
+    static_assert(std::min({2, 1, 3}) == 1, "");
+    static_assert(std::min({3, 2, 1}) == 1, "");
+    }
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif  // _LIBCPP_HAS_NO_GENERALIZED_INITIALIZERS
 }

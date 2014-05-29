@@ -51,4 +51,12 @@ int main()
 
     test_is_signed<int>();
     test_is_signed<double>();
+<<<<<<< HEAD
+=======
+
+#ifndef _LIBCPP_HAS_NO_INT128
+    test_is_signed<__int128_t>();
+    test_is_not_signed<__uint128_t>();
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

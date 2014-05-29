@@ -19,6 +19,10 @@
 #include <cassert>
 #include "../../../stack_allocator.h"
 #include "min_allocator.h"
+<<<<<<< HEAD
+=======
+#include "asan_testing.h"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
 
@@ -66,6 +70,10 @@ int main()
         assert(c.size() == 1);
         assert(c.front().geti() == 2);
         assert(c.front().getd() == 3.5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         i = c.emplace(c.cend(), 3, 4.5);
         assert(i == c.end()-1);
         assert(c.size() == 2);
@@ -73,6 +81,10 @@ int main()
         assert(c.front().getd() == 3.5);
         assert(c.back().geti() == 3);
         assert(c.back().getd() == 4.5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         i = c.emplace(c.cbegin()+1, 4, 6.5);
         assert(i == c.begin()+1);
         assert(c.size() == 3);
@@ -82,6 +94,10 @@ int main()
         assert(c[1].getd() == 6.5);
         assert(c.back().geti() == 3);
         assert(c.back().getd() == 4.5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
     {
         std::vector<A, stack_allocator<A, 7> > c;
@@ -90,6 +106,10 @@ int main()
         assert(c.size() == 1);
         assert(c.front().geti() == 2);
         assert(c.front().getd() == 3.5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         i = c.emplace(c.cend(), 3, 4.5);
         assert(i == c.end()-1);
         assert(c.size() == 2);
@@ -97,6 +117,10 @@ int main()
         assert(c.front().getd() == 3.5);
         assert(c.back().geti() == 3);
         assert(c.back().getd() == 4.5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         i = c.emplace(c.cbegin()+1, 4, 6.5);
         assert(i == c.begin()+1);
         assert(c.size() == 3);
@@ -106,6 +130,10 @@ int main()
         assert(c[1].getd() == 6.5);
         assert(c.back().geti() == 3);
         assert(c.back().getd() == 4.5);
+<<<<<<< HEAD
+=======
+        assert(is_contiguous_container_asan_correct(c)); 
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #if _LIBCPP_DEBUG >= 1
     {

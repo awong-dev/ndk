@@ -50,6 +50,13 @@ int main()
     test<unsigned long>(ULONG_MAX);
     test<long long>(LLONG_MAX);
     test<unsigned long long>(ULLONG_MAX);
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t>(__int128_t(__uint128_t(-1)/2));
+    test<__uint128_t>(__uint128_t(-1));
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float>(FLT_MAX);
     test<double>(DBL_MAX);
     test<long double>(LDBL_MAX);

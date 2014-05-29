@@ -37,6 +37,11 @@ public:
 int A::n_moves = 0;
 int A::n_copies = 0;
 
+<<<<<<< HEAD
+=======
+int func(int i) { return i; }
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 int main()
 {
     {
@@ -52,7 +57,11 @@ int main()
     }
     assert(test_alloc_base::count == 0);
     A::n_copies = 0;
+<<<<<<< HEAD
     A::n_copies = 0;
+=======
+    A::n_moves  = 0;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     {
         A a(5);
         std::packaged_task<double(int, char)> p(std::allocator_arg,
@@ -66,4 +75,31 @@ int main()
         assert(A::n_moves > 0);
     }
     assert(test_alloc_base::count == 0);
+<<<<<<< HEAD
+=======
+    A::n_copies = 0;
+    A::n_moves  = 0;
+    {
+        A a(5);
+        std::packaged_task<int(int)> p(std::allocator_arg, test_allocator<A>(), &func);
+        assert(test_alloc_base::count > 0);
+        assert(p.valid());
+        std::future<int> f = p.get_future();
+        p(4);
+        assert(f.get() == 4);
+    }
+    assert(test_alloc_base::count == 0);
+    A::n_copies = 0;
+    A::n_moves  = 0;
+    {
+        A a(5);
+        std::packaged_task<int(int)> p(std::allocator_arg, test_allocator<A>(), func);
+        assert(test_alloc_base::count > 0);
+        assert(p.valid());
+        std::future<int> f = p.get_future();
+        p(4);
+        assert(f.get() == 4);
+    }
+    assert(test_alloc_base::count == 0);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

@@ -161,7 +161,11 @@ public:
     basic_string& operator+=(initializer_list<value_type>);
 
     basic_string& append(const basic_string& str);
+<<<<<<< HEAD
     basic_string& append(const basic_string& str, size_type pos, size_type n);
+=======
+    basic_string& append(const basic_string& str, size_type pos, size_type n=npos); //C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& append(const value_type* s, size_type n);
     basic_string& append(const value_type* s);
     basic_string& append(size_type n, value_type c);
@@ -178,7 +182,11 @@ public:
 
     basic_string& assign(const basic_string& str);
     basic_string& assign(basic_string&& str);
+<<<<<<< HEAD
     basic_string& assign(const basic_string& str, size_type pos, size_type n);
+=======
+    basic_string& assign(const basic_string& str, size_type pos, size_type n=npos); // C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& assign(const value_type* s, size_type n);
     basic_string& assign(const value_type* s);
     basic_string& assign(size_type n, value_type c);
@@ -189,7 +197,11 @@ public:
     basic_string& insert(size_type pos1, const basic_string& str);
     basic_string& insert(size_type pos1, const basic_string& str,
                          size_type pos2, size_type n);
+<<<<<<< HEAD
     basic_string& insert(size_type pos, const value_type* s, size_type n);
+=======
+    basic_string& insert(size_type pos, const value_type* s, size_type n=npos); //C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& insert(size_type pos, const value_type* s);
     basic_string& insert(size_type pos, size_type n, value_type c);
     iterator      insert(const_iterator p, value_type c);
@@ -204,7 +216,11 @@ public:
 
     basic_string& replace(size_type pos1, size_type n1, const basic_string& str);
     basic_string& replace(size_type pos1, size_type n1, const basic_string& str,
+<<<<<<< HEAD
                           size_type pos2, size_type n2);
+=======
+                          size_type pos2, size_type n2=npos); // C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& replace(size_type pos, size_type n1, const value_type* s, size_type n2);
     basic_string& replace(size_type pos, size_type n1, const value_type* s);
     basic_string& replace(size_type pos, size_type n1, size_type n2, value_type c);
@@ -261,7 +277,11 @@ public:
     int compare(const basic_string& str) const noexcept;
     int compare(size_type pos1, size_type n1, const basic_string& str) const;
     int compare(size_type pos1, size_type n1, const basic_string& str,
+<<<<<<< HEAD
                 size_type pos2, size_type n2) const;
+=======
+                size_type pos2, size_type n2=npos) const; // C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     int compare(const value_type* s) const noexcept;
     int compare(size_type pos1, size_type n1, const value_type* s) const;
     int compare(size_type pos1, size_type n1, const value_type* s, size_type n2) const;
@@ -1426,7 +1446,11 @@ public:
 
     _LIBCPP_INLINE_VISIBILITY
     basic_string& append(const basic_string& __str);
+<<<<<<< HEAD
     basic_string& append(const basic_string& __str, size_type __pos, size_type __n);
+=======
+    basic_string& append(const basic_string& __str, size_type __pos, size_type __n=npos);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& append(const value_type* __s, size_type __n);
     basic_string& append(const value_type* __s);
     basic_string& append(size_type __n, value_type __c);
@@ -1465,7 +1489,11 @@ public:
     basic_string& assign(basic_string&& str)
         {*this = _VSTD::move(str); return *this;}
 #endif
+<<<<<<< HEAD
     basic_string& assign(const basic_string& __str, size_type __pos, size_type __n);
+=======
+    basic_string& assign(const basic_string& __str, size_type __pos, size_type __n=npos);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& assign(const value_type* __s, size_type __n);
     basic_string& assign(const value_type* __s);
     basic_string& assign(size_type __n, value_type __c);
@@ -1491,7 +1519,11 @@ public:
 
     _LIBCPP_INLINE_VISIBILITY
     basic_string& insert(size_type __pos1, const basic_string& __str);
+<<<<<<< HEAD
     basic_string& insert(size_type __pos1, const basic_string& __str, size_type __pos2, size_type __n);
+=======
+    basic_string& insert(size_type __pos1, const basic_string& __str, size_type __pos2, size_type __n=npos);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& insert(size_type __pos, const value_type* __s, size_type __n);
     basic_string& insert(size_type __pos, const value_type* __s);
     basic_string& insert(size_type __pos, size_type __n, value_type __c);
@@ -1527,7 +1559,11 @@ public:
 
     _LIBCPP_INLINE_VISIBILITY
     basic_string& replace(size_type __pos1, size_type __n1, const basic_string& __str);
+<<<<<<< HEAD
     basic_string& replace(size_type __pos1, size_type __n1, const basic_string& __str, size_type __pos2, size_type __n2);
+=======
+    basic_string& replace(size_type __pos1, size_type __n1, const basic_string& __str, size_type __pos2, size_type __n2=npos);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     basic_string& replace(size_type __pos, size_type __n1, const value_type* __s, size_type __n2);
     basic_string& replace(size_type __pos, size_type __n1, const value_type* __s);
     basic_string& replace(size_type __pos, size_type __n1, size_type __n2, value_type __c);
@@ -1619,7 +1655,11 @@ public:
     int compare(const basic_string& __str) const _NOEXCEPT;
     _LIBCPP_INLINE_VISIBILITY
     int compare(size_type __pos1, size_type __n1, const basic_string& __str) const;
+<<<<<<< HEAD
     int compare(size_type __pos1, size_type __n1, const basic_string& __str, size_type __pos2, size_type __n2) const;
+=======
+    int compare(size_type __pos1, size_type __n1, const basic_string& __str, size_type __pos2, size_type __n2=npos) const;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     int compare(const value_type* __s) const _NOEXCEPT;
     int compare(size_type __pos1, size_type __n1, const value_type* __s) const;
     int compare(size_type __pos1, size_type __n1, const value_type* __s, size_type __n2) const;
@@ -2311,7 +2351,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::assign(const value_type* __s, size_type __n)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::assign recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::assign received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __cap = capacity();
     if (__cap >= __n)
     {
@@ -2485,7 +2529,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::assign(const value_type* __s)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::assign recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::assign received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return assign(__s, traits_type::length(__s));
 }
 
@@ -2495,7 +2543,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::append(const value_type* __s, size_type __n)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::append recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::append received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __cap = capacity();
     size_type __sz = size();
     if (__cap - __sz >= __n)
@@ -2632,7 +2684,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::append(const value_type* __s)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::append recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::append received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return append(__s, traits_type::length(__s));
 }
 
@@ -2642,7 +2698,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::insert(size_type __pos, const value_type* __s, size_type __n)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::insert recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::insert received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __sz = size();
     if (__pos > __sz)
         this->__throw_out_of_range();
@@ -2794,7 +2854,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::insert(size_type __pos, const value_type* __s)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::insert recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::insert received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return insert(__pos, __s, traits_type::length(__s));
 }
 
@@ -2845,7 +2909,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::replace(size_type __pos, size_type __n1, const value_type* __s, size_type __n2)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n2 == 0 || __s != nullptr, "string::replace recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n2 == 0 || __s != nullptr, "string::replace received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __sz = size();
     if (__pos > __sz)
         this->__throw_out_of_range();
@@ -2977,7 +3045,11 @@ template <class _CharT, class _Traits, class _Allocator>
 basic_string<_CharT, _Traits, _Allocator>&
 basic_string<_CharT, _Traits, _Allocator>::replace(size_type __pos, size_type __n1, const value_type* __s)
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::replace recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::replace received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return replace(__pos, __n1, __s, traits_type::length(__s));
 }
 
@@ -3345,7 +3417,11 @@ basic_string<_CharT, _Traits, _Allocator>::find(const value_type* __s,
                                                 size_type __pos,
                                                 size_type __n) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __sz = size();
     if (__pos > __sz || __sz - __pos < __n)
         return npos;
@@ -3374,7 +3450,11 @@ typename basic_string<_CharT, _Traits, _Allocator>::size_type
 basic_string<_CharT, _Traits, _Allocator>::find(const value_type* __s,
                                                 size_type __pos) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::find(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::find(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return find(__s, __pos, traits_type::length(__s));
 }
 
@@ -3401,7 +3481,11 @@ basic_string<_CharT, _Traits, _Allocator>::rfind(const value_type* __s,
                                                  size_type __pos,
                                                  size_type __n) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::rfind(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::rfind(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __sz = size();
     __pos = _VSTD::min(__pos, __sz);
     if (__n < __sz - __pos)
@@ -3431,7 +3515,11 @@ typename basic_string<_CharT, _Traits, _Allocator>::size_type
 basic_string<_CharT, _Traits, _Allocator>::rfind(const value_type* __s,
                                                  size_type __pos) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::rfind(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::rfind(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return rfind(__s, __pos, traits_type::length(__s));
 }
 
@@ -3465,9 +3553,15 @@ basic_string<_CharT, _Traits, _Allocator>::find_first_of(const value_type* __s,
                                                          size_type __pos,
                                                          size_type __n) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_first_of(): recieved nullptr");
     return _VSTD::__find_first_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, __n);
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_first_of(): received nullptr");
+    return _VSTD::__find_first_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, __n);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3477,7 +3571,11 @@ basic_string<_CharT, _Traits, _Allocator>::find_first_of(const basic_string& __s
                                                          size_type __pos) const _NOEXCEPT
 {
     return _VSTD::__find_first_of<value_type, size_type, traits_type, npos>
+<<<<<<< HEAD
     	(data(), size(), __str.data(), __pos, __str.size());
+=======
+        (data(), size(), __str.data(), __pos, __str.size());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3486,9 +3584,15 @@ typename basic_string<_CharT, _Traits, _Allocator>::size_type
 basic_string<_CharT, _Traits, _Allocator>::find_first_of(const value_type* __s,
                                                          size_type __pos) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::find_first_of(): recieved nullptr");
     return _VSTD::__find_first_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, traits_type::length(__s));
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::find_first_of(): received nullptr");
+    return _VSTD::__find_first_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, traits_type::length(__s));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3508,9 +3612,15 @@ basic_string<_CharT, _Traits, _Allocator>::find_last_of(const value_type* __s,
                                                         size_type __pos,
                                                         size_type __n) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_last_of(): recieved nullptr");
     return _VSTD::__find_last_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, __n);
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_last_of(): received nullptr");
+    return _VSTD::__find_last_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, __n);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3520,7 +3630,11 @@ basic_string<_CharT, _Traits, _Allocator>::find_last_of(const basic_string& __st
                                                         size_type __pos) const _NOEXCEPT
 {
     return _VSTD::__find_last_of<value_type, size_type, traits_type, npos>
+<<<<<<< HEAD
     	(data(), size(), __str.data(), __pos, __str.size());
+=======
+        (data(), size(), __str.data(), __pos, __str.size());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3529,9 +3643,15 @@ typename basic_string<_CharT, _Traits, _Allocator>::size_type
 basic_string<_CharT, _Traits, _Allocator>::find_last_of(const value_type* __s,
                                                         size_type __pos) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::find_last_of(): recieved nullptr");
     return _VSTD::__find_last_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, traits_type::length(__s));
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::find_last_of(): received nullptr");
+    return _VSTD::__find_last_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, traits_type::length(__s));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3551,9 +3671,15 @@ basic_string<_CharT, _Traits, _Allocator>::find_first_not_of(const value_type* _
                                                              size_type __pos,
                                                              size_type __n) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_first_not_of(): recieved nullptr");
     return _VSTD::__find_first_not_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, __n);
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_first_not_of(): received nullptr");
+    return _VSTD::__find_first_not_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, __n);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3563,7 +3689,11 @@ basic_string<_CharT, _Traits, _Allocator>::find_first_not_of(const basic_string&
                                                              size_type __pos) const _NOEXCEPT
 {
     return _VSTD::__find_first_not_of<value_type, size_type, traits_type, npos>
+<<<<<<< HEAD
     	(data(), size(), __str.data(), __pos, __str.size());
+=======
+        (data(), size(), __str.data(), __pos, __str.size());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3572,9 +3702,15 @@ typename basic_string<_CharT, _Traits, _Allocator>::size_type
 basic_string<_CharT, _Traits, _Allocator>::find_first_not_of(const value_type* __s,
                                                              size_type __pos) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::find_first_not_of(): recieved nullptr");
     return _VSTD::__find_first_not_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, traits_type::length(__s));
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::find_first_not_of(): received nullptr");
+    return _VSTD::__find_first_not_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, traits_type::length(__s));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3584,7 +3720,11 @@ basic_string<_CharT, _Traits, _Allocator>::find_first_not_of(value_type __c,
                                                              size_type __pos) const _NOEXCEPT
 {
     return _VSTD::__find_first_not_of<value_type, size_type, traits_type, npos>
+<<<<<<< HEAD
     	(data(), size(), __c, __pos);
+=======
+        (data(), size(), __c, __pos);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 // find_last_not_of
@@ -3595,9 +3735,15 @@ basic_string<_CharT, _Traits, _Allocator>::find_last_not_of(const value_type* __
                                                             size_type __pos,
                                                             size_type __n) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_last_not_of(): recieved nullptr");
     return _VSTD::__find_last_not_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, __n);
+=======
+    _LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find_last_not_of(): received nullptr");
+    return _VSTD::__find_last_not_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, __n);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3607,7 +3753,11 @@ basic_string<_CharT, _Traits, _Allocator>::find_last_not_of(const basic_string& 
                                                             size_type __pos) const _NOEXCEPT
 {
     return _VSTD::__find_last_not_of<value_type, size_type, traits_type, npos>
+<<<<<<< HEAD
     	(data(), size(), __str.data(), __pos, __str.size());
+=======
+        (data(), size(), __str.data(), __pos, __str.size());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3616,9 +3766,15 @@ typename basic_string<_CharT, _Traits, _Allocator>::size_type
 basic_string<_CharT, _Traits, _Allocator>::find_last_not_of(const value_type* __s,
                                                             size_type __pos) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::find_last_not_of(): recieved nullptr");
     return _VSTD::__find_last_not_of<value_type, size_type, traits_type, npos>
     	(data(), size(), __s, __pos, traits_type::length(__s));
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::find_last_not_of(): received nullptr");
+    return _VSTD::__find_last_not_of<value_type, size_type, traits_type, npos>
+        (data(), size(), __s, __pos, traits_type::length(__s));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 template<class _CharT, class _Traits, class _Allocator>
@@ -3628,7 +3784,11 @@ basic_string<_CharT, _Traits, _Allocator>::find_last_not_of(value_type __c,
                                                             size_type __pos) const _NOEXCEPT
 {
     return _VSTD::__find_last_not_of<value_type, size_type, traits_type, npos>
+<<<<<<< HEAD
     	(data(), size(), __c, __pos);
+=======
+        (data(), size(), __c, __pos);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 // compare
@@ -3680,7 +3840,11 @@ template <class _CharT, class _Traits, class _Allocator>
 int
 basic_string<_CharT, _Traits, _Allocator>::compare(const value_type* __s) const _NOEXCEPT
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::compare(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::compare(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return compare(0, npos, __s, traits_type::length(__s));
 }
 
@@ -3690,7 +3854,11 @@ basic_string<_CharT, _Traits, _Allocator>::compare(size_type __pos1,
                                                    size_type __n1,
                                                    const value_type* __s) const
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__s != nullptr, "string::compare(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__s != nullptr, "string::compare(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     return compare(__pos1, __n1, __s, traits_type::length(__s));
 }
 
@@ -3701,7 +3869,11 @@ basic_string<_CharT, _Traits, _Allocator>::compare(size_type __pos1,
                                                    const value_type* __s,
                                                    size_type __n2) const
 {
+<<<<<<< HEAD
     _LIBCPP_ASSERT(__n2 == 0 || __s != nullptr, "string::compare(): recieved nullptr");
+=======
+    _LIBCPP_ASSERT(__n2 == 0 || __s != nullptr, "string::compare(): received nullptr");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     size_type __sz = size();
     if (__pos1 > __sz || __n2 == npos)
         this->__throw_out_of_range();

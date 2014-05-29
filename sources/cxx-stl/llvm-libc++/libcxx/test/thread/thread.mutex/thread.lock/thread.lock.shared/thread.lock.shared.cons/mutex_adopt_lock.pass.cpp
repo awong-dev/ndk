@@ -19,9 +19,15 @@
 int main()
 {
 #if _LIBCPP_STD_VER > 11
+<<<<<<< HEAD
     std::shared_mutex m;
     m.lock();
     std::shared_lock<std::shared_mutex> lk(m, std::adopt_lock);
+=======
+    std::shared_timed_mutex m;
+    m.lock();
+    std::shared_lock<std::shared_timed_mutex> lk(m, std::adopt_lock);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     assert(lk.mutex() == &m);
     assert(lk.owns_lock() == true);
 #endif  // _LIBCPP_STD_VER > 11

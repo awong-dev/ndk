@@ -479,6 +479,11 @@ public:
     template<class Y> weak_ptr(shared_ptr<Y> const& r) noexcept;
     weak_ptr(weak_ptr const& r) noexcept;
     template<class Y> weak_ptr(weak_ptr<Y> const& r) noexcept;
+<<<<<<< HEAD
+=======
+    weak_ptr(weak_ptr&& r) noexcept;                      // C++14
+    template<class Y> weak_ptr(weak_ptr<Y>&& r) noexcept; // C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
     // destructor
     ~weak_ptr();
@@ -487,6 +492,11 @@ public:
     weak_ptr& operator=(weak_ptr const& r) noexcept;
     template<class Y> weak_ptr& operator=(weak_ptr<Y> const& r) noexcept;
     template<class Y> weak_ptr& operator=(shared_ptr<Y> const& r) noexcept;
+<<<<<<< HEAD
+=======
+    weak_ptr& operator=(weak_ptr&& r) noexcept;                      // C++14
+    template<class Y> weak_ptr& operator=(weak_ptr<Y>&& r) noexcept; // C++14
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
     // modifiers
     void swap(weak_ptr& r) noexcept;
@@ -2397,13 +2407,23 @@ template <class _Ptr1, class _Ptr2>
 struct __same_or_less_cv_qualified_imp<_Ptr1, _Ptr2, false>
     : false_type {};
 
+<<<<<<< HEAD
 template <class _Ptr1, class _Ptr2, bool = is_scalar<_Ptr1>::value &&
                                          !is_pointer<_Ptr1>::value>
+=======
+template <class _Ptr1, class _Ptr2, bool = is_pointer<_Ptr1>::value ||
+                                           is_same<_Ptr1, _Ptr2>::value ||
+                                           __has_element_type<_Ptr1>::value>
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 struct __same_or_less_cv_qualified
     : __same_or_less_cv_qualified_imp<_Ptr1, _Ptr2> {};
 
 template <class _Ptr1, class _Ptr2>
+<<<<<<< HEAD
 struct __same_or_less_cv_qualified<_Ptr1, _Ptr2, true>
+=======
+struct __same_or_less_cv_qualified<_Ptr1, _Ptr2, false>
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     : false_type {};
 
 // default_delete

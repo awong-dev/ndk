@@ -21,7 +21,11 @@
 
 #if _LIBCPP_STD_VER > 11
 
+<<<<<<< HEAD
 std::shared_mutex m;
+=======
+std::shared_timed_mutex m;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 typedef std::chrono::system_clock Clock;
 typedef Clock::time_point time_point;
@@ -33,6 +37,7 @@ void f()
 {
     time_point t0 = Clock::now();
     {
+<<<<<<< HEAD
         std::shared_lock<std::shared_mutex> lk(m, std::try_to_lock);
         assert(lk.owns_lock() == false);
     }
@@ -42,11 +47,26 @@ void f()
     }
     {
         std::shared_lock<std::shared_mutex> lk(m, std::try_to_lock);
+=======
+        std::shared_lock<std::shared_timed_mutex> lk(m, std::try_to_lock);
+        assert(lk.owns_lock() == false);
+    }
+    {
+        std::shared_lock<std::shared_timed_mutex> lk(m, std::try_to_lock);
+        assert(lk.owns_lock() == false);
+    }
+    {
+        std::shared_lock<std::shared_timed_mutex> lk(m, std::try_to_lock);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(lk.owns_lock() == false);
     }
     while (true)
     {
+<<<<<<< HEAD
         std::shared_lock<std::shared_mutex> lk(m, std::try_to_lock);
+=======
+        std::shared_lock<std::shared_timed_mutex> lk(m, std::try_to_lock);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         if (lk.owns_lock())
             break;
     }

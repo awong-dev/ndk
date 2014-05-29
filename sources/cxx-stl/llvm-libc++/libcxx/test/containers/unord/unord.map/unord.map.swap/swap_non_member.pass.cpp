@@ -66,7 +66,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -82,7 +86,11 @@ int main()
         assert(c1.at(10) == "ten");
         assert(c1.at(20) == "twenty");
         assert(c1.at(30) == "thirty");
+<<<<<<< HEAD
         assert(c1.at(40) == "fourty");
+=======
+        assert(c1.at(40) == "forty");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c1.at(50) == "fifty");
         assert(c1.at(60) == "sixty");
         assert(c1.at(70) == "seventy");
@@ -165,7 +173,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -181,7 +193,11 @@ int main()
         assert(c1.at(10) == "ten");
         assert(c1.at(20) == "twenty");
         assert(c1.at(30) == "thirty");
+<<<<<<< HEAD
         assert(c1.at(40) == "fourty");
+=======
+        assert(c1.at(40) == "forty");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c1.at(50) == "fifty");
         assert(c1.at(60) == "sixty");
         assert(c1.at(70) == "seventy");
@@ -247,7 +263,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -263,7 +283,11 @@ int main()
         assert(c1.at(10) == "ten");
         assert(c1.at(20) == "twenty");
         assert(c1.at(30) == "thirty");
+<<<<<<< HEAD
         assert(c1.at(40) == "fourty");
+=======
+        assert(c1.at(40) == "forty");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c1.at(50) == "fifty");
         assert(c1.at(60) == "sixty");
         assert(c1.at(70) == "seventy");
@@ -346,7 +370,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -362,7 +390,11 @@ int main()
         assert(c1.at(10) == "ten");
         assert(c1.at(20) == "twenty");
         assert(c1.at(30) == "thirty");
+<<<<<<< HEAD
         assert(c1.at(40) == "fourty");
+=======
+        assert(c1.at(40) == "forty");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c1.at(50) == "fifty");
         assert(c1.at(60) == "sixty");
         assert(c1.at(70) == "seventy");
@@ -428,7 +460,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -444,7 +480,11 @@ int main()
         assert(c1.at(10) == "ten");
         assert(c1.at(20) == "twenty");
         assert(c1.at(30) == "thirty");
+<<<<<<< HEAD
         assert(c1.at(40) == "fourty");
+=======
+        assert(c1.at(40) == "forty");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c1.at(50) == "fifty");
         assert(c1.at(60) == "sixty");
         assert(c1.at(70) == "seventy");
@@ -527,7 +567,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -543,7 +587,11 @@ int main()
         assert(c1.at(10) == "ten");
         assert(c1.at(20) == "twenty");
         assert(c1.at(30) == "thirty");
+<<<<<<< HEAD
         assert(c1.at(40) == "fourty");
+=======
+        assert(c1.at(40) == "forty");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c1.at(50) == "fifty");
         assert(c1.at(60) == "sixty");
         assert(c1.at(70) == "seventy");

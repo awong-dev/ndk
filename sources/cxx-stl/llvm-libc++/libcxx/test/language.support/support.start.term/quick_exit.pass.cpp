@@ -18,8 +18,13 @@ void f() {}
 
 int main()
 {
+<<<<<<< HEAD
 #ifdef _LIBCPP_HAS_QUICK_EXIT
     std::at_quick_exit(f);
     quick_exit(0);
 #endif
+=======
+    std::at_quick_exit(f);
+    quick_exit(0);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

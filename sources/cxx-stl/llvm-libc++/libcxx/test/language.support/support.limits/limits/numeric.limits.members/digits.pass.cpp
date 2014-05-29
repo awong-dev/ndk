@@ -43,6 +43,13 @@ int main()
     test<unsigned long, sizeof(long) == 4 ? 32 : 64>();
     test<long long, 63>();
     test<unsigned long long, 64>();
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t, 127>();
+    test<__uint128_t, 128>();
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float, FLT_MANT_DIG>();
     test<double, DBL_MANT_DIG>();
     test<long double, LDBL_MANT_DIG>();

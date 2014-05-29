@@ -14,6 +14,10 @@
 
 #include <queue>
 #include <cassert>
+<<<<<<< HEAD
+=======
+#include <functional>
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 int main()
 {

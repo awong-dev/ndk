@@ -21,6 +21,16 @@ enum BigEnum
     big = 0xFFFFFFFFFFFFFFFFULL
 };
 
+<<<<<<< HEAD
+=======
+#if !defined(_LIBCPP_HAS_NO_INT128) && !defined(_LIBCPP_HAS_NO_STRONG_ENUMS)
+enum HugeEnum : __uint128_t
+{
+    hugezero
+};
+#endif
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 template <class T, class U>
 void test_make_signed()
 {
@@ -47,4 +57,14 @@ int main()
     test_make_signed< const wchar_t, std::conditional<sizeof(wchar_t) == 4, const int, const short>::type >();
     test_make_signed< const Enum, const int >();
     test_make_signed< BigEnum, std::conditional<sizeof(long) == 4, long long, long>::type >();
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test_make_signed< __int128_t, __int128_t >();
+    test_make_signed< __uint128_t, __int128_t >();
+# ifndef _LIBCPP_HAS_NO_STRONG_ENUMS
+    test_make_signed< HugeEnum, __int128_t >();
+# endif
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

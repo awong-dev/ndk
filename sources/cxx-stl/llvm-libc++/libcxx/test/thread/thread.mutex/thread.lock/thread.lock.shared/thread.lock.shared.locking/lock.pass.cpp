@@ -21,7 +21,11 @@
 
 #if _LIBCPP_STD_VER > 11
 
+<<<<<<< HEAD
 std::shared_mutex m;
+=======
+std::shared_timed_mutex m;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 typedef std::chrono::system_clock Clock;
 typedef Clock::time_point time_point;
@@ -31,7 +35,11 @@ typedef std::chrono::nanoseconds ns;
 
 void f()
 {
+<<<<<<< HEAD
     std::shared_lock<std::shared_mutex> lk(m, std::defer_lock);
+=======
+    std::shared_lock<std::shared_timed_mutex> lk(m, std::defer_lock);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     time_point t0 = Clock::now();
     lk.lock();
     time_point t1 = Clock::now();

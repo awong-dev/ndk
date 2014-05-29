@@ -86,7 +86,11 @@ int main()
         };
         C c(a, a + sizeof(a)/sizeof(a[0]));
         C *p = &c;
+<<<<<<< HEAD
 		c = *p;
+=======
+        c = *p;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         assert(c.size() == 4);
         assert(std::is_permutation(c.begin(), c.end(), a));
     }

@@ -21,7 +21,11 @@
 #include <locale.h>
 #if defined(_LIBCPP_MSVCRT) || defined(__MINGW32__)
 # include <support/win32/locale_win32.h>
+<<<<<<< HEAD
 #elif _AIX
+=======
+#elif defined(_AIX)
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 # include <support/ibm/xlocale.h>
 #elif (defined(__GLIBC__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun__)) || defined(__EMSCRIPTEN__) || defined(__IBMCPP__)
 # include <xlocale.h>
@@ -375,6 +379,7 @@ public:
     static const mask punct  = _ISPUNCT;
     static const mask xdigit = _ISXDIGIT;
     static const mask blank  = _ISBLANK;
+<<<<<<< HEAD
 #elif defined(__ANDROID__)
 # if !defined(_U)
 #   if !defined(_CTYPE_U)
@@ -402,6 +407,9 @@ public:
     // See src/support/android/locale_android.cpp for details!
     static const mask blank  = 0x100;
 #else  // __ANDROID__
+=======
+#else  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || __EMSCRIPTEN__ || __sun__
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     typedef unsigned long mask;
     static const mask space  = 1<<0;
     static const mask print  = 1<<1;
@@ -413,7 +421,11 @@ public:
     static const mask punct  = 1<<7;
     static const mask xdigit = 1<<8;
     static const mask blank  = 1<<9;
+<<<<<<< HEAD
 #endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || __EMSCRIPTEN__ || __sun__ || __ANDROID__
+=======
+#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     static const mask alnum  = alpha | digit;
     static const mask graph  = alnum | punct;
 

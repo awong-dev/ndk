@@ -92,6 +92,18 @@ int main()
     }
     assert(new_called == 0);
     {
+<<<<<<< HEAD
+=======
+    assert(new_called == 0);
+    non_default_test_allocator<std::function<int(int)>> al(1);
+    std::function<int(int)> f2(std::allocator_arg, al, g);
+    assert(new_called == 0);
+    assert(f2.target<int(*)(int)>());
+    assert(f2.target<A>() == 0);
+    }
+    assert(new_called == 0);
+    {
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     std::function<int(int)> f;
     assert(new_called == 0);
     assert(f.target<int(*)(int)>() == 0);

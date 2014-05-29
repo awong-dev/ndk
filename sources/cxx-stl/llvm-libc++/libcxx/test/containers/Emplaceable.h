@@ -14,6 +14,7 @@
 
 class Emplaceable
 {
+<<<<<<< HEAD
 #if !defined(__clang__)
 // GCC 4.8 when compile ccontainers/unord/unord.map/unorder.map.modifiers/emplace_hint.pass.cpp, etc,
 // complains about the following being private
@@ -22,6 +23,9 @@ public:
 #else
     Emplaceable(const Emplaceable&);
 #endif
+=======
+    Emplaceable(const Emplaceable&);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     Emplaceable& operator=(const Emplaceable&);
 
     int int_;

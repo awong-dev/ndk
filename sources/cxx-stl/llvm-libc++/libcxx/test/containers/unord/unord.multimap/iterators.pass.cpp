@@ -122,10 +122,20 @@ int main()
         C::const_iterator cii{};
         assert ( ii1 == ii2 );
         assert ( ii1 == ii4 );
+<<<<<<< HEAD
         assert ( ii1 == cii );
 
         assert ( !(ii1 != ii2 ));
         assert ( !(ii1 != cii ));
+=======
+
+        assert (!(ii1 != ii2 ));
+
+        assert ( (ii1 == cii ));
+        assert ( (cii == ii1 ));
+        assert (!(ii1 != cii ));
+        assert (!(cii != ii1 ));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     }
 #endif
 }

@@ -45,4 +45,15 @@ int main()
     test(x, y, std::greater<int>(), y);
     test(y, x, std::greater<int>(), y);
     }
+<<<<<<< HEAD
+=======
+#if _LIBCPP_STD_VER > 11
+    {
+    constexpr int x = 1;
+    constexpr int y = 0;
+    static_assert(std::max(x, y, std::greater<int>()) == y, "" );
+    static_assert(std::max(y, x, std::greater<int>()) == y, "" );
+    }
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

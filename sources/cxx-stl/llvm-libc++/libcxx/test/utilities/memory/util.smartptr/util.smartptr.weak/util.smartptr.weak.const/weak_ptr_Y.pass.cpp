@@ -12,6 +12,10 @@
 // weak_ptr
 
 // template<class Y> weak_ptr(const weak_ptr<Y>& r);
+<<<<<<< HEAD
+=======
+// template<class Y> weak_ptr(weak_ptr<Y> &&r);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 #include <memory>
 #include <type_traits>
@@ -51,6 +55,15 @@ struct C
 
 int C::count = 0;
 
+<<<<<<< HEAD
+=======
+template <class T>
+std::weak_ptr<T> source (std::shared_ptr<T> p) { return std::weak_ptr<T>(p); }
+
+template <class T>
+void sink (std::weak_ptr<T> &&) {}
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 int main()
 {
     static_assert(( std::is_convertible<std::weak_ptr<A>, std::weak_ptr<B> >::value), "");
@@ -92,4 +105,16 @@ int main()
     }
     assert(B::count == 0);
     assert(A::count == 0);
+<<<<<<< HEAD
+=======
+
+    {
+        std::shared_ptr<A> ps(new A);
+        std::weak_ptr<A> pA = source(ps);
+        std::weak_ptr<B> pB(std::move(pA));
+        assert(pB.use_count() == 1);
+    }
+    assert(B::count == 0);
+    assert(A::count == 0);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

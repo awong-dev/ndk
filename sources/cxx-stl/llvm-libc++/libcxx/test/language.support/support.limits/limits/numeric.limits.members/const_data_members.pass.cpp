@@ -129,6 +129,16 @@ int main()
     TEST_NUMERIC_LIMITS(volatile long)
     TEST_NUMERIC_LIMITS(const volatile long)
 
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    TEST_NUMERIC_LIMITS(__int128_t)
+    TEST_NUMERIC_LIMITS(const __int128_t)
+    TEST_NUMERIC_LIMITS(volatile __int128_t)
+    TEST_NUMERIC_LIMITS(const volatile __int128_t)
+#endif
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     // long long
     TEST_NUMERIC_LIMITS(long long)
     TEST_NUMERIC_LIMITS(const long long)
@@ -159,6 +169,16 @@ int main()
     TEST_NUMERIC_LIMITS(volatile unsigned long long)
     TEST_NUMERIC_LIMITS(const volatile unsigned long long)
 
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    TEST_NUMERIC_LIMITS(__uint128_t)
+    TEST_NUMERIC_LIMITS(const __uint128_t)
+    TEST_NUMERIC_LIMITS(volatile __uint128_t)
+    TEST_NUMERIC_LIMITS(const volatile __uint128_t)
+#endif
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     // float
     TEST_NUMERIC_LIMITS(float)
     TEST_NUMERIC_LIMITS(const float)

@@ -17,6 +17,7 @@
 
 class MoveOnly
 {
+<<<<<<< HEAD
 #if !defined(__clang__)
 // GCC 4.8 when compile containers/associative/map/map.cons/move_alloc.pass.cpp, etc,
 // complains about the following being private
@@ -25,6 +26,9 @@ public:
 #else
     MoveOnly(const MoveOnly&);
 #endif
+=======
+    MoveOnly(const MoveOnly&);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     MoveOnly& operator=(const MoveOnly&);
 
     int data_;

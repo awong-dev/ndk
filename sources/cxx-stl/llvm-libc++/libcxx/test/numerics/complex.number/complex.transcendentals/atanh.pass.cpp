@@ -51,7 +51,11 @@ void test_edges()
             assert(std::signbit(x[i].real()) == std::signbit(r.real()));
             assert(std::isnan(r.imag()));
         }
+<<<<<<< HEAD
         else if (abs(x[i].real()) == 1 && x[i].imag() == 0)
+=======
+        else if (std::abs(x[i].real()) == 1 && x[i].imag() == 0)
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         {
             assert(std::isinf(r.real()));
             assert(std::signbit(x[i].real()) == std::signbit(r.real()));

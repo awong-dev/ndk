@@ -7,7 +7,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+<<<<<<< HEAD
 #define	_LIBCPP_BUILDING_SYSTEM_ERROR
+=======
+#define _LIBCPP_BUILDING_SYSTEM_ERROR
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #include "system_error"
 #include "string"
 #include "cstring"
@@ -68,6 +72,12 @@ __generic_error_category::message(int ev) const
 #ifdef ELAST
     if (ev > ELAST)
       return string("unspecified generic_category error");
+<<<<<<< HEAD
+=======
+#elif defined(__linux__)
+    if (ev > 4095)
+      return string("unspecified generic_category error");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif  // ELAST
     return __do_message::message(ev);
 }
@@ -100,6 +110,12 @@ __system_error_category::message(int ev) const
 #ifdef ELAST
     if (ev > ELAST)
       return string("unspecified system_category error");
+<<<<<<< HEAD
+=======
+#elif defined(__linux__)
+    if (ev > 4095)
+      return string("unspecified system_category error");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif  // ELAST
     return __do_message::message(ev);
 }
@@ -110,6 +126,12 @@ __system_error_category::default_error_condition(int ev) const _NOEXCEPT
 #ifdef ELAST
     if (ev > ELAST)
       return error_condition(ev, system_category());
+<<<<<<< HEAD
+=======
+#elif defined(__linux__)
+    if (ev > 4095)
+      return error_condition(ev, system_category());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif  // ELAST
     return error_condition(ev, generic_category());
 }

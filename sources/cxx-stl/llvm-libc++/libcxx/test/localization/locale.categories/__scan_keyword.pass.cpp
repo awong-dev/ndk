@@ -22,7 +22,11 @@
 //  no keyword match is found.  If no keyword match is found, __ke is returned.
 //  Else an iterator pointing to the matching keyword is found.  If more than
 //  one keyword matches, an iterator to the first matching keyword is returned.
+<<<<<<< HEAD
 //  If on exit __b == __e, eofbit is set in __err.  If __case_senstive is false,
+=======
+//  If on exit __b == __e, eofbit is set in __err.  If __case_sensitive is false,
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 //  __ct is used to force to lower case before comparing characters.
 //  Examples:
 //  Keywords:  "a", "abb"

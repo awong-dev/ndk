@@ -47,6 +47,13 @@ int main()
     test<unsigned long, sizeof(long) == 4 ? 9 : 19>();
     test<long long, 18>();
     test<unsigned long long, 19>();
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t, 38>();
+    test<__uint128_t, 38>();
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float, FLT_DIG>();
     test<double, DBL_DIG>();
     test<long double, LDBL_DIG>();

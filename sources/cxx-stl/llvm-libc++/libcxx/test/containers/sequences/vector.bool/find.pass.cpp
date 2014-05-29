@@ -25,6 +25,10 @@ int main()
             std::vector<bool> b(i,true);
             std::vector<bool>::iterator j = std::find(b.begin()+1, b.end(), false);
             assert(j-b.begin() == i);
+<<<<<<< HEAD
+=======
+            assert(b.end() == j);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         }
     }
     {
@@ -33,6 +37,10 @@ int main()
             std::vector<bool> b(i,false);
             std::vector<bool>::iterator j = std::find(b.begin()+1, b.end(), true);
             assert(j-b.begin() == i);
+<<<<<<< HEAD
+=======
+            assert(b.end() == j);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         }
     }
 }

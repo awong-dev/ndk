@@ -9,7 +9,11 @@
 
 // <shared_mutex>
 
+<<<<<<< HEAD
 // class shared_mutex;
+=======
+// class shared_timed_mutex;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 // template <class Clock, class Duration>
 //   shared_lock(mutex_type& m, const chrono::time_point<Clock, Duration>& abs_time);
@@ -22,7 +26,11 @@
 
 #if _LIBCPP_STD_VER > 11
 
+<<<<<<< HEAD
 std::shared_mutex m;
+=======
+std::shared_timed_mutex m;
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 typedef std::chrono::steady_clock Clock;
 typedef Clock::time_point time_point;
@@ -33,7 +41,11 @@ typedef std::chrono::nanoseconds ns;
 void f1()
 {
     time_point t0 = Clock::now();
+<<<<<<< HEAD
     std::shared_lock<std::shared_mutex> lk(m, Clock::now() + ms(300));
+=======
+    std::shared_lock<std::shared_timed_mutex> lk(m, Clock::now() + ms(300));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     assert(lk.owns_lock() == true);
     time_point t1 = Clock::now();
     ns d = t1 - t0 - ms(250);
@@ -43,7 +55,11 @@ void f1()
 void f2()
 {
     time_point t0 = Clock::now();
+<<<<<<< HEAD
     std::shared_lock<std::shared_mutex> lk(m, Clock::now() + ms(250));
+=======
+    std::shared_lock<std::shared_timed_mutex> lk(m, Clock::now() + ms(250));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     assert(lk.owns_lock() == false);
     time_point t1 = Clock::now();
     ns d = t1 - t0 - ms(250);

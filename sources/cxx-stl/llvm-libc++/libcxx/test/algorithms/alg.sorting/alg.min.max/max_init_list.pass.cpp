@@ -31,5 +31,15 @@ int main()
     assert(i == 3);
     i = std::max({1, 3, 2});
     assert(i == 3);
+<<<<<<< HEAD
+=======
+#if _LIBCPP_STD_VER > 11
+    {
+    static_assert(std::max({1, 3, 2}) == 3, "");
+    static_assert(std::max({2, 1, 3}) == 3, "");
+    static_assert(std::max({3, 2, 1}) == 3, "");
+    }
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif  // _LIBCPP_HAS_NO_GENERALIZED_INITIALIZERS
 }

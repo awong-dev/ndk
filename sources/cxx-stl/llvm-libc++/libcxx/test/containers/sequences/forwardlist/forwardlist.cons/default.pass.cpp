@@ -31,5 +31,14 @@ int main()
         C c;
         assert(c.empty());
     }
+<<<<<<< HEAD
+=======
+    {
+        typedef int T;
+        typedef std::forward_list<T> C;
+        C c = {};
+        assert(c.empty());
+    }
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif
 }

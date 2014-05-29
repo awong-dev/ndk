@@ -114,18 +114,22 @@ inline _LIBCPP_INLINE_VISIBILITY int __libcpp_getc(FILE* __stream) {return getc(
 inline _LIBCPP_INLINE_VISIBILITY int getc(FILE* __stream) {return __libcpp_getc(__stream);}
 #endif  // getc
 
+<<<<<<< HEAD
 #ifdef getchar
 inline _LIBCPP_INLINE_VISIBILITY int __libcpp_getchar(void) {return getchar();}
 #undef getchar
 inline _LIBCPP_INLINE_VISIBILITY int getchar(void) {return __libcpp_getchar();}
 #endif  // getchar
 
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #ifdef putc
 inline _LIBCPP_INLINE_VISIBILITY int __libcpp_putc(int __c, FILE* __stream) {return putc(__c, __stream);}
 #undef putc
 inline _LIBCPP_INLINE_VISIBILITY int putc(int __c, FILE* __stream) {return __libcpp_putc(__c, __stream);}
 #endif  // putc
 
+<<<<<<< HEAD
 #ifdef __ANDROID__
 // In bionic's stdio.h, putchar appears as both a function prototype and a macro (later
 // in the same header).  Because it's defined as a macro, the following code snippet replaces
@@ -163,6 +167,8 @@ inline _LIBCPP_INLINE_VISIBILITY int __libcpp_ferror(FILE* __stream) {return fer
 inline _LIBCPP_INLINE_VISIBILITY int ferror(FILE* __stream) {return __libcpp_ferror(__stream);}
 #endif  // ferror
 
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 using ::FILE;

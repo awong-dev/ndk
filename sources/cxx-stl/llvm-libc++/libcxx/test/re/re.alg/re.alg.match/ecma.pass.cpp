@@ -576,12 +576,15 @@ int main()
         assert(!std::regex_match(s, m, std::regex("[a[.hyphen.]z]")));
         assert(m.size() == 0);
     }
+<<<<<<< HEAD
 /* Disable locale specific tests on Android because Android's NDK does not
  * support locales other than "C" and "POSIX".
  *
  * https://code.google.com/p/android/issues/detail?id=57313
  */
 #if 0
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
     {
         std::cmatch m;
@@ -614,8 +617,24 @@ int main()
         assert(m.position(0) == 0);
         assert(m.str(0) == s);
     }
+<<<<<<< HEAD
     std::locale::global(std::locale("C"));
 #endif
+=======
+    {
+        std::cmatch m;
+        const char s[] = "foobar";
+        assert(std::regex_match(s, m, std::regex("[^\\0]*")));
+        assert(m.size() == 1);
+    }
+    {
+        std::cmatch m;
+        const char s[] = "foo\0bar";
+        assert(std::regex_match(s, s+7, m, std::regex("[abfor\\0]*")));
+        assert(m.size() == 1);
+    }
+    std::locale::global(std::locale("C"));
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     {
         std::cmatch m;
         const char s[] = "m";
@@ -1236,12 +1255,15 @@ int main()
         assert(!std::regex_match(s, m, std::wregex(L"[a[.hyphen.]z]")));
         assert(m.size() == 0);
     }
+<<<<<<< HEAD
 /* Disable locale specific tests on Android because Android's NDK does not
  * support locales other than "C" and "POSIX".
  *
  * https://code.google.com/p/android/issues/detail?id=57313
  */
 #if 0
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
     {
         std::wcmatch m;
@@ -1275,7 +1297,10 @@ int main()
         assert(m.str(0) == s);
     }
     std::locale::global(std::locale("C"));
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     {
         std::wcmatch m;
         const wchar_t s[] = L"m";

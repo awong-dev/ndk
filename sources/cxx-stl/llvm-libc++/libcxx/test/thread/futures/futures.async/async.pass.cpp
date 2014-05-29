@@ -55,6 +55,15 @@ std::unique_ptr<int> f4(std::unique_ptr<int>&& p)
     return std::move(p);
 }
 
+<<<<<<< HEAD
+=======
+void f5(int i)
+{
+    std::this_thread::sleep_for(ms(200));
+    throw i;
+}
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 int main()
 {
     {
@@ -174,4 +183,20 @@ int main()
         Clock::time_point t1 = Clock::now();
         assert(t1-t0 < ms(100));
     }
+<<<<<<< HEAD
+=======
+
+    {
+        std::future<void> f = std::async(f5, 3);
+        std::this_thread::sleep_for(ms(300));
+        try { f.get(); assert (false); } catch ( int ex ) {}
+    }
+
+    {
+        std::future<void> f = std::async(std::launch::deferred, f5, 3);
+        std::this_thread::sleep_for(ms(300));
+        try { f.get(); assert (false); } catch ( int ex ) {}
+    }
+
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

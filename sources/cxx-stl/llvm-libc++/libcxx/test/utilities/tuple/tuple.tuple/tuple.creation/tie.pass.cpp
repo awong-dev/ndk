@@ -27,4 +27,16 @@ int main()
         assert(i == 42);
         assert(s == "C++");
     }
+<<<<<<< HEAD
+=======
+#if _LIBCPP_STD_VER > 11
+    {
+        static constexpr int i = 42;
+        static constexpr double f = 1.1;
+        constexpr std::tuple<const int &, const double &> t = std::tie(i, f);
+        static_assert ( std::get<0>(t) == 42, "" );
+        static_assert ( std::get<1>(t) == 1.1, "" );
+    }
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

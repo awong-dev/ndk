@@ -12,7 +12,11 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
+<<<<<<< HEAD
 shared_mutex::shared_mutex()
+=======
+shared_timed_mutex::shared_timed_mutex()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     : __state_(0)
 {
 }
@@ -20,7 +24,11 @@ shared_mutex::shared_mutex()
 // Exclusive ownership
 
 void
+<<<<<<< HEAD
 shared_mutex::lock()
+=======
+shared_timed_mutex::lock()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     unique_lock<mutex> lk(__mut_);
     while (__state_ & __write_entered_)
@@ -31,7 +39,11 @@ shared_mutex::lock()
 }
 
 bool
+<<<<<<< HEAD
 shared_mutex::try_lock()
+=======
+shared_timed_mutex::try_lock()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     unique_lock<mutex> lk(__mut_);
     if (__state_ == 0)
@@ -43,7 +55,11 @@ shared_mutex::try_lock()
 }
 
 void
+<<<<<<< HEAD
 shared_mutex::unlock()
+=======
+shared_timed_mutex::unlock()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     lock_guard<mutex> _(__mut_);
     __state_ = 0;
@@ -53,7 +69,11 @@ shared_mutex::unlock()
 // Shared ownership
 
 void
+<<<<<<< HEAD
 shared_mutex::lock_shared()
+=======
+shared_timed_mutex::lock_shared()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     unique_lock<mutex> lk(__mut_);
     while ((__state_ & __write_entered_) || (__state_ & __n_readers_) == __n_readers_)
@@ -64,7 +84,11 @@ shared_mutex::lock_shared()
 }
 
 bool
+<<<<<<< HEAD
 shared_mutex::try_lock_shared()
+=======
+shared_timed_mutex::try_lock_shared()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     unique_lock<mutex> lk(__mut_);
     unsigned num_readers = __state_ & __n_readers_;
@@ -79,7 +103,11 @@ shared_mutex::try_lock_shared()
 }
 
 void
+<<<<<<< HEAD
 shared_mutex::unlock_shared()
+=======
+shared_timed_mutex::unlock_shared()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 {
     lock_guard<mutex> _(__mut_);
     unsigned num_readers = (__state_ & __n_readers_) - 1;

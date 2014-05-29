@@ -36,7 +36,11 @@ int main()
             P(20, "twenty"),
             P(20, "twenty 2"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(50, "fifty 2"),
             P(50, "fifty 3"),
@@ -58,7 +62,11 @@ int main()
             P(20, "twenty"),
             P(20, "twenty 2"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(50, "fifty 2"),
             P(50, "fifty 3"),
@@ -80,7 +88,11 @@ int main()
             P(20, "twenty"),
             P(20, "twenty 2"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(50, "fifty 2"),
             P(50, "fifty 3"),
@@ -111,7 +123,11 @@ int main()
             P(20, "twenty"),
             P(20, "twenty 2"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(50, "fifty 2"),
             P(50, "fifty 3"),
@@ -134,7 +150,11 @@ int main()
             P(20, "twenty"),
             P(20, "twenty 2"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(50, "fifty 2"),
             P(50, "fifty 3"),
@@ -157,7 +177,11 @@ int main()
             P(20, "twenty"),
             P(20, "twenty 2"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(50, "fifty 2"),
             P(50, "fifty 3"),

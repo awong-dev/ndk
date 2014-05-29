@@ -430,9 +430,15 @@ public:
     typedef const value_type&                                    reference;
     typedef typename __pointer_traits::template
 #ifndef _LIBCPP_HAS_NO_TEMPLATE_ALIASES
+<<<<<<< HEAD
             rebind<value_type>
 #else
             rebind<value_type>::other
+=======
+            rebind<const value_type>
+#else
+            rebind<const value_type>::other
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif
                                                                  pointer;
 

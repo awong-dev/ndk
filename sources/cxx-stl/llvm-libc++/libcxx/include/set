@@ -425,14 +425,32 @@ public:
     typedef _VSTD::reverse_iterator<const_iterator> const_reverse_iterator;
 
     _LIBCPP_INLINE_VISIBILITY
+<<<<<<< HEAD
     explicit set(const value_compare& __comp = value_compare())
+=======
+    set()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         _NOEXCEPT_(
             is_nothrow_default_constructible<allocator_type>::value &&
             is_nothrow_default_constructible<key_compare>::value &&
             is_nothrow_copy_constructible<key_compare>::value)
+<<<<<<< HEAD
         : __tree_(__comp) {}
     _LIBCPP_INLINE_VISIBILITY
     set(const value_compare& __comp, const allocator_type& __a)
+=======
+        : __tree_(value_compare()) {}
+
+    _LIBCPP_INLINE_VISIBILITY
+    explicit set(const value_compare& __comp)
+        _NOEXCEPT_(
+            is_nothrow_default_constructible<allocator_type>::value &&
+            is_nothrow_copy_constructible<key_compare>::value)
+        : __tree_(__comp) {}
+
+    _LIBCPP_INLINE_VISIBILITY
+    explicit set(const value_compare& __comp, const allocator_type& __a)
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         : __tree_(__comp, __a) {}
     template <class _InputIterator>
         _LIBCPP_INLINE_VISIBILITY
@@ -822,14 +840,32 @@ public:
 
     // construct/copy/destroy:
     _LIBCPP_INLINE_VISIBILITY
+<<<<<<< HEAD
     explicit multiset(const value_compare& __comp = value_compare())
+=======
+    multiset()
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         _NOEXCEPT_(
             is_nothrow_default_constructible<allocator_type>::value &&
             is_nothrow_default_constructible<key_compare>::value &&
             is_nothrow_copy_constructible<key_compare>::value)
+<<<<<<< HEAD
         : __tree_(__comp) {}
     _LIBCPP_INLINE_VISIBILITY
     multiset(const value_compare& __comp, const allocator_type& __a)
+=======
+        : __tree_(value_compare()) {}
+
+    _LIBCPP_INLINE_VISIBILITY
+    explicit multiset(const value_compare& __comp)
+        _NOEXCEPT_(
+            is_nothrow_default_constructible<allocator_type>::value &&
+            is_nothrow_copy_constructible<key_compare>::value)
+        : __tree_(__comp) {}
+
+    _LIBCPP_INLINE_VISIBILITY
+    explicit multiset(const value_compare& __comp, const allocator_type& __a)
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
         : __tree_(__comp, __a) {}
     template <class _InputIterator>
         _LIBCPP_INLINE_VISIBILITY

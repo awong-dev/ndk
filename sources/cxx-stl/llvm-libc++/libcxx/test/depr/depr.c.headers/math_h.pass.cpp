@@ -82,9 +82,15 @@ void test_exp()
 void test_fabs()
 {
     static_assert((std::is_same<decltype(fabs((double)0)), double>::value), "");
+<<<<<<< HEAD
     static_assert((std::is_same<decltype(fabsf(0)), float>::value), "");
     static_assert((std::is_same<decltype(fabsl(0)), long double>::value), "");
     assert(fabs(-1) == 1);
+=======
+    static_assert((std::is_same<decltype(fabsf(0.f)), float>::value), "");
+    static_assert((std::is_same<decltype(fabsl(0.L)), long double>::value), "");
+    assert(fabs(-1.f) == 1);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 void test_floor()
@@ -229,11 +235,15 @@ void test_isinf()
 void test_isnan()
 {
     static_assert((std::is_same<decltype(isnan((float)0)), bool>::value), "");
+<<<<<<< HEAD
 #if !defined(__ANDROID__)
  // bionic isnan(double) returns int.  Not sure how isnan(float) and isnan(long double) pass.
  // Mask this check to reveal/fix more seirous one: eg. lack of log2 and nettoward, etc
     static_assert((std::is_same<decltype(isnan((double)0)), bool>::value), "");
 #endif
+=======
+    static_assert((std::is_same<decltype(isnan((double)0)), bool>::value), "");
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     static_assert((std::is_same<decltype(isnan((long double)0)), bool>::value), "");
     assert(isnan(-1.0) == false);
 }

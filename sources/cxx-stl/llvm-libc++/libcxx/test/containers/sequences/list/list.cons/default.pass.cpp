@@ -49,5 +49,13 @@ int main()
         assert(l.size() == 0);
         assert(std::distance(l.begin(), l.end()) == 0);
     }
+<<<<<<< HEAD
+=======
+    {
+        std::list<int> l = {};
+        assert(l.size() == 0);
+        assert(std::distance(l.begin(), l.end()) == 0);
+    }
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 #endif
 }

@@ -50,9 +50,12 @@ protected:
 
 int main()
 {
+<<<<<<< HEAD
 #if !defined(__ANDROID__)
     // Remove tests setlocale() to other than "", "C", and "POSIX"
     // for Android
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     {
         testbuf<char> sb;
         std::ostream os(&sb);
@@ -89,5 +92,8 @@ int main()
         os << std::put_money(x, true);
         assert(sb.str() == L"-USD 1,234,567.89");
     }
+<<<<<<< HEAD
 #endif // __ANDROID__
+=======
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

@@ -51,11 +51,32 @@ int main()
         std::deque<int>::const_iterator cii{};
         assert ( ii1 == ii2 );
         assert ( ii1 == ii4 );
+<<<<<<< HEAD
         assert ( ii1 == cii );
 
         assert ( !(ii1 != ii2 ));
         assert ( !(ii1 != cii ));
 
+=======
+
+        assert (!(ii1 != ii2 ));
+
+        assert ( (ii1 == cii ));
+        assert ( (cii == ii1 ));
+        assert (!(ii1 != cii ));
+        assert (!(cii != ii1 ));
+        assert (!(ii1 <  cii ));
+        assert (!(cii <  ii1 ));
+        assert ( (ii1 <= cii ));
+        assert ( (cii <= ii1 ));
+        assert (!(ii1 >  cii ));
+        assert (!(cii >  ii1 ));
+        assert ( (ii1 >= cii ));
+        assert ( (cii >= ii1 ));
+        assert (cii - ii1 == 0);
+        assert (ii1 - cii == 0);
+        
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 //         std::deque<int> c;
 //         assert ( ii1 != c.cbegin());
 //         assert ( cii != c.begin());

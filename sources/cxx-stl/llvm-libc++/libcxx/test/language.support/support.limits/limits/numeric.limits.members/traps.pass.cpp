@@ -48,6 +48,13 @@ int main()
     test<unsigned long, integral_types_trap>();
     test<long long, integral_types_trap>();
     test<unsigned long long, integral_types_trap>();
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t, integral_types_trap>();
+    test<__uint128_t, integral_types_trap>();
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float, false>();
     test<double, false>();
     test<long double, false>();

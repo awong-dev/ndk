@@ -50,6 +50,13 @@ int main()
     test<unsigned long>(0);
     test<long long>(LLONG_MIN);
     test<unsigned long long>(0);
+<<<<<<< HEAD
+=======
+#ifndef _LIBCPP_HAS_NO_INT128
+    test<__int128_t>(-__int128_t(__uint128_t(-1)/2) - 1);
+    test<__uint128_t>(0);
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
     test<float>(FLT_MIN);
     test<double>(DBL_MIN);
     test<long double>(LDBL_MIN);

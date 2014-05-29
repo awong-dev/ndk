@@ -31,7 +31,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),
@@ -54,7 +58,11 @@ int main()
             P(10, "ten"),
             P(20, "twenty"),
             P(30, "thirty"),
+<<<<<<< HEAD
             P(40, "fourty"),
+=======
+            P(40, "forty"),
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
             P(50, "fifty"),
             P(60, "sixty"),
             P(70, "seventy"),

@@ -17,6 +17,10 @@
 #include <iterator>
 #include <list>
 #include <cassert>
+<<<<<<< HEAD
+=======
+#include "nasty_containers.hpp"
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 
 template <class C>
 void
@@ -42,4 +46,8 @@ public:
 int main()
 {
     test(std::list<Copyable>());
+<<<<<<< HEAD
+=======
+    test(nasty_list<Copyable>());
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }

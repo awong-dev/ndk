@@ -133,6 +133,7 @@ void f42()
 
 class MoveOnly
 {
+<<<<<<< HEAD
 #if !defined(__clang__)
    // GCC 4.8 complains about the following being private
 public:
@@ -142,6 +143,9 @@ public:
 #else
     MoveOnly(const MoveOnly&);
 #endif
+=======
+    MoveOnly(const MoveOnly&);
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 public:
     MoveOnly() {}
     MoveOnly(MoveOnly&&) {}

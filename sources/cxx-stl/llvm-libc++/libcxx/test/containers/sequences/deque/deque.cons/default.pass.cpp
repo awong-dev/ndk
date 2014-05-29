@@ -24,6 +24,13 @@ test()
 {
     std::deque<T, Allocator> d;
     assert(d.size() == 0);
+<<<<<<< HEAD
+=======
+#if __cplusplus >= 201103L
+    std::deque<T, Allocator> d1 = {};
+    assert(d1.size() == 0);
+#endif
+>>>>>>> 1aeedfd... Pulled ToT libc++ to sources/cxx-stl/llvm-libc++/libcxx
 }
 
 int main()
