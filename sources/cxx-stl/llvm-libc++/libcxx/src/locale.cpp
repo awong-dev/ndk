@@ -54,10 +54,6 @@ locale_t __cloc() {
 }
 #endif // __cloc_defined
 
-inline locale_t __new_cloc() {
-  return newlocale(LC_ALL_MASK, "C", 0);
-}
-
 namespace {
 
 struct release
@@ -661,14 +657,8 @@ collate_byname<char>::collate_byname(const char* n, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("collate_byname<char>::collate_byname"
                             " failed to construct for " + string(n));
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -678,14 +668,8 @@ collate_byname<char>::collate_byname(const string& name, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("collate_byname<char>::collate_byname"
                             " failed to construct for " + name);
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -725,14 +709,8 @@ collate_byname<wchar_t>::collate_byname(const char* n, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("collate_byname<wchar_t>::collate_byname(size_t refs)"
                             " failed to construct for " + string(n));
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -742,14 +720,8 @@ collate_byname<wchar_t>::collate_byname(const string& name, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("collate_byname<wchar_t>::collate_byname(size_t refs)"
                             " failed to construct for " + name);
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -842,8 +814,6 @@ ctype<wchar_t>::do_toupper(char_type c) const
     return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
     return isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
-#elif defined(__ANDROID__)
-    return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
     return (isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
 #endif
@@ -858,8 +828,6 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
         *low = isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
                              : *low;
-#elif defined(__ANDROID__)
-        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
 #endif
@@ -873,8 +841,6 @@ ctype<wchar_t>::do_tolower(char_type c) const
     return isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
     return isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
-#elif defined(__ANDROID__)
-    return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
     return (isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
 #endif
@@ -889,8 +855,6 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
         *low = isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
                              : *low;
-#elif defined(__ANDROID__)
-        *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
 #endif
@@ -960,8 +924,6 @@ ctype<char>::do_toupper(char_type c) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
     return isascii(c) ? 
       static_cast<char>(__classic_upper_table()[static_cast<unsigned char>(c)]) : c;
-#elif defined(__ANDROID__)
-    return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
     return (isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
 #endif
@@ -979,8 +941,6 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
         *low = isascii(*low) ?
           static_cast<char>(__classic_upper_table()[static_cast<size_t>(*low)]) : *low;
-#elif defined(__ANDROID__)
-        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
 #endif
@@ -998,8 +958,6 @@ ctype<char>::do_tolower(char_type c) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
     return isascii(c) ?
       static_cast<char>(__classic_lower_table()[static_cast<size_t>(c)]) : c;
-#elif defined(__ANDROID__)
-    return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
     return (isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
 #endif
@@ -1015,8 +973,6 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
         *low = static_cast<char>(__classic_lower_table()[static_cast<unsigned char>(*low)]);
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
         *low = isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
-#elif defined(__ANDROID__)
-        *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
 #endif
@@ -1062,11 +1018,6 @@ extern "C" const int ** __ctype_tolower_loc();
 extern "C" const int ** __ctype_toupper_loc();
 #endif
 
-#if defined(__ANDROID__)
-// See src/support/android/android_locale.cpp
-extern "C" const unsigned short* const _ctype_android;
-#endif
-
 const ctype<char>::mask*
 ctype<char>::classic_table()  _NOEXCEPT
 {
@@ -1084,8 +1035,6 @@ ctype<char>::classic_table()  _NOEXCEPT
 // going to end up dereferencing it later...
 #elif defined(__EMSCRIPTEN__)
     return *__ctype_b_loc();
-#elif defined(__ANDROID__)
-    return _ctype_android;
 #elif defined(_AIX)
     return (const unsigned int *)__lc_ctype_ptr->obj->mask;
 #else
@@ -1145,14 +1094,8 @@ ctype_byname<char>::ctype_byname(const char* name, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("ctype_byname<char>::ctype_byname"
                             " failed to construct for " + string(name));
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -1162,14 +1105,8 @@ ctype_byname<char>::ctype_byname(const string& name, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("ctype_byname<char>::ctype_byname"
                             " failed to construct for " + name);
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -1214,14 +1151,8 @@ ctype_byname<wchar_t>::ctype_byname(const char* name, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("ctype_byname<wchar_t>::ctype_byname"
                             " failed to construct for " + string(name));
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -1231,14 +1162,8 @@ ctype_byname<wchar_t>::ctype_byname(const string& name, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("ctype_byname<wchar_t>::ctype_byname"
                             " failed to construct for " + name);
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -1497,7 +1422,7 @@ locale::id codecvt<wchar_t, char, mbstate_t>::id;
 
 codecvt<wchar_t, char, mbstate_t>::codecvt(size_t refs)
     : locale::facet(refs),
-      __l(0)
+      __l(_LIBCPP_GET_C_LOCALE)
 {
 }
 
@@ -1507,14 +1432,8 @@ codecvt<wchar_t, char, mbstate_t>::codecvt(const char* nm, size_t refs)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__l == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("codecvt_byname<wchar_t, char, mbstate_t>::codecvt_byname"
                             " failed to construct for " + string(nm));
-#else
-        __l = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -4308,12 +4227,7 @@ numpunct_byname<char>::__init(const char* nm)
 {
     if (strcmp(nm, "C") != 0)
     {
-        locale_t l = newlocale(LC_ALL_MASK, nm, 0);
-#if defined(__ANDROID__)
-        if (l == 0)
-            l = __new_cloc();
-#endif
-        __locale_unique_ptr loc(l, freelocale);
+        __locale_unique_ptr loc(newlocale(LC_ALL_MASK, nm, 0), freelocale);
 #ifndef _LIBCPP_NO_EXCEPTIONS
         if (loc == nullptr)
             throw runtime_error("numpunct_byname<char>::numpunct_byname"
@@ -4356,12 +4270,7 @@ numpunct_byname<wchar_t>::__init(const char* nm)
 {
     if (strcmp(nm, "C") != 0)
     {
-        locale_t l = newlocale(LC_ALL_MASK, nm, 0);
-#if defined(__ANDROID__)
-        if (l == 0)
-            l = __new_cloc();
-#endif
-        __locale_unique_ptr loc(l, freelocale);
+        __locale_unique_ptr loc(newlocale(LC_ALL_MASK, nm, 0), freelocale);
 #ifndef _LIBCPP_NO_EXCEPTIONS
         if (loc == nullptr)
             throw runtime_error("numpunct_byname<char>::numpunct_byname"
@@ -4775,14 +4684,8 @@ __time_get::__time_get(const char* nm)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__loc_ == 0)
-    {
-#if !defined(__ANDROID__)
         throw runtime_error("time_get_byname"
                             " failed to construct for " + string(nm));
-#else
-        __loc_ = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -4791,14 +4694,8 @@ __time_get::__time_get(const string& nm)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__loc_ == 0)
-    {
-# if !defined(__ANDROID__)
         throw runtime_error("time_get_byname"
                             " failed to construct for " + nm);
-#else
-        __loc_ = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -5475,14 +5372,8 @@ __time_put::__time_put(const char* nm)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__loc_ == 0)
-    {
-# if !defined(__ANDROID__)
         throw runtime_error("time_put_byname"
                             " failed to construct for " + string(nm));
-#else
-        __loc_ = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -5491,14 +5382,8 @@ __time_put::__time_put(const string& nm)
 {
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__loc_ == 0)
-    {
-# if !defined(__ANDROID__)
         throw runtime_error("time_put_byname"
                             " failed to construct for " + nm);
-#else
-        __loc_ = __new_cloc();
-#endif
-    }
 #endif  // _LIBCPP_NO_EXCEPTIONS
 }
 
@@ -5917,12 +5802,7 @@ void
 moneypunct_byname<char, false>::init(const char* nm)
 {
     typedef moneypunct<char, false> base;
-    locale_t l = newlocale(LC_ALL_MASK, nm, 0);
-#if defined(__ANDROID__)
-    if (l == 0)
-        l = __new_cloc();
-#endif
-    __locale_unique_ptr loc(l, freelocale);
+    __locale_unique_ptr loc(newlocale(LC_ALL_MASK, nm, 0), freelocale);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (loc == nullptr)
         throw runtime_error("moneypunct_byname"
@@ -5970,12 +5850,7 @@ void
 moneypunct_byname<char, true>::init(const char* nm)
 {
     typedef moneypunct<char, true> base;
-    locale_t l = newlocale(LC_ALL_MASK, nm, 0);
-#if defined(__ANDROID__)
-    if (l == 0)
-        l = __new_cloc();
-#endif
-    __locale_unique_ptr loc(l, freelocale);
+    __locale_unique_ptr loc(newlocale(LC_ALL_MASK, nm, 0), freelocale);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (loc == nullptr)
         throw runtime_error("moneypunct_byname"
@@ -6040,12 +5915,7 @@ void
 moneypunct_byname<wchar_t, false>::init(const char* nm)
 {
     typedef moneypunct<wchar_t, false> base;
-    locale_t l = newlocale(LC_ALL_MASK, nm, 0);
-#if defined(__ANDROID__)
-    if (l == 0)
-        l = __new_cloc();
-#endif
-    __locale_unique_ptr loc(l, freelocale);
+    __locale_unique_ptr loc(newlocale(LC_ALL_MASK, nm, 0), freelocale);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (loc == nullptr)
         throw runtime_error("moneypunct_byname"
@@ -6128,12 +5998,7 @@ void
 moneypunct_byname<wchar_t, true>::init(const char* nm)
 {
     typedef moneypunct<wchar_t, true> base;
-    locale_t l = newlocale(LC_ALL_MASK, nm, 0);
-#if defined(__ANDROID__)
-    if (l == 0)
-        l = __new_cloc();
-#endif
-    __locale_unique_ptr loc(l, freelocale);
+    __locale_unique_ptr loc(newlocale(LC_ALL_MASK, nm, 0), freelocale);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (loc == nullptr)
         throw runtime_error("moneypunct_byname"

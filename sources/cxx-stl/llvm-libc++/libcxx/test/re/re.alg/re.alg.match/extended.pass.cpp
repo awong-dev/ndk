@@ -612,12 +612,6 @@ int main()
                                                  std::regex_constants::extended)));
         assert(m.size() == 0);
     }
-/* Disable locale specific tests on Android because Android's NDK does not
- * support locales other than "C" and "POSIX".
- *
- * https://code.google.com/p/android/issues/detail?id=57313
- */
-#if 0
     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
     {
         std::cmatch m;
@@ -652,7 +646,6 @@ int main()
         assert(m.str(0) == s);
     }
     std::locale::global(std::locale("C"));
-#endif
     {
         std::cmatch m;
         const char s[] = "m";
@@ -1285,12 +1278,6 @@ int main()
                                                  std::regex_constants::extended)));
         assert(m.size() == 0);
     }
-/* Disable locale specific tests on Android because Android's NDK does not
- * support locales other than "C" and "POSIX".
- *
- * https://code.google.com/p/android/issues/detail?id=57313
- */
-#if 0
     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
     {
         std::wcmatch m;
@@ -1325,7 +1312,6 @@ int main()
         assert(m.str(0) == s);
     }
     std::locale::global(std::locale("C"));
-#endif
     {
         std::wcmatch m;
         const wchar_t s[] = L"m";

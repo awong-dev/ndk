@@ -38,9 +38,6 @@ public:
 
 int main()
 {
-#if !defined(__ANDROID__)
-    // Remove tests setlocale() to other than "", "C", and "POSIX"
-    // for Android
     {
         testbuf<char> sb("  -$1,234,567.89");
         std::istream is(&sb);
@@ -73,5 +70,4 @@ int main()
         is >> std::get_money(x, true);
         assert(x == -123456789);
     }
-#endif
 }

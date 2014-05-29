@@ -27,7 +27,7 @@
         #define __new_handler __cxxabiapple::__cxa_new_handler
     #endif
 #else  // __APPLE__
-    #if defined(LIBCXXRT) || __has_include(<cxxabi.h>) || defined(__ANDROID__)
+    #if defined(LIBCXXRT) || __has_include(<cxxabi.h>)
         #include <cxxabi.h>
     #endif  // __has_include(<cxxabi.h>)
     #if !defined(_LIBCPPABI_VERSION) && !defined(__GLIBCXX__)
@@ -172,7 +172,7 @@ get_new_handler() _NOEXCEPT
 
 #endif // !__GLIBCXX__
 
-#if !defined(LIBCXXRT) || defined(GABIXX_LIBCXX)
+#ifndef LIBCXXRT
 
 bad_alloc::bad_alloc() _NOEXCEPT
 {
@@ -190,7 +190,9 @@ bad_alloc::what() const _NOEXCEPT
     return "std::bad_alloc";
 }
 
-#endif // !LIBCXXRT || GABIXX_LIBCXX
+#endif // !__GLIBCXX__
+
+#endif //LIBCXXRT
 
 bad_array_new_length::bad_array_new_length() _NOEXCEPT
 {
@@ -220,10 +222,9 @@ bad_array_new_length::what() const _NOEXCEPT
     return "bad_array_new_length";
 }
 
-#endif // !_LIBCPPABI_VERSION
+#endif // _LIBCPPABI_VERSION
 
-
-#endif // !LIBSTDCXX
+#ifndef LIBSTDCXX
 
 void
 __throw_bad_alloc()
@@ -232,4 +233,7 @@ __throw_bad_alloc()
     throw bad_alloc();
 #endif
 }
+
+#endif // !LIBSTDCXX
+
 }  // std

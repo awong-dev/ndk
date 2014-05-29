@@ -15,10 +15,6 @@
 #error __bool_true_false_are_defined not defined
 #endif
 
-#if !defined(__clang__)
-// GCC defines bool, true, and false in lib/gcc/arm-linux-androideabi/4.8/include/stdbool.h
-#else
-
 #ifdef bool
 #error bool should not be defined
 #endif
@@ -29,8 +25,6 @@
 
 #ifdef false
 #error false should not be defined
-#endif
-
 #endif
 
 int main()
