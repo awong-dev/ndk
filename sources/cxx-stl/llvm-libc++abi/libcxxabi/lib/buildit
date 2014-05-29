@@ -90,7 +90,7 @@ case $TRIPLE in
   *-none-eabi*)
     RC_CFLAGS="-fPIC"
     SOEXT=so
-    EXTRA_FLAGS+=" -target $TRIPLE --sysroot=$SYSROOT -no-integrated-as -funwind-tables"
+    EXTRA_FLAGS+=" -target $TRIPLE --sysroot=$SYSROOT -no-integrated-as -funwind-tables -DLIBCXXABI_BARE_METAL=1"
   ;;
   *)
     RC_CFLAGS="-fPIC"
