@@ -22,5 +22,5 @@ cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs
 cp libc++abi.a /Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm/usr/lib/armv4t
 
 cd ../test
-export OPTIONS="-target arm-none-eabi -march=armv4 -T generic-hosted-llvm.ld --sysroot=/Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm -std=c++11 -g -O0 -fno-integrated-as"
+export OPTIONS="-target arm-none-eabi -march=armv4 -T generic-hosted-llvm.ld --sysroot=/Users/jroelofs/workdir/mentor/cs-llvm/build/Release+Asserts/SDKs/eabi-elf/codesourcery/arm -std=c++11 -g -O0 -fno-integrated-as -DLIBCXXABI_BARE_METAL=1"
 ./testit
