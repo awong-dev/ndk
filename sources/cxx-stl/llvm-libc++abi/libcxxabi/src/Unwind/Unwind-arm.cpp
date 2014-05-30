@@ -149,7 +149,7 @@ _Unwind_Reason_Code unwindOneFrame(
       break;
     case 1:
     case 2:
-      len = 4 + 4 *((unwindInfo & 0x00ff0000) >> 16);
+      len = 4 + 4 * ((unwindInfo & 0x00ff0000) >> 16);
       startOffset = 2;
       break;
     default:
