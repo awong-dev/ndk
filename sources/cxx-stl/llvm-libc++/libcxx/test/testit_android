@@ -78,6 +78,7 @@ TARGET_ARCH=
 TARGET_PATH=/data/local/tmp/libcxx
 CXX=
 WITH_COMPILER_RT=
+OPTIMIZE=
 for OPT; do
   case $OPT in
     --help|-?)
@@ -100,6 +101,9 @@ for OPT; do
       ;;
     --with-compiler-rt)
       WITH_COMPILER_RT=yes
+      ;;
+    -O*)
+      OPTIMIZE=$OPT
       ;;
     -*)
       echo "Unknown option: $OPT. See --help."
@@ -249,7 +253,7 @@ function version_ge {
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -g -funwind-tables"
+  OPTIONS="-std=c++11 -g -funwind-tables $OPTIMIZE"
   # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
   # unless we specify -UNDEBUG to bring assert() back.
   # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
