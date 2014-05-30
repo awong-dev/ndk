@@ -1065,10 +1065,6 @@ __gxx_personality_v0(_Unwind_State state,
     bool native_exception = (unwind_exception->exception_class & get_vendor_and_language) ==
                             (kOurExceptionClass & get_vendor_and_language);
 
-    // TODO(ajwong): The "Copy the address" comment was in upstream...do we actually need this in arm?
-    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
-    const uint8_t* lsda = 0;
-
 #if LIBCXXABI_ARM_EHABI
     // ARM EHABI # 6.2, # 9.2
     //
@@ -1096,6 +1092,9 @@ __gxx_personality_v0(_Unwind_State state,
     size_t N = ((FirstDataWord >> 24) & 0xff);
     size_t NDataWords = N + 1;
 #endif
+
+    // TODO(ajwong): The "Copy the address" comment was in upstream...do we actually need this in arm?
+    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
 
     const uint8_t *lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
 

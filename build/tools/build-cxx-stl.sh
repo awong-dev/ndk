@@ -83,7 +83,11 @@ register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is 
 EXPLICIT_COMPILER_VERSION=
 
 GCC_VERSION=
-register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version" "$GCC_VERSION"
+register_option "--gcc-version=<ver>" do_gcc_version "Specify GCC version"
+do_gcc_version() {
+    GCC_VERSION=$1
+    EXPLICIT_COMPILER_VERSION=true
+}
 
 LLVM_VERSION=
 register_option "--llvm-version=<ver>" do_llvm_version "Specify LLVM version"
@@ -95,6 +99,7 @@ do_llvm_version() {
 register_jobs_option
 
 extract_parameters "$@"
+TRY64=yes
 
 ABIS=$(commas_to_spaces $ABIS)
 UNKNOWN_ABIS=
@@ -520,6 +525,7 @@ build_stl_libs_for_abi ()
 
     if [ -n "$GCC_VERSION" ]; then
         GCCVER=$GCC_VERSION
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -std=c99"
     else
         ARCH=$(convert_abi_to_arch $ABI)
         GCCVER=$(get_default_gcc_version_for_arch $ARCH)
@@ -536,27 +542,29 @@ build_stl_libs_for_abi ()
 
     builder_set_dstdir "$DSTDIR"
 
-    # Always rebuild GAbi++, except for unknown archs.
-    builder_set_srcdir "$GABIXX_SRCDIR"
-    builder_reset_cflags DEFAULT_CFLAGS
-    builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
+    if [ "$CXX_STL" != "libc++" ]; then
+        # Always rebuild GAbi++, except for unknown archs.
+        builder_set_srcdir "$GABIXX_SRCDIR"
+        builder_reset_cflags DEFAULT_CFLAGS
+        builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
 
-    builder_reset_cxxflags DEFAULT_CXXFLAGS
-    builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
-    builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
-    if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-      builder_sources $GABIXX_SOURCES
-    elif [ "$CXX_STL" = "gabi++" ]; then
-      log "Could not build gabi++ with unknown arch!"
-      exit 1
-    else
-      builder_sources src/delete.cc src/new.cc
+        builder_reset_cxxflags DEFAULT_CXXFLAGS
+        builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
+        builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
+        if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+          builder_sources $GABIXX_SOURCES
+        elif [ "$CXX_STL" = "gabi++" ]; then
+          log "Could not build gabi++ with unknown arch!"
+          exit 1
+        else
+          builder_sources src/delete.cc src/new.cc
+        fi
     fi
 
     # Build the runtime sources, except if we're only building GAbi++
     if [ "$CXX_STL" != "gabi++" ]; then
       builder_set_srcdir "$CXX_STL_SRCDIR"
-      builder_reset_cflags
+      builder_reset_cflags DEFAULT_CFLAGS
       builder_cflags "$DEFAULT_CFLAGS $CXX_STL_CFLAGS $EXTRA_CFLAGS"
       builder_reset_cxxflags DEFAULT_CXXFLAGS
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"

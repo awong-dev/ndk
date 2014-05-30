@@ -351,15 +351,31 @@ builder_shared_library ()
     fi
     builder_log "${_BUILD_PREFIX}SharedLibrary: $libname"
 
+    if [ -n "${LLVM_VERSION}" -a -n "${GCC_VERSION}" ]; then
+        echo "Cannot set both LLVM_VERSION and GCC_VERSION at the same time. Make up your mind!"
+        exit 1
+    fi
+    if [ -n "${LLVM_VERSION}" ]; then
+        _COMPILER_RUNTIME="-lcompiler_rt_shared"
+    fi
+    if [ -n "${GCC_VERSION}" ]; then
+        _COMPILER_RUNTIME="-lgcc"
+    fi
+
     # Important: -lgcc must appear after objects and static libraries,
     #            but before shared libraries for Android. It doesn't hurt
     #            for other platforms.
+    # TODO(ajwong): As an optimization, should this have:
+    #   -Wl,-Bsymbolic-functions,--dynamic-list-cpp-new,--dyanmic-list-data,--dynamic-list-cpp-typeinfo \
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -shared \
+        $_BUILD_LDFLAGS_BEGIN_SO \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
-        -lgcc \
+        -Lsources/android/compiler-rt/libs/armeabi-v7a \
+        $_COMPILER_RUNTIME \
+        -nodefaultlibs \
         $_BUILD_SHARED_LIBRARIES \
         -lc $libm \
         $_BUILD_LDFLAGS \
@@ -387,10 +403,12 @@ builder_nodefaultlibs_shared_library ()
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -shared \
+        $_BUILD_LDFLAGS_BEGIN_SO \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         $_BUILD_SHARED_LIBRARIES \
         $_BUILD_LDFLAGS \
+        $_BUILD_LDFLAGS_END_SO \
         -o $lib
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
 }
@@ -500,7 +518,11 @@ builder_begin_android ()
     if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
     fi
-    if [ -n "$LLVM_VERSION" ]; then
+
+    if [ -z "$LLVM_VERSION" ]; then
+        BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
+    else
+        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION)
         # override GCC_VERSION to pick $DEFAULT_LLVM_GCC_VERSION instead
         GCC_VERSION=$DEFAULT_LLVM_GCC_VERSION
     fi

@@ -28,13 +28,16 @@ make scripts."
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
+GCC_VERSION=
+register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify LLVM version"
+
 LLVM_VERSION=
 register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
 STL=gnustl
 register_var_option "--stl=<name>" STL "Specify C++ STL"
 
-ARCH=
+ARCH=arm
 register_var_option "--arch=<name>" ARCH "Specify target architecture"
 
 # Grab the ABIs that match the architecture.
@@ -64,6 +67,15 @@ register_option "--platform=<name>" do_platform "Specify target Android platform
 do_platform () { PLATFORM=$1; }
 
 extract_parameters "$@"
+
+if [ -z "$ABIS" ]; then
+    ABIS=$(convert_arch_to_abi $ARCH)
+fi
+
+if [ -z "$ABIS" ]; then
+    dump "ERROR: No ABIS. Possibly unsupported NDK architecture $ARCH?"
+    exit 1
+fi
 
 # Check NDK_DIR
 if [ ! -d "$NDK_DIR/build/core" ] ; then
@@ -423,20 +435,20 @@ if [ -n "$LLVM_VERSION" ]; then
 
   cat > "$TMPDIR/bin/clang" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@" $EXTRA_CLANG_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANG_FLAGS
     $(dump_extra_compile_commands)
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@" $EXTRA_CLANG_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANG_FLAGS
 fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@" $EXTRA_CLANGXX_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANGXX_FLAGS
     $(dump_extra_compile_commands)
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@" $EXTRA_CLANGXX_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_CLANGXX_FLAGS
 fi
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
@@ -474,6 +486,62 @@ EOF
     cp -a "$TMPDIR/bin/clang.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang.cmd"
     cp -a "$TMPDIR/bin/clang++.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++.cmd"
   fi
+fi
+
+echo "GCC_VERSION $GCC_VERSION"
+if [ -n "$GCC_VERSION" ]; then
+  # Prebuilts are part of default toolchain copy so no need for it here.
+#  run copy_directory "$GCC_TOOLCHAIN_PATH" "$TMPDIR"
+
+  case "$ARCH" in
+      arm) # NOte: -target may change by gcc based on the
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm
+          ;;
+      x86)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86
+          ;;
+      mips)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
+          ;;
+      arm64)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm64
+          ;;
+      x86_64)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86_64
+          ;;
+      mips64)
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64
+          ;;
+      *)
+        dump "ERROR: Unsupported NDK architecture $ARCH!"
+  esac
+
+  EXTRA_GCC_FLAGS=
+  EXTRA_GCCXX_FLAGS=
+  if [ "$ARCH_STL" != "$ARCH" ]; then
+    EXTRA_GCCXX_FLAGS="$EXTRA_GCC_FLAGS -I\`dirname \$0\`/../include/c++/$GCC_BASE_VERSION"
+  fi
+
+  cat > "$TMPDIR/bin/gcc" <<EOF
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-gcc --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCC_FLAGS
+    $(dump_extra_compile_commands)
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-gcc --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCC_FLAGS
+fi
+EOF
+
+  cat > "$TMPDIR/bin/g++" <<EOF
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-g++ --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCCXX_FLAGS
+    $(dump_extra_compile_commands)
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/${TOOLCHAIN_PREFIX}-g++ --sysroot $INSTALL_DIR/sysroot "\$@" $EXTRA_GCCXX_FLAGS
+fi
+EOF
+  chmod 0755 "$TMPDIR/bin/gcc" "$TMPDIR/bin/g++"
 fi
 
 dump "Copying sysroot headers and libraries..."
@@ -520,9 +588,12 @@ ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
 
 # $1: filenames of headers
-copy_gabixx_headers () {
+copy_abi_headers () {
+  local ABI_NAME=$1
+  shift
+
   for header in $@; do
-    (cd $ABI_STL_INCLUDE && cp -a ../../gabi++/include/$header $header)
+    (set -e; cd $ABI_STL_INCLUDE && cp -aR ../../$ABI_NAME/include/$header $header) || exit 1
   done
 }
 
@@ -535,13 +606,13 @@ copy_stl_common_headers () {
         libcxx|libc++)
             copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
             copy_directory "$SUPPORT_DIR/include" "$ABI_STL_INCLUDE"
-            copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
+            copy_directory "$LIBCXX_DIR/../llvm-libc++abi/libcxxabi/include" "$ABI_STL_INCLUDE/../../llvm-libc++abi/include"
+            copy_abi_headers llvm-libc++abi cxxabi.h  libunwind.h  mach-o  unwind.h
             ;;
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
             copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
+            copy_abi_headers gabi++ cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
             ;;
     esac
 }
