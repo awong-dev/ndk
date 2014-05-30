@@ -964,6 +964,9 @@ public:
     typedef locale                  locale_type;
     typedef ctype_base::mask        char_class_type;
 
+    // Note that Android's whitespace bit, aka. _B (see locale_android.cpp for
+    // the details) was unfortunately defined as 0x80 which made the whitespace
+    // character be recognized as a word.
     static const char_class_type __regex_word = 0x200;
 
 private:
