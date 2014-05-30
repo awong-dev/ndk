@@ -93,7 +93,7 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
           "unwind_phase1(ex_ojb=%p): calling personality function %p\n",
           exception_object, p);
       struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor1);
-#ifdef __arm__
+#if LIBCXXABI_ARM_EHABI
       exception_object->pr_cache.fnstart = frameInfo.start_ip;
       exception_object->pr_cache.ehtp = (_Unwind_EHT_Header *)frameInfo.unwind_info;
       exception_object->pr_cache.additional = frameInfo.flags;
@@ -105,7 +105,7 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
                                  (long)exception_object->pr_cache.fnstart,
                                  (long)exception_object->pr_cache.ehtp,
                                  (long)exception_object->pr_cache.additional);
-#else
+#else // !LIBCXXABI_ARM_EHABI
       _Unwind_Reason_Code personalityResult =
           (*p)(1, _UA_SEARCH_PHASE, exception_object->exception_class,
                exception_object, context);
@@ -115,8 +115,8 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
         // found a catch clause or locals that need destructing in this frame
         // stop search and remember stack pointer at the frame
         handlerNotFound = false;
-#ifdef __arm__
-        // p should have initialized barrier_cache. #7.3.5
+#if LIBCXXABI_ARM_EHABI
+        // p should have initialized barrier_cache. EHABI #7.3.5
 #else
         unw_get_reg(&cursor1, UNW_REG_SP, &sp);
         exception_object->private_2 = (uintptr_t)sp;
@@ -133,8 +133,8 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
         // continue unwinding
         break;
 
-#ifdef __arm__
-      // # EHABI #7.3.3
+#if LIBCXXABI_ARM_EHABI
+      // EHABI #7.3.3
       case _URC_FAILURE:
         return _URC_FAILURE;
 #endif
@@ -223,7 +223,8 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
       __personality_routine p =
           (__personality_routine)(long)(frameInfo.handler);
       struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor2);
-#ifdef __arm__
+#if LIBCXXABI_ARM_EHABI
+      // EHABI #7.2
       exception_object->pr_cache.fnstart = frameInfo.start_ip;
       exception_object->pr_cache.ehtp = (_Unwind_EHT_Header *)frameInfo.unwind_info;
       exception_object->pr_cache.additional = frameInfo.flags;
@@ -245,7 +246,8 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
         _LIBUNWIND_TRACE_UNWINDING(
             "unwind_phase2(ex_ojb=%p): _URC_CONTINUE_UNWIND\n",
             exception_object);
-#ifdef __arm__
+#if LIBCXXABI_ARM_EHABI
+        // EHABI #7.2
         if (sp == exception_object->barrier_cache.sp) {
 #else
         if (sp == exception_object->private_2) {
@@ -270,7 +272,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
                                      exception_object, (long)pc, (long)sp);
         }
 
-#ifdef __arm__
+#if LIBCXXABI_ARM_EHABI
         // EHABI #7.4.1 says we need to preserve pc for when _Unwind_Resume is called
         // back, to find this same frame.
         unw_word_t pc;
@@ -280,7 +282,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
         unw_resume(&cursor2);
         // unw_resume() only returns if there was an error.
         return _URC_FATAL_PHASE2_ERROR;
-#ifdef __arm__
+#if LIBCXXABI_ARM_EHABI
       // # EHABI #7.4.3
       case _URC_FAILURE:
         abort();
@@ -300,7 +302,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
   return _URC_FATAL_PHASE2_ERROR;
 }
 
-#ifndef __arm__
+#if !LIBCXXABI_ARM_EHABI
 static _Unwind_Reason_Code
 unwind_phase2_forced(unw_context_t *uc,
                      _Unwind_Exception *exception_object,
@@ -411,7 +413,8 @@ _Unwind_RaiseException(_Unwind_Exception *exception_object) {
   unw_context_t uc;
   unw_getcontext(&uc);
 
-#ifdef __arm__
+#if LIBCXXABI_ARM_EHABI
+  // This field for compat with GCC to say this isn't a forced unwind. EHABI #7.2
   exception_object->unwinder_cache.reserved1 = 0;
 #else
   // Mark that this is a non-forced unwind, so _Unwind_Resume()
@@ -448,16 +451,18 @@ _Unwind_Resume(_Unwind_Exception *exception_object) {
   unw_context_t uc;
   unw_getcontext(&uc);
 
-#ifdef __arm__
-  // TODO(piman): Do we need a "force unwind" mechanism?
+#if LIBCXXABI_ARM_EHABI
+  // _Unwind_RaiseException on EHABI will always set the reserved1 field to 0,
+  // which is in the same position as private_1 below.
+  unwind_phase2(&uc, exception_object, true);
 #else
   if (exception_object->private_1 != 0)
     unwind_phase2_forced(&uc, exception_object,
                          (_Unwind_Stop_Fn) exception_object->private_1,
                          (void *)exception_object->private_2);
   else
-#endif
     unwind_phase2(&uc, exception_object, true);
+#endif
 
   // Clients assume _Unwind_Resume() does not return, so all we can do is abort.
   _LIBUNWIND_ABORT("_Unwind_Resume() can't return");
@@ -465,7 +470,7 @@ _Unwind_Resume(_Unwind_Exception *exception_object) {
 
 
 
-#ifndef __arm__
+#if !LIBCXXABI_ARM_EHABI
 /// Not used by C++.
 /// Unwinds stack, calling "stop" function at each frame.
 /// Could be used to implement longjmp().

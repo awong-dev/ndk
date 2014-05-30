@@ -503,20 +503,10 @@ void
 set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
               const scan_results& results)
 {
-#if __arm__
-    // FIXME: ARM EHABI # 9.4 says the UCB is passed in r0. What about ttypeIndex?
-    // FIXME: Check return value.
-    assert( INT32_MIN <= results.ttypeIndex &&
-            INT32_MAX >= results.ttypeIndex &&
-            "ttypeIndex out of range of register to pass UCB to landing pad");
-    _Unwind_SetGR(context, 0, reinterpret_cast<uintptr_t>(unwind_exception));
-    _Unwind_SetGR(context, 1, static_cast<uintptr_t>(results.ttypeIndex));
-#else
     _Unwind_SetGR(context, __builtin_eh_return_data_regno(0),
                                  reinterpret_cast<uintptr_t>(unwind_exception));
     _Unwind_SetGR(context, __builtin_eh_return_data_regno(1),
                                     static_cast<uintptr_t>(results.ttypeIndex));
-#endif
     _Unwind_SetIP(context, results.landingPad);
 }
 
