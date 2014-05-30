@@ -964,7 +964,8 @@ public:
     typedef locale                  locale_type;
     typedef ctype_base::mask        char_class_type;
 
-    static const char_class_type __regex_word = 0x80;
+    static const char_class_type __regex_word = 0x200;
+
 private:
     locale __loc_;
     const ctype<char_type>* __ct_;
