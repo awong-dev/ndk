@@ -19,7 +19,8 @@
 #include "libunwind.h"
 #include "../private_typeinfo.h"
 
-#if __arm__ && !CXXABI_SJLJ
+
+#if LIBCXXABI_ARM_EHABI
 namespace {
 
 // Strange order: take words in order, but inside word, take from most to least
@@ -326,4 +327,4 @@ extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(
   return unwindOneFrame(state, ucbp, context);
 }
 
-#endif  // __arm__ && !CXXABI_SJLJ
+#endif  // LIBCXXABI_ARM_EHABI
