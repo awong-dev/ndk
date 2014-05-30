@@ -1,17 +1,17 @@
-From 226c6c6d989445ddc55fa3bab50234f5f5b827e0 Mon Sep 17 00:00:00 2001
+From 393fae7652f2aeb41567ee43e3f332326ee39232 Mon Sep 17 00:00:00 2001
 From: Logan Chien <logan.chien@mediatek.com>
 Date: Wed, 12 Feb 2014 20:09:43 +0800
-Subject: [PATCH 4/6] [libc++] std::terminate() should not specify "throw ()"
- in C++ 98.
+Subject: [PATCH 04/12] std::terminate() should not specify "throw ()" in C++
+ 98.
 
 ---
- include/exception | 4 ++++
+ sources/cxx-stl/llvm-libc++/libcxx/include/exception | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/include/exception b/include/exception
+diff --git a/sources/cxx-stl/llvm-libc++/libcxx/include/exception b/sources/cxx-stl/llvm-libc++/libcxx/include/exception
 index cad802e..681a659 100644
---- a/include/exception
-+++ b/include/exception
+--- a/sources/cxx-stl/llvm-libc++/libcxx/include/exception
++++ b/sources/cxx-stl/llvm-libc++/libcxx/include/exception
 @@ -112,7 +112,11 @@ _LIBCPP_NORETURN _LIBCPP_FUNC_VIS void unexpected();
  typedef void (*terminate_handler)();
  _LIBCPP_FUNC_VIS terminate_handler set_terminate(terminate_handler) _NOEXCEPT;
@@ -25,5 +25,5 @@ index cad802e..681a659 100644
  _LIBCPP_FUNC_VIS bool uncaught_exception() _NOEXCEPT;
  
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.8.5.2 (Apple Git-48)
 

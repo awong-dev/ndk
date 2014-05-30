@@ -1,7 +1,7 @@
-From fbb68e1b52988199871392b4e16d611158a79995 Mon Sep 17 00:00:00 2001
+From b8043b2656edf515dbd0418277f84055e329d0be Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Wed, 12 Feb 2014 20:04:18 +0800
-Subject: [PATCH 1/6] android: Add locale support.
+Subject: [PATCH 01/12] android: Add locale support.
 
 This is based on the Bionic <ctype.h> declarations. Note that
 unfortunately, the _ctype_ table exposed by this header has a bug
@@ -9,16 +9,16 @@ so a fixed copy is included here instead.
 
 See src/support/android/locale_android.cpp for details.
 ---
- include/__locale                       |  17 +++++-
- src/locale.cpp                         |  25 +++++++-
- src/support/android/locale_android.cpp | 101 +++++++++++++++++++++++++++++++++
+ .../cxx-stl/llvm-libc++/libcxx/include/__locale    |  17 +++-
+ sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp  |  25 ++++-
+ .../libcxx/src/support/android/locale_android.cpp  | 101 +++++++++++++++++++++
  3 files changed, 140 insertions(+), 3 deletions(-)
- create mode 100644 src/support/android/locale_android.cpp
+ create mode 100644 sources/cxx-stl/llvm-libc++/libcxx/src/support/android/locale_android.cpp
 
-diff --git a/include/__locale b/include/__locale
-index 6d75162..d50fd31 100644
---- a/include/__locale
-+++ b/include/__locale
+diff --git a/sources/cxx-stl/llvm-libc++/libcxx/include/__locale b/sources/cxx-stl/llvm-libc++/libcxx/include/__locale
+index fb5b196..c793cfe 100644
+--- a/sources/cxx-stl/llvm-libc++/libcxx/include/__locale
++++ b/sources/cxx-stl/llvm-libc++/libcxx/include/__locale
 @@ -375,7 +375,20 @@ public:
      static const mask punct  = _ISPUNCT;
      static const mask xdigit = _ISXDIGIT;
@@ -50,10 +50,10 @@ index 6d75162..d50fd31 100644
      static const mask alnum  = alpha | digit;
      static const mask graph  = alnum | punct;
  
-diff --git a/src/locale.cpp b/src/locale.cpp
+diff --git a/sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp b/sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp
 index 4877f2b..66aaca9 100644
---- a/src/locale.cpp
-+++ b/src/locale.cpp
+--- a/sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp
++++ b/sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp
 @@ -814,6 +814,8 @@ ctype<wchar_t>::do_toupper(char_type c) const
      return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
  #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
@@ -156,11 +156,11 @@ index 4877f2b..66aaca9 100644
  {
  }
  
-diff --git a/src/support/android/locale_android.cpp b/src/support/android/locale_android.cpp
+diff --git a/sources/cxx-stl/llvm-libc++/libcxx/src/support/android/locale_android.cpp b/sources/cxx-stl/llvm-libc++/libcxx/src/support/android/locale_android.cpp
 new file mode 100644
 index 0000000..7193028
 --- /dev/null
-+++ b/src/support/android/locale_android.cpp
++++ b/sources/cxx-stl/llvm-libc++/libcxx/src/support/android/locale_android.cpp
 @@ -0,0 +1,101 @@
 +// -*- C++ -*-
 +//===-------------------- support/win32/locale_win32.cpp ------------------===//
@@ -264,5 +264,5 @@ index 0000000..7193028
 +
 +const unsigned short* const _ctype_android = ctype_android_tab + 128;
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.8.5.2 (Apple Git-48)
 

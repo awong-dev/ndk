@@ -1,0 +1,25 @@
+From f453b29228aa0919497b78ad4e63f2b838799509 Mon Sep 17 00:00:00 2001
+From: "Albert J. Wong" <ajwong@chromium.org>
+Date: Thu, 29 May 2014 16:11:29 +0200
+Subject: [PATCH 11/12] Fix bad merging of patch in 0006
+
+Change-Id: I766ba6f0c7dcc561b8fe304d993166ba3567ef68
+---
+ sources/cxx-stl/llvm-libc++/libcxx/src/stdexcept.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sources/cxx-stl/llvm-libc++/libcxx/src/stdexcept.cpp b/sources/cxx-stl/llvm-libc++/libcxx/src/stdexcept.cpp
+index 1e3b2ca..26de25f 100644
+--- a/sources/cxx-stl/llvm-libc++/libcxx/src/stdexcept.cpp
++++ b/sources/cxx-stl/llvm-libc++/libcxx/src/stdexcept.cpp
+@@ -20,6 +20,7 @@
+ /* For _LIBCPPABI_VERSION */
+ #if __has_include(<cxxabi.h>) || defined(__APPLE_) || defined(LIBCXXRT) || defined(__ANDROID__)
+ #include <cxxabi.h>
++#endif
+ 
+ static_assert(sizeof(std::__libcpp_refstring) == sizeof(const char *), "");
+ 
+-- 
+1.8.5.2 (Apple Git-48)
+
