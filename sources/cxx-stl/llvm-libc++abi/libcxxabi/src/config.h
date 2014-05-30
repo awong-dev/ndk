@@ -22,14 +22,6 @@
 #  define LIBCXXABI_SINGLE_THREADED 1
 #endif
 
-#ifndef LIBCXXABI_USE_GLIBC
-#  if __clang__
-#    define LIBCXXABI_USE_GLIBC 0
-#  else
-#    define LIBCXXABI_USE_GLIBC 1
-#  endif
-#endif
-
 // Set this in the CXXFLAGS when you need it, because otherwise we'd have to
 // #if !defined(__linux__) && !defined(__APPLE__) && ...
 // and so-on for *every* platform.
