@@ -155,8 +155,6 @@ _Unwind_Reason_Code unwindOneFrame(
     _Unwind_State state,
     _Unwind_Control_Block* ucbp,
     struct _Unwind_Context* context) {
-  // TODO(piman): handle phase1/phase2.
-
   // Read the compact model EHT entry's header # 6.3
   uint32_t* unwindingData = ucbp->pr_cache.ehtp;
   uint32_t unwindInfo = *unwindingData;
@@ -190,6 +188,18 @@ _Unwind_Reason_Code unwindOneFrame(
     return result;
 
   return _Unwind_VRS_Interpret(context, unwindingData, startOffset, len);
+}
+
+// Generates mask discriminator for _Unwind_VRS_Pop, e.g. for _UVRSC_CORE /
+// _UVRSD_UINT32.
+uint32_t RegisterMask(uint8_t start, uint8_t count_minus_one) {
+  return ((1U << (count_minus_one + 1)) - 1) << start;
+}
+
+// Generates mask discriminator for _Unwind_VRS_Pop, e.g. for _UVRSC_VFP /
+// _UVRSD_DOUBLE.
+uint32_t RegisterRange(uint8_t start, uint8_t count_minus_one) {
+  return (start << 16) | (count_minus_one + 1);
 }
 
 } // end anonymous namespace
@@ -236,8 +246,7 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
           break;
         }
         case 0xa0: {
-          uint8_t numRegisters = 1 + (byte & 0x07);
-          uint16_t registers = ((1<<numRegisters) - 1) << 4;
+          uint32_t registers = RegisterMask(4, byte & 0x07);
           if (byte & 0x08)
             registers |= 1<<14;
           _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
@@ -275,25 +284,63 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
                               _UVRSD_UINT32, &sp);
               break;
             }
-            case 0xb3:
-              // TODO(piman): pop VFP single precision from FSTMFDX.
-              // (Only in phase 2, see 4.7 on lazy saving of these)
-              return _URC_FAILURE;
+            case 0xb3: {
+              uint8_t v = getByte(data, offset++);
+              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(v >> 4, v & 0x0f), _UVRSD_VFPX);
+              break;
+            }
             case 0xb4:
             case 0xb5:
             case 0xb6:
             case 0xb7:
               return _URC_FAILURE;
             default:
-              // TODO(piman): pop VFP double precision from FSTMFDX.
-              // (Only in phase 2, see 4.7 on lazy saving of these)
+              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(8, byte & 0x07), _UVRSD_VFPX);
+              break;
+          }
+          break;
+        }
+        case 0xc0: {
+          switch (byte) {
+            case 0xc0:
+            case 0xc1:
+            case 0xc2:
+            case 0xc3:
+            case 0xc4:
+            case 0xc5:
+              _Unwind_VRS_Pop(context, _UVRSC_WMMXD, RegisterRange(10, byte & 0x7), _UVRSD_DOUBLE);
+              break;
+            case 0xc6: {
+              uint8_t v = getByte(data, offset++);
+              _Unwind_VRS_Pop(context, _UVRSC_WMMXD, RegisterRange(v >> 4, v & 0xf), _UVRSD_DOUBLE);
+              break;
+            }
+            case 0xc7: {
+              uint8_t v = getByte(data, offset++);
+              if (!v || v & 0xf0)
+                return _URC_FAILURE;
+              _Unwind_VRS_Pop(context, _UVRSC_WMMXC, v, _UVRSD_DOUBLE);
+              break;
+            }
+            case 0xc8:
+            case 0xc9: {
+              uint8_t v = getByte(data, offset++);
+              uint8_t start = (byte == 0xc8) ? 16 : 0;
+              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(start + (v >> 4), v & 0xf), _UVRSD_DOUBLE);
+              break;
+            }
+            default:
               return _URC_FAILURE;
           }
           break;
         }
+        case 0xd0: {
+          if (byte & 0x08)
+            return _URC_FAILURE;
+          _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(8, byte & 0x7), _UVRSD_DOUBLE);
+          break;
+        }
         default:
-          // TODO(piman): iwMMX, VFP double precision from FSTMFDD, spares.
-          // (Only in phase 2, see 4.7 on lazy saving of these)
           return _URC_FAILURE;
       }
     }

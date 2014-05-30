@@ -201,8 +201,11 @@ _LIBUNWIND_EXPORT int unw_get_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
 /// Set value of specified float register at cursor position in stack frame.
 _LIBUNWIND_EXPORT int unw_set_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
                                     unw_fpreg_t value) {
-  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%g)\n",
-                             cursor, regNum, value);
+#if __arm__
+  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%llx)\n", cursor, regNum, value);
+#else
+  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%g)\n", cursor, regNum, value);
+#endif
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->validFloatReg(regNum)) {
     co->setFloatReg(regNum, value);
@@ -281,6 +284,15 @@ _LIBUNWIND_EXPORT int unw_is_signal_frame(unw_cursor_t *cursor) {
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   return co->isSignalFrame();
 }
+
+#if __arm__
+// Save VFP registers d0-d15 using FSTMIADX instead of FSTMIADD
+_LIBUNWIND_EXPORT void unw_save_vfp_as_X(unw_cursor_t *cursor) {
+  _LIBUNWIND_TRACE_API("unw_fpreg_save_vfp_as_X(cursor=%p)\n", cursor);
+  AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
+  return co->saveVFPAsX();
+}
+#endif
 
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND

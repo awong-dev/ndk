@@ -381,6 +381,9 @@ public:
   virtual bool        getFunctionName(char *bf, size_t ln, unw_word_t *off) = 0;
   virtual void        setInfoBasedOnIPRegister(bool isReturnAddr = false) = 0;
   virtual const char *getRegisterName(int num) = 0;
+#if __arm__
+  virtual void        saveVFPAsX() = 0;
+#endif
 };
 
 
@@ -406,6 +409,9 @@ public:
   virtual bool        getFunctionName(char *buf, size_t len, unw_word_t *off);
   virtual void        setInfoBasedOnIPRegister(bool isReturnAddress = false);
   virtual const char *getRegisterName(int num);
+#if __arm__
+  virtual void        saveVFPAsX();
+#endif
 
   void            operator delete(void *, size_t) {}
 
@@ -575,6 +581,12 @@ void UnwindCursor<A, R>::setFloatReg(int regNum, unw_fpreg_t value) {
 template <typename A, typename R> void UnwindCursor<A, R>::jumpto() {
   _registers.jumpto();
 }
+
+#if __arm__
+template <typename A, typename R> void UnwindCursor<A, R>::saveVFPAsX() {
+  _registers.saveVFPAsX();
+}
+#endif
 
 template <typename A, typename R>
 const char *UnwindCursor<A, R>::getRegisterName(int regNum) {
