@@ -283,6 +283,10 @@ builder_sources ()
         fi
         builder_log "${_BUILD_PREFIX}$text: $src"
         builder_command $NDK_CCACHE $cc -c -o "$obj" "$srcfull" $cflags
+        if [ "$_BUILD_MK" ]; then
+            echo "  depfile = $obj.d" >> $_BUILD_MK
+            echo "  deps = gcc" >> $_BUILD_MK
+        fi
         fail_panic "Could not compile ${_BUILD_PREFIX}$src"
         _BUILD_OBJECTS=$_BUILD_OBJECTS" $obj"
     done
@@ -378,7 +382,7 @@ builder_shared_library ()
         $_COMPILER_RUNTIME \
         -nodefaultlibs \
         $_BUILD_SHARED_LIBRARIES \
-        -lc $libm \
+        -lc $libm -ldl \
         $_BUILD_LDFLAGS \
         -o $lib
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
