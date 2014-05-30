@@ -18,25 +18,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if __ANDROID__ || LIBCXXABI_USE_GLIBC
- #if __ANDROID__
-  #include <link.h>  // For dl_unwind_find_exidx.
- #else
-  typedef long unsigned int *_Unwind_Ptr;
-  extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
-  _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
-      __gnu_Unwind_Find_exidx;
- #endif
+#if __ANDROID__ || __APPLE__
+ #include <link.h>
+ #define LIBCXXABI_HAS_FIND_EXIDX 1
+#elif __LINUX__
+ typedef long unsigned int *_Unwind_Ptr;
+ extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
+ _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
+     __gnu_Unwind_Find_exidx;
  #define LIBCXXABI_HAS_FIND_EXIDX 1
 #else
  #define LIBCXXABI_HAS_FIND_EXIDX 0
 #endif
 
-#if (__clang__ && !defined(__has_include) || __has_include(<dlfcn.h>)) || LIBCXXABI_USE_GLIBC
- #include <dlfcn.h>
- #define LIBCXXABI_HAS_DLADDR 1
+#if __clang__
+ #define LIBCXXABI_HAS_DLADDR __has_include(<dlfcn.h>)
 #else
- #define LIBCXXABI_HAS_DLADDR 0
+ #define LIBCXXABI_HAS_DLADDR !_WIN32
+#endif
+
+#if LIBCXXABI_HAS_DLADDR
+#include <dlfcn.h>
 #endif
 
 #if __APPLE__
