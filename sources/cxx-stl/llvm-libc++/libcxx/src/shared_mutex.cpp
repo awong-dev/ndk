@@ -10,6 +10,8 @@
 #define _LIBCPP_BUILDING_SHARED_MUTEX
 #include "shared_mutex"
 
+#if !_LIBCPP_SINGLE_THREADED
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 shared_timed_mutex::shared_timed_mutex()
@@ -99,3 +101,7 @@ shared_timed_mutex::unlock_shared()
 
 
 _LIBCPP_END_NAMESPACE_STD
+
+#endif // !_LIBCPP_SINGLE_THREADED
+
+
