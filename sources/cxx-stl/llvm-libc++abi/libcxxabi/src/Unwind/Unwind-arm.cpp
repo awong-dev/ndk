@@ -43,10 +43,31 @@ static inline uint32_t signExtendPrel31(uint32_t data) {
   return data | ((data & 0x40000000u) << 1);
 }
 
+struct Descriptor {
+   // See # 9.2
+   typedef enum {
+     SU16 = 0, // Short descriptor, 16-bit entries
+     LU16 = 1, // Long descriptor,  16-bit entries
+     LU32 = 3, // Long descriptor,  32-bit entries
+     RESERVED0 =  4, RESERVED1 =  5, RESERVED2  = 6,  RESERVED3  =  7,
+     RESERVED4 =  8, RESERVED5 =  9, RESERVED6  = 10, RESERVED7  = 11,
+     RESERVED8 = 12, RESERVED9 = 13, RESERVED10 = 14, RESERVED11 = 15
+   } Format;
+
+   // See # 9.2
+   typedef enum {
+     CLEANUP = 0x0,
+     FUNC    = 0x1,
+     CATCH   = 0x2,
+     INVALID = 0x4
+   } Kind;
+};
+
 _Unwind_Reason_Code ProcessDescriptors(
     _Unwind_State state,
     _Unwind_Control_Block* ucbp,
     struct _Unwind_Context* context,
+    Descriptor::Format format,
     const char* descriptorStart,
     int flags) {
   // EHT is inlined in the index using compact form. No descriptors. #5
@@ -60,22 +81,20 @@ _Unwind_Reason_Code ProcessDescriptors(
     // Read descriptor based on # 9.2.
     uint32_t length;
     uint32_t offset;
-    if (flags & 0x2) {
-      // 32-bit descriptor
-      descriptor = getNextWord(descriptor, &length);
-      descriptor = getNextWord(descriptor, &offset);
-    } else {
-      // 16-bit descriptor
-      descriptor = getNextNibble(descriptor, &length);
-      descriptor = getNextNibble(descriptor, &offset);
+    switch (format) {
+      case Descriptor::LU32:
+        descriptor = getNextWord(descriptor, &length);
+        descriptor = getNextWord(descriptor, &offset);
+      case Descriptor::LU16:
+        descriptor = getNextNibble(descriptor, &length);
+        descriptor = getNextNibble(descriptor, &offset);
+      default:
+        assert(false);
+        return _URC_FAILURE;
     }
-    // See 9.2 table for decoding the kind of descriptor. It's a 2-bit value.
-    enum DescriptorKind {
-      DESC_CLEANUP = 0x0,
-      DESC_FUNC = 0x1,
-      DESC_CATCH = 0x2,
-      DESC_INVALID = 0x4,
-    } kind = static_cast<DescriptorKind>((length & 0x1) | ((offset & 0x1) << 1));
+
+    // See # 9.2 table for decoding the kind of descriptor. It's a 2-bit value.
+    Descriptor::Kind kind = static_cast<Descriptor::Kind>((length & 0x1) | ((offset & 0x1) << 1));
 
     // Clear off flag from last bit.
     length &= ~1;
@@ -86,15 +105,15 @@ _Unwind_Reason_Code ProcessDescriptors(
     bool isInScope = (scopeStart <= pc) && (pc < scopeEnd);
 
     switch (kind) {
-      case DESC_CLEANUP: {
+      case Descriptor::CLEANUP: {
         // TODO(ajwong): Handle cleanup descriptors.
         break;
       }
-      case DESC_FUNC: {
+      case Descriptor::FUNC: {
         // TODO(ajwong): Handle function descriptors.
         break;
       }
-      case DESC_CATCH: {
+      case Descriptor::CATCH: {
         // Catch descriptors require gobbling one more word.
         uint32_t landing_pad;
         descriptor = getNextWord(descriptor, &landing_pad);
@@ -137,19 +156,21 @@ _Unwind_Reason_Code unwindOneFrame(
     struct _Unwind_Context* context) {
   // TODO(piman): handle phase1/phase2.
 
+  // Read the compact model EHT entry's header # 6.3
   uint32_t* unwindingData = ucbp->pr_cache.ehtp;
   uint32_t unwindInfo = *unwindingData;
-  int choice = (unwindInfo & 0x0f000000) >> 24;
+  assert((unwindInfo & 0xf0000000) == 0x80000000 && "Must be a compact entry");
+  Descriptor::Format format = static_cast<Descriptor::Format>((unwindInfo & 0x0f000000) >> 24);
   size_t len = 0;
   size_t startOffset = 0;
-  switch (choice) {
-    case 0:
+  switch (format) {
+    case Descriptor::SU16:
       len = 4;
       startOffset = 1;
       break;
-    case 1:
-    case 2:
-      len = 4 + 4 *((unwindInfo & 0x00ff0000) >> 16);
+    case Descriptor::LU16:
+    case Descriptor::LU32:
+      len = 4 + 4 * ((unwindInfo & 0x00ff0000) >> 16);
       startOffset = 2;
       break;
     default:
@@ -160,7 +181,7 @@ _Unwind_Reason_Code unwindOneFrame(
   // of the correct stack frame.
   _Unwind_Reason_Code result =
       ProcessDescriptors(
-          state, ucbp, context,
+          state, ucbp, context, format,
           reinterpret_cast<const char*>(ucbp->pr_cache.ehtp) + len,
           ucbp->pr_cache.additional);
 
@@ -170,7 +191,7 @@ _Unwind_Reason_Code unwindOneFrame(
   return _Unwind_VRS_Interpret(context, unwindingData, startOffset, len);
 }
 
-}
+} // end anonymous namespace
 
 extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
     _Unwind_Context* context,
