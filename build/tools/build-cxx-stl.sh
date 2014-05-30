@@ -183,25 +183,6 @@ if [ "$CXX_STL" = "libc++" ]; then
   GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS"
 fi
 
-# Determine GAbi++ build parameters. Note that GAbi++ is also built as part
-# of STLport and Libc++, in slightly different ways.
-if [ "$CXX_STL" = "libc++" ]; then
-  GABIXX_INCLUDES=$LIBCXX_INCLUDES
-  # Use clang to build libc++ by default
-  if [ "$EXPLICIT_COMPILER_VERSION" != "true" ]; then
-    LLVM_VERSION=$DEFAULT_LLVM_VERSION
-  fi
-else
-  GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
-fi
-GABIXX_CFLAGS="$COMMON_CFLAGS $GABIXX_INCLUDES"
-GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
-GABIXX_SOURCES="" #$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
-GABIXX_LDFLAGS="-ldl"
-if [ "$CXX_STL" = "libc++" ]; then
-  GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS"
-fi
-
 function version_ge {
     input_string=$1
     compare_string=$2

@@ -1055,7 +1055,8 @@ __gxx_personality_v0(_Unwind_State state,
     bool native_exception = (unwind_exception->exception_class & get_vendor_and_language) ==
                             (kOurExceptionClass & get_vendor_and_language);
 
-    // TODO(ajwong): This was upstream...do we actually need this in arm? Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
+    // TODO(ajwong): The "Copy the address" comment was in upstream...do we actually need this in arm?
+    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
     const uint8_t* lsda = 0;
 
 #if LIBCXXABI_ARM_EHABI
@@ -1174,70 +1175,6 @@ __gxx_personality_v0(_Unwind_State state,
 }
 #endif
 
-#if __arm__ && !CXXABI_SJLJ
-_Unwind_Reason_Code __gxx_personality_v0(_Unwind_State state, _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
-  int version = 1;
-  uint64_t exceptionClass = unwind_exception->exception_class;
-  int actions = 0;
-  uint32_t* unwinding_data = unwind_exception->pr_cache.ehtp + 1;
-  uint32_t first_data_word = *unwinding_data;
-  // MSB of first word is num extraWords.
-  size_t data_words = 1 + ((first_data_word >> 24) & 0xff);
-  size_t unwinding_data_len = (data_words * 4);
-
-  switch (state) {
-    default: {
-      return _URC_FAILURE;
-    }
-    case _US_VIRTUAL_UNWIND_FRAME: {
-      actions = _UA_SEARCH_PHASE;
-      break;
-    }
-    case _US_UNWIND_FRAME_STARTING: {
-      actions = _UA_CLEANUP_PHASE;
-      uint32_t sp;
-      _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
-      if (unwind_exception->barrier_cache.sp == sp) {
-        actions |= _UA_HANDLER_FRAME;
-      }
-      break;
-    }
-    case _US_UNWIND_FRAME_RESUME: {
-      return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
-    }
-  }
-  // Dwarf Language specific data comes after unwinding op codes.
-  // Clobber pr_cache.additional with the lsda because in the generic handler,
-  // the additional data doesn't have anything of value.
-  const uint8_t* lsda = reinterpret_cast<uint8_t*>(unwinding_data + data_words);
-
-  // TODO(piman): helper_func_internal does this, is this needed?
-  // _Unwind_SetGR (context, UNWIND_POINTER_REG, reinterpret_cast<uint32_t>(unwind_exception));
-  _Unwind_Reason_Code result = __gxx_personality_internal(
-      version, static_cast<_Unwind_Action>(actions), exceptionClass,
-      unwind_exception, context, lsda);
-
-  if (state == _US_VIRTUAL_UNWIND_FRAME && result == _URC_HANDLER_FOUND) {
-    _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
-                    &unwind_exception->barrier_cache.sp);
-  }
-  if (result == _URC_CONTINUE_UNWIND)
-    return _Unwind_VRS_Interpret(context, unwinding_data, 1, unwinding_data_len);
-  return result;
-}
-#else
-_Unwind_Reason_Code
-#if __arm__ && CXXABI_SJLJ
-__gxx_personality_sj0
-#else
-__gxx_personality_v0
-#endif
-                    (int version, _Unwind_Action actions, uint64_t exceptionClass,
-                     _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
-  return __gxx_personality_internal(version, actions, exceptionClass, unwind_exception, context,
-                                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
-}
-#endif
 
 __attribute__((noreturn))
 void

@@ -384,7 +384,6 @@ inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
   }
 #endif
   return false;
-  */
 }
 
 
@@ -507,4 +506,3 @@ struct unw_addr_space_ppc : public unw_addr_space {
 } // namespace libunwind
 
 #endif // __ADDRESSSPACE_HPP__
-

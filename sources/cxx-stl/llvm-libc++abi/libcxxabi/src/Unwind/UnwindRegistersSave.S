@@ -313,6 +313,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @ However #7.4.5 says in general all VRS registers should be restored..
 @ Do we need a dirty bit?
 @
+  .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   @ 32bit thumb-2 restrictions for stm:
   @ . the sp (r13) cannot be in the list
