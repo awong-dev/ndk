@@ -266,6 +266,7 @@ Lnovec:
 ; On entry:
 ;  thread_state pointer is in x0
 ;
+  .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind15Registers_arm646jumptoEv)
   ; skip restore of x0,x1 for now
   ldp    x2, x3,  [x0, #0x010]
@@ -330,16 +331,5 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm6jumptoEv)
 #else
   mov pc, lr
 #endif
-
-@ extern int unw_getcontext(unw_context_t* thread_state)
-  .globl unw_getcontext
-unw_getcontext:
-  @ 32bit thumb-2 restrictions for stm:
-  @ . the sp (r13) cannot be in the list
-  @ . the pc (r15) and lr (r14) cannot both be in the list in an LDM instruction
-  ldm lr, {r0-r12}
-  ldr sp, [lr, #52]
-  ldr lr, [lr, #60]  @ restore pc into lr
-  mov pc, lr
 
 #endif

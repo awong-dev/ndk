@@ -71,7 +71,7 @@ typedef struct _Unwind_Control_Block _Unwind_Exception; /* Alias */
 
 struct _Unwind_Control_Block {
   uint64_t exception_class;
-  void (*exception_cleanup)(_Unwind_Reason_Code, _Unwind_Control_Block *);
+  void (*exception_cleanup)(_Unwind_Reason_Code, _Unwind_Control_Block*);
   /* Unwinder cache, private fields for the unwinder's use */
   struct {
     uint32_t reserved1; /* init reserved1 to 0, then don't touch */
@@ -92,20 +92,25 @@ struct _Unwind_Control_Block {
   /* Pr cache (for pr's benefit): */
   struct {
     uint32_t fnstart; /* function start address */
-    _Unwind_EHT_Header *ehtp; /* pointer to EHT entry header word */
+    _Unwind_EHT_Header* ehtp; /* pointer to EHT entry header word */
     uint32_t additional; /* additional data */
     uint32_t reserved1;
   } pr_cache;
-  long long int :0; /* Force alignment of next item to 8-byte boundary */
+
+  long long int :0; /* Enforce the 8-byte alignment */
 };
+
+typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn)
+      (_Unwind_State state,
+       _Unwind_Exception* exceptionObject,
+       struct _Unwind_Context* context);
 
 typedef _Unwind_Reason_Code (*__personality_routine)
       (_Unwind_State state,
-       _Unwind_Control_Block* ucb,
+       _Unwind_Exception* exceptionObject,
        struct _Unwind_Context* context);
-
 #else
-
+struct _Unwind_Context;   // opaque
 struct _Unwind_Exception; // forward declaration
 typedef struct _Unwind_Exception _Unwind_Exception;
 
@@ -159,10 +164,6 @@ extern void _Unwind_Resume(_Unwind_Exception *exception_object);
 extern void _Unwind_DeleteException(_Unwind_Exception *exception_object);
 
 #if LIBCXXABI_ARM_EHABI
-//
-// The following are semi-suppoted extensions to the C++ ABI
-//
-
 typedef enum {
   _UVRSC_CORE = 0, /* integer register */
   _UVRSC_VFP = 1, /* vfp */
@@ -236,13 +237,13 @@ static inline void _Unwind_SetIP(struct _Unwind_Context* context,
 extern uintptr_t _Unwind_GetGR(struct _Unwind_Context *context, int index);
 extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                           uintptr_t new_value);
+extern uintptr_t _Unwind_GetIP(struct _Unwind_Context *context);
+extern void _Unwind_SetIP(struct _Unwind_Context *, uintptr_t new_value);
 #endif // LIBCXXABI_ARM_EHABI
 
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
-
 extern uintptr_t
     _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context);
-#if !defined(__arm__)
 #if __USING_SJLJ_EXCEPTIONS__
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(_Unwind_Exception *exception_object,
@@ -252,13 +253,16 @@ extern _Unwind_Reason_Code
     _Unwind_ForcedUnwind(_Unwind_Exception *exception_object,
                          _Unwind_Stop_Fn stop, void *stop_parameter);
 #endif // !__USING_SJLJ_EXCEPTIONS__
-#endif // !defined(__arm__)
 
 #if __USING_SJLJ_EXCEPTIONS__
 typedef struct _Unwind_FunctionContext *_Unwind_FunctionContext_t;
 extern void _Unwind_SjLj_Register(_Unwind_FunctionContext_t fc);
 extern void _Unwind_SjLj_Unregister(_Unwind_FunctionContext_t fc);
 #endif
+
+//
+// The following are semi-suppoted extensions to the C++ ABI
+//
 
 //
 //  called by __cxa_rethrow().

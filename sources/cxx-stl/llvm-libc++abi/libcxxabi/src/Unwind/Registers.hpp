@@ -1325,6 +1325,7 @@ private:
   };
 
   GPRs    _registers;
+  double _vfpRegisterData[32];
   uint8_t _wmmxData[sizeof(uint64_t) * 16];
   uint8_t _wmmxControl[sizeof(uint32_t) * 4];
 };

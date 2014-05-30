@@ -62,7 +62,7 @@ int main ( int argc, char *argv [] ) {
 
 #if LIBCXXABI_SINGLE_THREADED
     size_t thread_globals;
-    retVal = thread_code(&thread_globals) != &thread_globals;
+    retVal = thread_code(&thread_globals) != 0;
 #else
 //  Make the threads, let them run, and wait for them to finish
     for ( int i = 0; i < NUMTHREADS; ++i )

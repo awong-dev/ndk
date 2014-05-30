@@ -106,7 +106,7 @@ struct __cxa_eh_globals {
 #if LIBCXXABI_ARM_EHABI
     __cxa_exception* propagatingExceptions;
 #endif
-    };
+};
 
 #pragma GCC visibility pop
 #pragma GCC visibility push(default)
