@@ -27,6 +27,21 @@ then
     CC=clang
 fi
 
+if [ -z "$AR" ]
+then
+    AR=ar
+fi
+
+if [ -z "$RANLIB" ]
+then
+    RANLIB=ranlib
+fi
+
+if [ -z "$SYSROOT" ]
+then
+    SYSROOT=""
+fi
+
 if [ -z "$MACOSX_DEPLOYMENT_TARGET" ]
 then
     if [ -z "$IPHONEOS_DEPLOYMENT_TARGET" ]
@@ -118,6 +133,11 @@ case $TRIPLE in
     fi
     RC_CFLAGS="-qpic=large"
     ;;
+  *-eabi*)
+    RC_FLAGS="-fPIC"
+    SOEXT=so
+    EXTRA_FLAGS+="-target $TRIPLE --sysroot=$SYSROOT -no-integrated-as"
+    ;;
   *)
     RC_CFLAGS="-fPIC"
     SOEXT=so
@@ -144,7 +164,15 @@ case $TRIPLE in
   done
   ;;
 esac
-$CC *.o $RC_CFLAGS $LDSHARED_FLAGS $EXTRA_FLAGS
+case $TRIPLE in
+  *-eabi*)
+    $AR rc libc++.a *.o
+    $RANLIB libc++.a
+  ;;
+  *)
+    $CC *.o $RC_CFLAGS $LDSHARED_FLAGS $EXTRA_FLAGS
+  ;;
+esac
 
 #libtool -static -o libc++.a *.o
 
@@ -156,6 +184,8 @@ case $TRIPLE in
         ln -s libc++.1.dylib libc++.dylib
         ;;
     *-*-mingw*)
+        ;;
+    *-none-eabi*)
         ;;
     *-ibm-*)
         if [ $hostOS = "linux" ]
