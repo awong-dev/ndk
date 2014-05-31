@@ -375,6 +375,18 @@ public:
     static const mask punct  = _ISPUNCT;
     static const mask xdigit = _ISXDIGIT;
     static const mask blank  = _ISBLANK;
+#elif defined(_NEWLIB_VERSION) && defined(__ARM_EABI__)
+    typedef unsigned short mask;
+    static const mask space  = _S;
+    static const mask print  = _P | _U | _L | _N | _B;
+    static const mask cntrl  = _C;
+    static const mask upper  = _U;
+    static const mask lower  = _L;
+    static const mask alpha  = _U | _L;
+    static const mask digit  = _N;
+    static const mask punct  = _P;
+    static const mask xdigit = _N | _X;
+    static const mask blank  = _B;
 #elif defined(__ANDROID__)
 # if !defined(_U)
 #   if !defined(_CTYPE_U)
@@ -401,7 +413,7 @@ public:
     static const mask xdigit = _N | _X;
     // See src/support/android/locale_android.cpp for details!
     static const mask blank  = 0x100;
-#else  // __ANDROID__
+#else // defined(ANDROID)
     typedef unsigned long mask;
     static const mask space  = 1<<0;
     static const mask print  = 1<<1;
@@ -524,6 +536,15 @@ protected:
     virtual const char_type* do_narrow(const char_type* __low, const char_type* __high, char __dfault, char* __dest) const;
 };
 
+
+#if !defined(__STRICT_ANSI__)
+#define __isascii isascii
+#else
+static int __isascii(int __c) {
+  return (0 <= __c && __c <= 127) ? 1 : 0;
+}
+#endif
+
 template <>
 class _LIBCPP_TYPE_VIS ctype<char>
     : public locale::facet, public ctype_base
@@ -538,14 +559,14 @@ public:
     _LIBCPP_ALWAYS_INLINE
     bool is(mask __m, char_type __c) const
     {
-        return isascii(__c) ? (__tab_[static_cast<int>(__c)] & __m) !=0 : false;
+        return __isascii(__c) ? (__tab_[static_cast<int>(__c)] & __m) !=0 : false;
     }
 
     _LIBCPP_ALWAYS_INLINE
     const char_type* is(const char_type* __low, const char_type* __high, mask* __vec) const
     {
         for (; __low != __high; ++__low, ++__vec)
-            *__vec = isascii(*__low) ? __tab_[static_cast<int>(*__low)] : 0;
+            *__vec = __isascii(*__low) ? __tab_[static_cast<int>(*__low)] : 0;
         return __low;
     }
 
@@ -553,7 +574,7 @@ public:
     const char_type* scan_is (mask __m, const char_type* __low, const char_type* __high) const
     {
         for (; __low != __high; ++__low)
-            if (isascii(*__low) && (__tab_[static_cast<int>(*__low)] & __m))
+            if (__isascii(*__low) && (__tab_[static_cast<int>(*__low)] & __m))
                 break;
         return __low;
     }
@@ -562,7 +583,7 @@ public:
     const char_type* scan_not(mask __m, const char_type* __low, const char_type* __high) const
     {
         for (; __low != __high; ++__low)
-            if (!(isascii(*__low) && (__tab_[static_cast<int>(*__low)] & __m)))
+            if (!(__isascii(*__low) && (__tab_[static_cast<int>(*__low)] & __m)))
                 break;
         return __low;
     }

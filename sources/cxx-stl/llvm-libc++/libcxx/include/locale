@@ -197,6 +197,13 @@ template <class charT> class messages_byname;
 #include <nl_types.h>
 #endif  // !_LIBCPP_MSVCRT
 
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+#if __has_include(<newlib.h>)
+#include <newlib.h> // for _NEWLIB_VERSION
+#endif
+
 #ifdef __APPLE__
 #include <Availability.h>
 #endif
@@ -229,8 +236,7 @@ typedef _VSTD::unique_ptr<__locale_struct, decltype(&uselocale)> __locale_raii;
 // OSX has nice foo_l() functions that let you turn off use of the global
 // locale.  Linux, not so much.  The following functions avoid the locale when
 // that's possible and otherwise do the wrong thing.  FIXME.
-#if defined(__linux__) || defined(__EMSCRIPTEN__) || defined(_AIX)
-
+#if defined(__linux__) || defined(__EMSCRIPTEN__) || defined(_AIX) || defined(_NEWLIB_VERSION)
 #ifdef _LIBCPP_LOCALE__L_EXTENSIONS
 decltype(MB_CUR_MAX_L(_VSTD::declval<locale_t>()))
 inline _LIBCPP_INLINE_VISIBILITY
@@ -401,6 +407,26 @@ int __sscanf_l(const char *__s, locale_t __l, const char *__format, ...) {
 #endif
   va_end(__va);
   return __res;
+}
+
+inline
+int __isxdigit_l(char __c, locale_t __l) {
+#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
+  return isxdigit_l(__c, __l);
+#else
+  __locale_raii __current(uselocale(__l), uselocale);
+  return isxdigit(__c);
+#endif
+}
+
+inline
+int __isdigit_l(char __c, locale_t __l) {
+#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
+  return isdigit_l(__c, __l);
+#else
+  __locale_raii __current(uselocale(__l), uselocale);
+  return isdigit(__c);
+#endif
 }
 
 #endif  // __linux__
@@ -864,7 +890,15 @@ __num_get_signed_integral(const char* __a, const char* __a_end,
         typename remove_reference<decltype(errno)>::type __save_errno = errno;
         errno = 0;
         char *__p2;
-        long long __ll = strtoll_l(__a, &__p2, __base, _LIBCPP_GET_C_LOCALE);
+        long long __ll;
+        {
+#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
+          __ll = strtoll_l(__a, &__p2, __base, _LIBCPP_GET_C_LOCALE);
+#else
+          __locale_raii __current(uselocale(_LIBCPP_GET_C_LOCALE), uselocale);
+          __ll = strtoll(__a, &__p2, __base);
+#endif
+        }
         typename remove_reference<decltype(errno)>::type __current_errno = errno;
         if (__current_errno == 0)
             errno = __save_errno;
@@ -904,7 +938,15 @@ __num_get_unsigned_integral(const char* __a, const char* __a_end,
         typename remove_reference<decltype(errno)>::type __save_errno = errno;
         errno = 0;
         char *__p2;
-        unsigned long long __ll = strtoull_l(__a, &__p2, __base, _LIBCPP_GET_C_LOCALE);
+        unsigned long long __ll;
+        {
+#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
+          __ll = strtoull_l(__a, &__p2, __base, _LIBCPP_GET_C_LOCALE);
+#else
+          __locale_raii __current(uselocale(_LIBCPP_GET_C_LOCALE), uselocale);
+          __ll = strtoull(__a, &__p2, __base);
+#endif
+        }
         typename remove_reference<decltype(errno)>::type __current_errno = errno;
         if (__current_errno == 0)
             errno = __save_errno;
@@ -934,7 +976,15 @@ __num_get_float(const char* __a, const char* __a_end, ios_base::iostate& __err)
         typename remove_reference<decltype(errno)>::type __save_errno = errno;
         errno = 0;
         char *__p2;
-        long double __ld = strtold_l(__a, &__p2, _LIBCPP_GET_C_LOCALE);
+        long double __ld;
+        {
+#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
+          __ld = strtold_l(__a, &__p2, _LIBCPP_GET_C_LOCALE);
+#else
+          __locale_raii __current(uselocale(_LIBCPP_GET_C_LOCALE), uselocale);
+          __ld = strtold(__a, &__p2);
+#endif
+        }
         typename remove_reference<decltype(errno)>::type __current_errno = errno;
         if (__current_errno == 0)
             errno = __save_errno;
@@ -1290,13 +1340,13 @@ __num_put<_CharT>::__widen_and_group_float(char* __nb, char* __np, char* __ne,
         *__oe++ = __ct.widen(*__nf++);
         *__oe++ = __ct.widen(*__nf++);
         for (__ns = __nf; __ns < __ne; ++__ns)
-            if (!isxdigit_l(*__ns, _LIBCPP_GET_C_LOCALE))
+            if (!__isxdigit_l(*__ns, _LIBCPP_GET_C_LOCALE))
                 break;
     }
     else
     {
         for (__ns = __nf; __ns < __ne; ++__ns)
-            if (!isdigit_l(*__ns, _LIBCPP_GET_C_LOCALE))
+            if (!__isdigit_l(*__ns, _LIBCPP_GET_C_LOCALE))
                 break;
     }
     if (__grouping.empty())

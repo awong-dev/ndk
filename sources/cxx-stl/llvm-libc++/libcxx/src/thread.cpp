@@ -14,7 +14,8 @@
 #include "limits"
 #include <sys/types.h>
 #if !defined(_WIN32)
-#if !defined(__sun__) && !defined(__linux__) && !defined(_AIX)
+#if !defined(__sun__) && !defined(__linux__) && !defined(_AIX) &&\
+    !defined(_NEWLIB_VERSION)
 #include <sys/sysctl.h>
 #endif // !__sun__ && !__linux__ && !_AIX
 #include <unistd.h>
