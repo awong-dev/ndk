@@ -12,6 +12,8 @@
 #include "system_error"
 #include "cassert"
 
+#if !_LIBCPP_SINGLE_THREADED
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 condition_variable::~condition_variable()
@@ -79,3 +81,6 @@ notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
 }
 
 _LIBCPP_END_NAMESPACE_STD
+
+#endif // !_LIBCPP_SINGLE_THREADED
+
