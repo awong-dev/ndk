@@ -18,19 +18,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if __clang__
-// This should be based on bare metal mode in config.h
- #define _LIBUNWIND_USE_DLFCN_H __has_include(<dlfcn.h>)
-#else
- #define _LIBUNWIND_USE_DLFCN_H !_WIN32
-#endif
-
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
 
 #if __ANDROID__ || __APPLE__
  #include <link.h>
 #elif __LINUX__
-// TODO(ajwong): Is there a header for this?
  // Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
  typedef long unsigned int *_Unwind_Ptr;
  extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
@@ -38,8 +30,11 @@
      __gnu_Unwind_Find_exidx;
 #endif
 
+#if !_LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
 #endif
+
+#endif  // _LIBUNWIND_SUPPORT_ARM_UNWIND
 
 #if __APPLE__
 #include <mach-o/getsect.h>
@@ -53,7 +48,7 @@ namespace libunwind {
 #include "dwarf2.h"
 #include "Registers.hpp"
 
-#if _LIBUNWIND_SUPPORT_ARM_UNWIND && !_LIBUNWIND_USE_DLFCN_H
+#if _LIBUNWIND_SUPPORT_ARM_UNWIND && _LIBUNWIND_IS_BAREMETAL
 // When statically linked on bare-metal, the symbols for the EH table are looked
 // up without going through the dynamic loader.
 // TODO(jroelofs): since Newlib on arm-none-eabi doesn't
@@ -343,7 +338,7 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
     return true;
   }
 #elif _LIBUNWIND_SUPPORT_ARM_UNWIND
- #if _LIBUNWIND_USE_DLFCN_H
+ #if !_LIBUNWIND_IS_BAREMETAL
   int length = 0;
   info.arm_section = (uintptr_t) dl_unwind_find_exidx(
       (_Unwind_Ptr) targetAddr, &length);
@@ -375,7 +370,7 @@ inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
 inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
                                                 size_t bufLen,
                                                 unw_word_t *offset) {
-#if _LIBUNWIND_USE_DLFCN_H
+#if !_LIBUNWIND_IS_BAREMETAL
   Dl_info dyldInfo;
   if (dladdr((void *)addr, &dyldInfo)) {
     if (dyldInfo.dli_sname != NULL) {
