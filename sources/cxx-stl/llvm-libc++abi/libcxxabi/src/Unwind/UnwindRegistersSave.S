@@ -308,10 +308,11 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @ On entry:
 @  thread_state pointer is in r0
 @ 
-@ FIXME: Resolve the following ambiguity:
-@ Per EHABI #4.7 only core integer registers need to be saved at start.
-@ However #7.4.5 says in general all VRS registers should be restored..
-@ Do we need a dirty bit?
+@ Per EHABI #4.7 this only saves the core integer registers.
+@ EHABI #7.4.5 notes that in general all VRS registers should be restored
+@ however this is very hard to do for VFP registers because it is unknown
+@ to the lbirary how many registers are implemented by the architecture.
+@ Instead, VFP registers are demand saved by logic external to unw_getcontext.
 @
   .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
@@ -322,7 +323,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   str sp, [r0, #52]
   str lr, [r0, #56]
   str lr, [r0, #60]  @ store return address as pc
-  mov r0, #0      @ return UNW_ESUCCESS
+  mov r0, #0         @ return UNW_ESUCCESS
   mov pc, lr
 
 #endif
