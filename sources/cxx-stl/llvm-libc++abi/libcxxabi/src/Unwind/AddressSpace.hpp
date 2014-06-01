@@ -19,7 +19,6 @@
 #include <string.h>
 
 #if _LIBUNWIND_SUPPORT_ARM_UNWIND
-
 #if __ANDROID__ || __APPLE__
  #include <link.h>
 #elif __LINUX__
@@ -29,12 +28,11 @@
  _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
      __gnu_Unwind_Find_exidx;
 #endif
+#endif  // _LIBUNWIND_SUPPORT_ARM_UNWIND
 
 #if !_LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
 #endif
-
-#endif  // _LIBUNWIND_SUPPORT_ARM_UNWIND
 
 #if __APPLE__
 #include <mach-o/getsect.h>
