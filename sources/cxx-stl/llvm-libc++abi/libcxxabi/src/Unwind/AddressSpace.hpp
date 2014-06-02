@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if _LIBUNWIND_SUPPORT_EHABI_UNWIND
+#if _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
 #if __LINUX__
  // Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
  typedef long unsigned int *_Unwind_Ptr;
@@ -28,7 +28,7 @@
 #else
  #include <link.h>
 #endif
-#endif  // _LIBUNWIND_SUPPORT_EHABI_UNWIND
+#endif  // _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
 
 #if !_LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
@@ -46,7 +46,7 @@ namespace libunwind {
 #include "dwarf2.h"
 #include "Registers.hpp"
 
-#if _LIBUNWIND_SUPPORT_EHABI_UNWIND && _LIBUNWIND_IS_BAREMETAL
+#if _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND && _LIBUNWIND_IS_BAREMETAL
 // When statically linked on bare-metal, the symbols for the EH table are looked
 // up without going through the dynamic loader.
 // TODO(jroelofs): since Newlib on arm-none-eabi doesn't
@@ -78,7 +78,7 @@ struct UnwindInfoSections {
   uintptr_t       compact_unwind_section;
   uintptr_t       compact_unwind_section_length;
 #endif
-#if _LIBUNWIND_SUPPORT_EHABI_UNWIND
+#if _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
   // No dso_base for ARM EHABI.
   uintptr_t       arm_section;
   uintptr_t       arm_section_length;
@@ -338,7 +338,7 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
     info.compact_unwind_section_length = dyldInfo.compact_unwind_section_length;
     return true;
   }
-#elif _LIBUNWIND_SUPPORT_EHABI_UNWIND
+#elif _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
  #if !_LIBUNWIND_IS_BAREMETAL
   int length = 0;
   info.arm_section = (uintptr_t) dl_unwind_find_exidx(
