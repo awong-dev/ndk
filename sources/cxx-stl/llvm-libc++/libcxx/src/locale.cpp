@@ -42,158 +42,6 @@
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #endif
 
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int islower_l(int __ch, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return islower(__ch);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int isupper_l(int __ch, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return isupper(__ch);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswalpha_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswalpha(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswblank_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswblank(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswcntrl_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswcntrl(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswdigit_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswdigit(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswlower_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswlower(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswprint_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswprint(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswpunct_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswpunct(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswspace_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswspace(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswupper_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswupper(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int iswxdigit_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return iswxdigit(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int strcoll_l(const char *__s1, const char *__s2, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return strcoll(__s1, __s2);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static size_t strftime_l(char * __s, size_t __m,
-                         const char * __f,
-                         const struct tm * __t, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return strftime(__s, __m, __f, __t);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static size_t strxfrm_l(char * __s1, const char * __s2,
-                        size_t __n, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return strxfrm(__s1, __s2, __n);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int tolower_l(int __c, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return tolower(__c);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static wint_t towlower_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return towlower(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int toupper_l(int __c, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return toupper(__c);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static wint_t towupper_l(wint_t __wc, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return towupper(__wc);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static size_t wcsxfrm_l(wchar_t * __ws1, const wchar_t * __ws2,
-                        size_t __n, locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return wcsxfrm(__ws1, __ws2, __n);
-}
-#endif
-
-#ifndef _LIBCPP_LOCALE__L_EXTENSIONS
-static int wcscoll_l(const wchar_t *__ws1, const wchar_t *__ws2,
-                     locale_t __l) {
-    std::__locale_raii __current(uselocale(__l), uselocale);
-    return wcscoll(__ws1, __ws2);
-}
-#endif
-
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 #ifdef __cloc_defined
@@ -957,14 +805,14 @@ ctype<wchar_t>::~ctype()
 bool
 ctype<wchar_t>::do_is(mask m, char_type c) const
 {
-    return __isascii(c) ? (ctype<char>::classic_table()[c] & m) != 0 : false;
+    return isascii(c) ? (ctype<char>::classic_table()[c] & m) != 0 : false;
 }
 
 const wchar_t*
 ctype<wchar_t>::do_is(const char_type* low, const char_type* high, mask* vec) const
 {
     for (; low != high; ++low, ++vec)
-        *vec = static_cast<mask>(__isascii(*low) ?
+        *vec = static_cast<mask>(isascii(*low) ?
                                    ctype<char>::classic_table()[*low] : 0);
     return low;
 }
@@ -973,7 +821,7 @@ const wchar_t*
 ctype<wchar_t>::do_scan_is(mask m, const char_type* low, const char_type* high) const
 {
     for (; low != high; ++low)
-        if (__isascii(*low) && (ctype<char>::classic_table()[*low] & m))
+        if (isascii(*low) && (ctype<char>::classic_table()[*low] & m))
             break;
     return low;
 }
@@ -982,7 +830,7 @@ const wchar_t*
 ctype<wchar_t>::do_scan_not(mask m, const char_type* low, const char_type* high) const
 {
     for (; low != high; ++low)
-        if (!(__isascii(*low) && (ctype<char>::classic_table()[*low] & m)))
+        if (!(isascii(*low) && (ctype<char>::classic_table()[*low] & m)))
             break;
     return low;
 }
@@ -991,11 +839,13 @@ wchar_t
 ctype<wchar_t>::do_toupper(char_type c) const
 {
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-    return __isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
+    return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
-    return __isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
+    return isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
+#elif defined(__ANDROID__)
+    return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
-    return (__isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
+    return (isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
 #endif
 }
 
@@ -1004,12 +854,14 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
 {
     for (; low != high; ++low)
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-        *low = __isascii(*low) ? _DefaultRuneLocale.__mapupper[*low] : *low;
+        *low = isascii(*low) ? _DefaultRuneLocale.__mapupper[*low] : *low;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
-        *low = __isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
+        *low = isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
                              : *low;
+#elif defined(__ANDROID__)
+        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
-        *low = (__isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
+        *low = (isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
 #endif
     return low;
 }
@@ -1018,11 +870,13 @@ wchar_t
 ctype<wchar_t>::do_tolower(char_type c) const
 {
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-    return __isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
+    return isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
-    return __isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
+    return isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
+#elif defined(__ANDROID__)
+    return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
-    return (__isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
+    return (isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
 #endif
 }
 
@@ -1031,14 +885,14 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
 {
     for (; low != high; ++low)
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-        *low = __isascii(*low) ? _DefaultRuneLocale.__maplower[*low] : *low;
+        *low = isascii(*low) ? _DefaultRuneLocale.__maplower[*low] : *low;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
-        *low = __isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
+        *low = isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
                              : *low;
 #elif defined(__ANDROID__)
         *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
-        *low = (__isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
+        *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
 #endif
     return low;
 }
@@ -1060,7 +914,7 @@ ctype<wchar_t>::do_widen(const char* low, const char* high, char_type* dest) con
 char
 ctype<wchar_t>::do_narrow(char_type c, char dfault) const
 {
-    if (__isascii(c))
+    if (isascii(c))
         return static_cast<char>(c);
     return dfault;
 }
@@ -1069,7 +923,7 @@ const wchar_t*
 ctype<wchar_t>::do_narrow(const char_type* low, const char_type* high, char dfault, char* dest) const
 {
     for (; low != high; ++low, ++dest)
-        if (__isascii(*low))
+        if (isascii(*low))
             *dest = static_cast<char>(*low);
         else
             *dest = dfault;
@@ -1099,17 +953,17 @@ char
 ctype<char>::do_toupper(char_type c) const
 {
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-    return __isascii(c) ?
+    return isascii(c) ?
       static_cast<char>(_DefaultRuneLocale.__mapupper[static_cast<ptrdiff_t>(c)]) : c;
 #elif defined(__NetBSD__)
     return static_cast<char>(__classic_upper_table()[static_cast<unsigned char>(c)]);
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
-    return __isascii(c) ? 
+    return isascii(c) ? 
       static_cast<char>(__classic_upper_table()[static_cast<unsigned char>(c)]) : c;
 #elif defined(__ANDROID__)
     return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
-    return (__isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
+    return (isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
 #endif
 }
 
@@ -1118,17 +972,17 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
 {
     for (; low != high; ++low)
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-        *low = __isascii(*low) ?
+        *low = isascii(*low) ?
           static_cast<char>(_DefaultRuneLocale.__mapupper[static_cast<ptrdiff_t>(*low)]) : *low;
 #elif defined(__NetBSD__)
         *low = static_cast<char>(__classic_upper_table()[static_cast<unsigned char>(*low)]);
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
-        *low = __isascii(*low) ?
+        *low = isascii(*low) ?
           static_cast<char>(__classic_upper_table()[static_cast<size_t>(*low)]) : *low;
 #elif defined(__ANDROID__)
         *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
-        *low = (__isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
+        *low = (isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
 #endif
     return low;
 }
@@ -1137,17 +991,17 @@ char
 ctype<char>::do_tolower(char_type c) const
 {
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-    return __isascii(c) ?
+    return isascii(c) ?
       static_cast<char>(_DefaultRuneLocale.__maplower[static_cast<ptrdiff_t>(c)]) : c;
 #elif defined(__NetBSD__)
     return static_cast<char>(__classic_lower_table()[static_cast<unsigned char>(c)]);
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
-    return __isascii(c) ?
+    return isascii(c) ?
       static_cast<char>(__classic_lower_table()[static_cast<size_t>(c)]) : c;
 #elif defined(__ANDROID__)
     return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
-    return (__isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
+    return (isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
 #endif
 }
 
@@ -1156,13 +1010,15 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
 {
     for (; low != high; ++low)
 #ifdef _LIBCPP_HAS_DEFAULTRUNELOCALE
-        *low = __isascii(*low) ? static_cast<char>(_DefaultRuneLocale.__maplower[static_cast<ptrdiff_t>(*low)]) : *low;
+        *low = isascii(*low) ? static_cast<char>(_DefaultRuneLocale.__maplower[static_cast<ptrdiff_t>(*low)]) : *low;
 #elif defined(__NetBSD__)
         *low = static_cast<char>(__classic_lower_table()[static_cast<unsigned char>(*low)]);
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
-        *low = __isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
+        *low = isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
+#elif defined(__ANDROID__)
+        *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
-        *low = (__isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
+        *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
 #endif
     return low;
 }
@@ -1184,7 +1040,7 @@ ctype<char>::do_widen(const char* low, const char* high, char_type* dest) const
 char
 ctype<char>::do_narrow(char_type c, char dfault) const
 {
-    if (__isascii(c))
+    if (isascii(c))
         return static_cast<char>(c);
     return dfault;
 }
@@ -1193,7 +1049,7 @@ const char*
 ctype<char>::do_narrow(const char_type* low, const char_type* high, char dfault, char* dest) const
 {
     for (; low != high; ++low, ++dest)
-        if (__isascii(*low))
+        if (isascii(*low))
             *dest = *low;
         else
             *dest = dfault;
@@ -1232,8 +1088,6 @@ ctype<char>::classic_table()  _NOEXCEPT
     return _ctype_android;
 #elif defined(_AIX)
     return (const unsigned int *)__lc_ctype_ptr->obj->mask;
-#elif defined(_NEWLIB_VERSION) && defined(__ARM_EABI__)
-    return (const unsigned short*)((const unsigned char*)__ctype_ptr__+1);
 #else
     // Platform not supported: abort so the person doing the port knows what to
     // fix
@@ -1420,7 +1274,7 @@ ctype_byname<wchar_t>::do_is(const char_type* low, const char_type* high, mask* 
 {
     for (; low != high; ++low, ++vec)
     {
-        if (__isascii(*low))
+        if (isascii(*low))
             *vec = static_cast<mask>(ctype<char>::classic_table()[*low]);
         else
         {
