@@ -312,7 +312,11 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
               break;
             case 0xc6: {
               uint8_t v = getByte(data, offset++);
-              _Unwind_VRS_Pop(context, _UVRSC_WMMXD, RegisterRange(v >> 4, v & 0xf), _UVRSD_DOUBLE);
+              uint8_t start = v >> 4;
+              uint8_t count_minus_one = v & 0xf;
+              if (start + count_minus_one >= 16)
+                return _URC_FAILURE;
+              _Unwind_VRS_Pop(context, _UVRSC_WMMXD, RegisterRange(start, count_minus_one), _UVRSD_DOUBLE);
               break;
             }
             case 0xc7: {
@@ -325,8 +329,11 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
             case 0xc8:
             case 0xc9: {
               uint8_t v = getByte(data, offset++);
-              uint8_t start = (byte == 0xc8) ? 16 : 0;
-              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(start + (v >> 4), v & 0xf), _UVRSD_DOUBLE);
+              uint8_t start = ((byte == 0xc8) ? 16 : 0) + (v >> 4);
+              uint8_t count_minus_one = v & 0xf;
+              if (start + count_minus_one >= 32)
+                return _URC_FAILURE;
+              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(start, count_minus_one), _UVRSD_DOUBLE);
               break;
             }
             default:
