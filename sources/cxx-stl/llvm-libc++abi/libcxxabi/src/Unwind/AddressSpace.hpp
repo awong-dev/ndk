@@ -19,14 +19,14 @@
 #include <string.h>
 
 #if _LIBUNWIND_SUPPORT_EHABI_UNWIND
-#if __ANDROID__ || __APPLE__
- #include <link.h>
-#elif __LINUX__
+#if __LINUX__
  // Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
  typedef long unsigned int *_Unwind_Ptr;
  extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
  _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
      __gnu_Unwind_Find_exidx;
+#else
+ #include <link.h>
 #endif
 #endif  // _LIBUNWIND_SUPPORT_EHABI_UNWIND
 
