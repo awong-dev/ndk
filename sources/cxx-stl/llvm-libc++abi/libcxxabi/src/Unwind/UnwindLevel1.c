@@ -521,13 +521,13 @@ static uint64_t ValueAsBitPattern(_Unwind_VRS_DataRepresentation representation,
   switch (representation) {
     case _UVRSD_UINT32:
     case _UVRSD_FLOAT:
-      memcpy(&value, valuep, 2);
+      memcpy(&value, valuep, sizeof(uint32_t));
       break;
 
     case _UVRSD_VFPX:
     case _UVRSD_UINT64:
     case _UVRSD_DOUBLE:
-      memcpy(&value, valuep, 4);
+      memcpy(&value, valuep, sizeof(uint64_t));
       break;
   }
   return value;
