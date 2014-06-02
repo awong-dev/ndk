@@ -63,20 +63,23 @@ namespace libunwind {
 
 /// Used by findUnwindSections() to return info about needed sections.
 struct UnwindInfoSections {
-  uintptr_t        dso_base;
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND
+  uintptr_t       dso_base;
   uintptr_t       dwarf_section;
   uintptr_t       dwarf_section_length;
 #endif
 #if _LIBUNWIND_SUPPORT_DWARF_INDEX
+  uintptr_t       dso_base;
   uintptr_t       dwarf_index_section;
   uintptr_t       dwarf_index_section_length;
 #endif
 #if _LIBUNWIND_SUPPORT_COMPACT_UNWIND
+  uintptr_t       dso_base;
   uintptr_t       compact_unwind_section;
   uintptr_t       compact_unwind_section_length;
 #endif
 #if _LIBUNWIND_SUPPORT_EHABI_UNWIND
+  // No dso_base for ARM EHABI.
   uintptr_t       arm_section;
   uintptr_t       arm_section_length;
 #endif
