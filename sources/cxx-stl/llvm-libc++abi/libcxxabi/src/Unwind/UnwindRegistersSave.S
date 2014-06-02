@@ -324,6 +324,10 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   str lr, [r0, #56]
   str lr, [r0, #60]  @ store return address as pc
   mov r0, #0         @ return UNW_ESUCCESS
+#if _ARM_ARCH > 4
+  bx lr
+#else
   mov pc, lr
+#endif
 
 #endif

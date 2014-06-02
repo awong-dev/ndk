@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <inttypes.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -22,10 +21,6 @@
 #include "libunwind.h"
 #include "unwind.h"
 #include "config.h"
-
-#if !defined(PRIXPTR)
-#define PRIXPTR "%p"
-#endif
 
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
 
@@ -78,10 +73,10 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
       unw_word_t pc;
       unw_get_reg(&cursor1, UNW_REG_IP, &pc);
       _LIBUNWIND_TRACE_UNWINDING(
-          "unwind_phase1(ex_ojb=%p): pc=0x%lX, start_ip=0x%lX, func=%s, "
-          "lsda=0x%lX, personality=0x%lX\n",
-          exception_object, (long)pc, (long)frameInfo.start_ip, functionName,
-          (long)frameInfo.lsda, (long)frameInfo.handler);
+          "unwind_phase1(ex_ojb=%p): pc=0x%llX, start_ip=0x%llX, func=%s, "
+          "lsda=0x%llX, personality=0x%llX\n",
+          exception_object, (long long)pc, (long long)frameInfo.start_ip, functionName,
+          (long long)frameInfo.lsda, (long long)frameInfo.handler);
     }
 
     // If there is a personality routine, ask it if it will want to stop at
@@ -100,11 +95,11 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
       _Unwind_Reason_Code personalityResult =
           (*p)(_US_VIRTUAL_UNWIND_FRAME, exception_object, context);
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase1(ex_ojb=%p): personality result %d "
-                                 " start_ip %lx ehtp %lx additional %lx\n",
+                                 "start_ip %x ehtp %x additional %x\n",
                                  exception_object, personalityResult,
-                                 (long)exception_object->pr_cache.fnstart,
-                                 (long)exception_object->pr_cache.ehtp,
-                                 (long)exception_object->pr_cache.additional);
+                                 exception_object->pr_cache.fnstart,
+                                 exception_object->pr_cache.ehtp,
+                                 exception_object->pr_cache.additional);
 #else // !LIBCXXABI_ARM_EHABI
       _Unwind_Reason_Code personalityResult =
           (*p)(1, _UA_SEARCH_PHASE, exception_object->exception_class,
@@ -212,10 +207,11 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
            UNW_ESUCCESS) || (frameInfo.start_ip + offset > frameInfo.end_ip))
         strcpy(functionName, ".anonymous.");
       _LIBUNWIND_TRACE_UNWINDING(
-          "unwind_phase2(ex_ojb=%p): start_ip=0x%lX, func=%s, sp=0x%lX, "
-          "lsda=0x%lX, personality=0x%lX\n",
-          exception_object, (long)frameInfo.start_ip, functionName, (long)sp,
-          (long)frameInfo.lsda, (long)frameInfo.handler);
+          "unwind_phase2(ex_ojb=%p): start_ip=0x%llX, func=%s, sp=0x%llX, "
+          "lsda=0x%llX, personality=0x%llX\n",
+          exception_object, (long long)frameInfo.start_ip, functionName,
+          (long long)sp, (long long)frameInfo.lsda,
+          (long long)frameInfo.handler);
     }
 
     // If there is a personality routine, tell it we are unwinding.
@@ -268,16 +264,19 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
           unw_get_reg(&cursor2, UNW_REG_IP, &pc);
           unw_get_reg(&cursor2, UNW_REG_SP, &sp);
           _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p): re-entering  "
-                                     "user code with ip=0x%lX, sp=0x%lX\n",
-                                     exception_object, (long)pc, (long)sp);
+                                     "user code with ip=0x%llX, sp=0x%llX\n",
+                                     exception_object, (long long)pc,
+                                     (long long)sp);
         }
 
 #if LIBCXXABI_ARM_EHABI
-        // EHABI #7.4.1 says we need to preserve pc for when _Unwind_Resume is called
-        // back, to find this same frame.
-        unw_word_t pc;
-        unw_get_reg(&cursor2, UNW_REG_IP, &pc);
-        exception_object->unwinder_cache.reserved2 = (uint32_t)pc;
+        {
+          // EHABI #7.4.1 says we need to preserve pc for when _Unwind_Resume
+          // is called back, to find this same frame.
+          unw_word_t pc;
+          unw_get_reg(&cursor2, UNW_REG_IP, &pc);
+          exception_object->unwinder_cache.reserved2 = (uint32_t)pc;
+        }
 #endif
         unw_resume(&cursor2);
         // unw_resume() only returns if there was an error.
@@ -414,7 +413,8 @@ _Unwind_RaiseException(_Unwind_Exception *exception_object) {
   unw_getcontext(&uc);
 
 #if LIBCXXABI_ARM_EHABI
-  // This field for compat with GCC to say this isn't a forced unwind. EHABI #7.2
+  // This field for is for compatibility with GCC to say this isn't a forced
+  // unwind. EHABI #7.2
   exception_object->unwinder_cache.reserved1 = 0;
 #else
   // Mark that this is a non-forced unwind, so _Unwind_Resume()
@@ -454,6 +454,7 @@ _Unwind_Resume(_Unwind_Exception *exception_object) {
 #if LIBCXXABI_ARM_EHABI
   // _Unwind_RaiseException on EHABI will always set the reserved1 field to 0,
   // which is in the same position as private_1 below.
+  // TODO(ajwong): Who wronte the above? Why is it true?
   unwind_phase2(&uc, exception_object, true);
 #else
   if (exception_object->private_1 != 0)
@@ -490,7 +491,7 @@ _Unwind_ForcedUnwind(_Unwind_Exception *exception_object,
   // do it
   return unwind_phase2_forced(&uc, exception_object, stop, stop_parameter);
 }
-#endif
+#endif // !LIBCXXABI_ARM_EHABI
 
 
 /// Called by personality handler during phase 2 to get LSDA for current frame.
@@ -502,10 +503,11 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
   if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
     result = (uintptr_t)frameInfo.lsda;
   _LIBUNWIND_TRACE_API("_Unwind_GetLanguageSpecificData(context=%p)"
-                             "=> 0x%" PRIXPTR "\n", context, result);
+                       "=> 0x%llx\n", context, (long long)result);
   if (result != 0) {
     if (*((uint8_t *)result) != 0xFF)
-      _LIBUNWIND_DEBUG_LOG("lsda at 0x%" PRIXPTR " does not start with 0xFF\n", result);
+      _LIBUNWIND_DEBUG_LOG("lsda at 0x%llx does not start with 0xFF\n",
+                           (long long)result);
   }
   return result;
 }
@@ -513,15 +515,34 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
 
 #if LIBCXXABI_ARM_EHABI
 
+static uint64_t ValueAsBitPattern(_Unwind_VRS_DataRepresentation representation,
+                                  void* valuep) {
+  uint64_t value = 0;
+  switch (representation) {
+    case _UVRSD_UINT32:
+    case _UVRSD_FLOAT:
+      memcpy(&value, valuep, 2);
+      break;
+
+    case _UVRSD_VFPX:
+    case _UVRSD_UINT64:
+    case _UVRSD_DOUBLE:
+      memcpy(&value, valuep, 4);
+      break;
+  }
+  return value;
+}
+
 _Unwind_VRS_Result _Unwind_VRS_Set(
     _Unwind_Context *context,
     _Unwind_VRS_RegClass regclass,
     uint32_t regno,
     _Unwind_VRS_DataRepresentation representation,
     void *valuep) {
-  _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, regclass=%d reg=%d, rep=%d, "
-                             "value=0x%0llX)\n", context, regclass,
-                             regno, representation, 0LL /* FIXME */);
+  _LIBUNWIND_TRACE_API("_Unwind_VRS_Set(context=%p, regclass=%d, reg=%d, "
+                       "rep=%d, value=0x%llX)\n", context, regclass,
+                       regno, representation,
+                       ValueAsBitPattern(representation, valuep));
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   switch (regclass) {
     case _UVRSC_CORE: {
@@ -569,15 +590,12 @@ _Unwind_VRS_Result _Unwind_VRS_Set(
   return _UVRSR_NOT_IMPLEMENTED;
 }
 
-_Unwind_VRS_Result _Unwind_VRS_Get(
+static _Unwind_VRS_Result _Unwind_VRS_Get_Internal(
     _Unwind_Context *context,
     _Unwind_VRS_RegClass regclass,
     uint32_t regno,
     _Unwind_VRS_DataRepresentation representation,
     void *valuep) {
-  _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, regclass=%d reg=%d, rep=%d, "
-                       "value=0x%0lX)\n", context, regclass,
-                       regno, representation, (long)*((uint32_t*)valuep));
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   switch (regclass) {
     case _UVRSC_CORE: {
@@ -630,11 +648,30 @@ _Unwind_VRS_Result _Unwind_VRS_Get(
   return _UVRSR_NOT_IMPLEMENTED;
 }
 
+_Unwind_VRS_Result _Unwind_VRS_Get(
+    _Unwind_Context *context,
+    _Unwind_VRS_RegClass regclass,
+    uint32_t regno,
+    _Unwind_VRS_DataRepresentation representation,
+    void *valuep) {
+  _Unwind_VRS_Result result =
+      _Unwind_VRS_Get_Internal(context, regclass, regno, representation,
+                               valuep);
+  _LIBUNWIND_TRACE_API("_Unwind_VRS_Get(context=%p, regclass=%d, reg=%d, "
+                       "rep=%d, value=0x%llX, result = %d)\n", context, regclass,
+                       regno, representation, 
+                       ValueAsBitPattern(representation, valuep), result);
+  return result;
+}
+
 _Unwind_VRS_Result _Unwind_VRS_Pop(
     _Unwind_Context *context,
     _Unwind_VRS_RegClass regclass,
     uint32_t discriminator,
     _Unwind_VRS_DataRepresentation representation) {
+  _LIBUNWIND_TRACE_API("_Unwind_VRS_Pop(context=%p, regclass=%d, "
+                       "discriminator=%d, representation=%d)\n",
+                        context, regclass, discriminator, representation);
   if (regclass != _UVRSC_CORE || representation != _UVRSD_UINT32) {
     // TODO(piman): VFP, ...
     _LIBUNWIND_ABORT("during phase1 personality function said it would "
@@ -687,6 +724,8 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetGR(struct _Unwind_Context *context,
   return (uintptr_t)result;
 }
 
+
+
 /// Called by personality handler during phase 2 to alter register values.
 _LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                                      uintptr_t new_value) {
@@ -697,6 +736,8 @@ _LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
   unw_set_reg(cursor, index, new_value);
 }
 
+
+
 /// Called by personality handler during phase 2 to get instruction pointer.
 _LIBUNWIND_EXPORT uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
   unw_cursor_t *cursor = (unw_cursor_t *)context;
@@ -706,6 +747,8 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
                              (uint64_t) result);
   return (uintptr_t)result;
 }
+
+
 
 /// Called by personality handler during phase 2 to alter instruction pointer,
 /// such as setting where the landing pad is, so _Unwind_Resume() will
@@ -718,7 +761,7 @@ _LIBUNWIND_EXPORT void _Unwind_SetIP(struct _Unwind_Context *context,
   unw_set_reg(cursor, UNW_REG_IP, new_value);
 }
 
-#endif  // !LICXXABI_ARM_EHABI
+#endif // !LICXXABI_ARM_EHABI
 
 /// Called by personality handler during phase 2 to find the start of the
 /// function.
@@ -729,10 +772,11 @@ _Unwind_GetRegionStart(struct _Unwind_Context *context) {
   uintptr_t result = 0;
   if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
     result = (uintptr_t)frameInfo.start_ip;
-  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%" PRIXPTR "\n",
-                             context, result);
+  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%llX\n",
+                             context, (long long)result);
   return result;
 }
+
 
 /// Called by personality handler during phase 2 if a foreign exception
 // is caught.
