@@ -104,12 +104,6 @@ int main()
     test("tild", std::string(""));
     test("ch", std::string(""));
 
-#if !defined(__ANDROID__)
-    std::locale::global(std::locale("cs_CZ.ISO8859-2"));
-    test("ch", std::string("ch"));
-    std::locale::global(std::locale("C"));
-#endif
-
     test(L"NUL", std::wstring(L"\x00", 1));
     test(L"alert", std::wstring(L"\x07"));
     test(L"backspace", std::wstring(L"\x08"));
@@ -182,10 +176,4 @@ int main()
 
     test(L"tild", std::wstring(L""));
     test(L"ch", std::wstring(L""));
-
-#if !defined(__ANDROID__)
-    std::locale::global(std::locale("cs_CZ.ISO8859-2"));
-    test(L"ch", std::wstring(L"ch"));
-    std::locale::global(std::locale("C"));
-#endif
 }
