@@ -12,6 +12,7 @@
 #ifndef __UNWINDCURSOR_HPP__
 #define __UNWINDCURSOR_HPP__
 
+#include <algorithm>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -604,26 +605,80 @@ extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr1(
 extern "C" _Unwind_Reason_Code __aeabi_unwind_cpp_pr2(
     _Unwind_State state, _Unwind_Control_Block *ucbp, _Unwind_Context *context);
 
+template<typename A>
+struct EHABISectionIterator {
+  typedef EHABISectionIterator _Self;
+
+  typedef std::random_access_iterator_tag iterator_category;
+  typedef typename A::pint_t value_type;
+  typedef typename A::pint_t* pointer;
+  typedef typename A::pint_t& reference;
+  typedef size_t size_type;
+  typedef size_t difference_type;
+
+  static _Self begin(A& addressSpace, const UnwindInfoSections& sects) {
+    return _Self(addressSpace, sects, 0);
+  }
+  static _Self end(A& addressSpace, const UnwindInfoSections& sects) {
+    return _Self(addressSpace, sects, sects.arm_section_length);
+  }
+
+  EHABISectionIterator(A& addressSpace, const UnwindInfoSections& sects, size_t i)
+      : _addressSpace(&addressSpace), _sects(&sects), _i(i) {}
+
+  _Self& operator++() { ++_i; return *this; }
+  _Self& operator+=(size_t a) { _i += a; return *this; }
+  _Self& operator--() { assert(_i > 0); --_i; return *this; }
+  _Self& operator-=(size_t a) { assert(_i >= a); _i -= a; return *this; }
+
+  _Self operator+(size_t a) { _Self out = *this; out._i += a; return out; }
+  _Self operator-(size_t a) { assert(_i >= a); _Self out = *this; out._i -= a; return out; }
+
+  size_t operator-(const _Self& other) { return _i - other._i; }
+
+  bool operator==(const _Self& other) const {
+    assert(_addressSpace == other._addressSpace);
+    assert(_sects == other._sects);
+    return _i == other._i;
+  }
+
+  typename A::pint_t operator*() const { return functionAddress(); }
+
+  typename A::pint_t functionAddress() const {
+    typename A::pint_t indexAddr = _sects->arm_section + arrayoffsetof(
+        EHABIIndexEntry, _i, functionOffset);
+    return indexAddr + signExtendPrel31(_addressSpace->get32(indexAddr));
+  }
+
+  typename A::pint_t dataAddress() {
+    typename A::pint_t indexAddr = _sects->arm_section + arrayoffsetof(
+        EHABIIndexEntry, _i, data);
+    return indexAddr;
+  }
+
+ private:
+  size_t _i;
+  A* _addressSpace;
+  const UnwindInfoSections* _sects;
+};
+
 template <typename A, typename R>
 bool UnwindCursor<A, R>::getInfoFromEHABISection(
     pint_t pc,
     const UnwindInfoSections &sects) {
-  // TODO(piman): binary search instead.
-  pint_t thisPC = 0;
-  pint_t nextPC = 0;
-  pint_t indexAddr = 0;
-  pint_t indexDataAddr = 0;
-  // arm_section_length is in entries.
-  for (size_t i = 0; i < sects.arm_section_length; ++i) {
-    pint_t nextIndexAddr = sects.arm_section + arrayoffsetof(
-        EHABIIndexEntry, i, functionOffset);
-    thisPC = nextPC;
-    nextPC = nextIndexAddr + signExtendPrel31(_addressSpace.get32(nextIndexAddr));
-    if (pc < nextPC)
-      break;
-    indexAddr = nextIndexAddr;
-    indexDataAddr = sects.arm_section + arrayoffsetof(EHABIIndexEntry, i, data);
-  }
+  EHABISectionIterator<A> begin =
+      EHABISectionIterator<A>::begin(_addressSpace, sects);
+  EHABISectionIterator<A> end =
+      EHABISectionIterator<A>::end(_addressSpace, sects);
+
+  EHABISectionIterator<A> itNextPC = std::upper_bound(begin, end, pc);
+  if (itNextPC == begin || itNextPC == end)
+    return false;
+  EHABISectionIterator<A> itThisPC = itNextPC - 1;
+
+  pint_t thisPC = itThisPC.functionAddress();
+  pint_t nextPC = itNextPC.functionAddress();
+  pint_t indexDataAddr = itThisPC.dataAddress();
 
   if (indexDataAddr == 0)
     return false;
