@@ -76,7 +76,7 @@ DO_STATIC=
 TARGET_ABI=
 TARGET_ARCH=
 if [ -n "$SHARD_TEST_TOOLCHAIN" ]; then
-  TARGET_PATH=/data/local/tmp/libcxx-${SHARD_TEST_TOOLCHAIN}-$(echo $(dirname $PWD) | sum | cut -d' ' -f1 )-$(basename $PWD)
+  TARGET_PATH=/data/local/tmp/libcxx-${SHARD_TEST_TOOLCHAIN}-$(dirname $PWD | sum | cut -d' ' -f1)-$(basename $PWD)
 else
   TARGET_PATH=/data/local/tmp/libcxx
 fi
