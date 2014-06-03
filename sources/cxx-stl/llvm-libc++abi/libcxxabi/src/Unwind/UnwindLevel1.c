@@ -646,7 +646,9 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
     case _UVRSC_WMMXC: {
       if (representation != _UVRSD_UINT32)
         return _UVRSR_FAILED;
-      bool did13 = false;
+      // When popping SP from the stack, we don't want to override it from the
+      // computed new stack location. See EHABI #7.5.4 table 3.
+      bool poppedSP = false;
       uint32_t* sp;
       if (_Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
                           _UVRSD_UINT32, &sp) != _UVRSR_OK) {
@@ -657,13 +659,13 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
           continue;
         uint32_t value = *sp++;
         if (regclass == _UVRSC_CORE && i == 13)
-          did13 = true;
+          poppedSP = true;
         if (_Unwind_VRS_Set(context, regclass, i,
                             _UVRSD_UINT32, &value) != _UVRSR_OK) {
           return _UVRSR_FAILED;
         }
       }
-      if (!did13) {
+      if (!poppedSP) {
         return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
                                _UVRSD_UINT32, &sp);
       }
@@ -681,6 +683,8 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
                           _UVRSD_UINT32, &sp) != _UVRSR_OK) {
         return _UVRSR_FAILED;
       }
+      // For _UVRSD_VFPX, we're assuming the data is stored in FSTMX "standard
+      // format 1", which is equivalent to FSTMD + a padding word.
       for (uint32_t i = first; i < end; ++i) {
         // SP is only 32-bit aligned so don't copy 64-bit at a time.
         uint64_t value = *sp++;

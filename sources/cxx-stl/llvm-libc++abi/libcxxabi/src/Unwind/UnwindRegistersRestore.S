@@ -364,9 +364,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPy)
   @ d16-d31 are only available when compiling with -mfpu=vfpv3. We don't want to
   @ do that in the library (because we don't want the compiler to generate
-  @ instructions that access those), but this is only accessed if the
-  @ personality routine needs these registers, which implies they are actually,
-  @ available on the target, so it's ok to execute.
+  @ instructions that access those) but this is only accessed if the
+  @ personality routine needs these registers. Use of these registers implies
+  @ they are, actually, available on the target, so it's ok to execute.
   @ So, generate the instruction using the corresponding coprocessor mnemonic.
   ldcl p11, cr0, [r0], {#0x20}  @ vldm r0, {d16-d31}
   mov pc, lr

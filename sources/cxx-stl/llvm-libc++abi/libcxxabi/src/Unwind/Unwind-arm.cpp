@@ -268,6 +268,7 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
             }
             case 0xb2: {
               uint32_t addend = 0;
+              // This decodes a uleb128 value.
               while (true) {
                 if (offset >= len)
                   return _URC_FAILURE;
