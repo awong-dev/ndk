@@ -268,21 +268,21 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
             }
             case 0xb2: {
               uint32_t addend = 0;
+              uint32_t shift = 0;
               // This decodes a uleb128 value.
               while (true) {
                 if (offset >= len)
                   return _URC_FAILURE;
-                uint8_t v = getByte(data, offset++);
-                addend = addend << 7 | (v & 0x7f);
+                uint32_t v = getByte(data, offset++);
+                addend |= (v & 0x7f) << shift;
                 if ((v & 0x80) == 0)
                   break;
+                shift += 7;
               }
               uint32_t sp;
-              _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
-                              _UVRSD_UINT32, &sp);
-              sp += 0x204 + addend;
-              _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
-                              _UVRSD_UINT32, &sp);
+              _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+              sp += 0x204 + (addend << 2);
+              _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
               break;
             }
             case 0xb3: {
