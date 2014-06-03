@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # //===--------------------------- testit ---------------------------------===//
 # //
 # //                     The LLVM Compiler Infrastructure
@@ -75,7 +75,11 @@ DO_HELP=
 DO_STATIC=
 TARGET_ABI=
 TARGET_ARCH=
-TARGET_PATH=/data/local/tmp/libcxx
+if [ -n "$SHARD_TEST_TOOLCHAIN" ]; then
+  TARGET_PATH=/data/local/tmp/libcxx-${SHARD_TEST_TOOLCHAIN}-$(echo $(dirname $PWD) | sum | cut -d' ' -f1 )-$(basename $PWD)
+else
+  TARGET_PATH=/data/local/tmp/libcxx
+fi
 CXX=
 WITH_COMPILER_RT=
 OPTIMIZE=
