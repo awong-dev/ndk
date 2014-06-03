@@ -412,10 +412,6 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/musl-math/frexpf.c \
 ../../android/support/src/musl-math/frexpl.c \
 ../../android/support/src/musl-math/frexp.c \
-../../android/support/src/musl-math/scalbln.c \
-../../android/support/src/musl-math/scalblnf.c \
-../../android/support/src/musl-math/scalblnl.c \
-../../android/support/src/musl-math/scalbnl.c \
 ../../android/support/src/musl-stdio/swprintf.c \
 ../../android/support/src/musl-stdio/vwprintf.c \
 ../../android/support/src/musl-stdio/wprintf.c \
@@ -430,6 +426,15 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/wcstox/wcstod.c \
 ../../android/support/src/wcstox/wcstol.c \
 "
+
+# Replaces broken implementations in x86 libm.so
+LIBCXX_SOURCES_x86=\
+"../../android/support/src/musl-math/scalbln.c \
+../../android/support/src/musl-math/scalblnf.c \
+../../android/support/src/musl-math/scalblnl.c \
+../../android/support/src/musl-math/scalbnl.c \
+"
+
 # If the --no-makefile flag is not used, we're going to put all build
 # commands in a temporary Makefile that we will be able to invoke with
 # -j$NUM_JOBS to build stuff in parallel.
@@ -450,6 +455,7 @@ case $CXX_STL in
     CXX_STL_CXXFLAGS=$GABIXX_CXXFLAGS
     CXX_STL_LDFLAGS=$GABIXX_LDFLAGS
     CXX_STL_SOURCES=$GABIXX_SOURCES
+    CXX_STL_SOURCES_x86=
     CXX_STL_PACKAGE=gabixx
     ;;
   stlport)
@@ -460,6 +466,7 @@ case $CXX_STL in
     CXX_STL_CXXFLAGS=$STLPORT_CXXFLAGS
     CXX_STL_LDFLAGS=$STLPORT_LDFLAGS
     CXX_STL_SOURCES=$STLPORT_SOURCES
+    CXX_STL_SOURCES_x86=
     CXX_STL_PACKAGE=stlport
     ;;
   libc++)
@@ -470,6 +477,7 @@ case $CXX_STL in
     CXX_STL_CXXFLAGS=$LIBCXX_CXXFLAGS
     CXX_STL_LDFLAGS=$LIBCXX_LDFLAGS
     CXX_STL_SOURCES=$LIBCXX_SOURCES
+    CXX_STL_SOURCES_x86=$LIBCXX_SOURCES_x86
     CXX_STL_PACKAGE=libcxx
     ;;
   *)
@@ -574,7 +582,11 @@ build_stl_libs_for_abi ()
       builder_reset_cxxflags DEFAULT_CXXFLAGS
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
       builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
-      builder_sources $CXX_STL_SOURCES
+      if [ "$ABI" = "x86" -a -n "$CXX_STL_SOURCES_x86" ]; then
+        builder_sources $CXX_STL_SOURCES $CXX_STL_SOURCES_x86
+      else
+        builder_sources $CXX_STL_SOURCES
+      fi
     fi
 
     if [ "$TYPE" = "static" ]; then
