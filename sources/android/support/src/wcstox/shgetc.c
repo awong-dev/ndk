@@ -28,7 +28,10 @@ void shunget(struct fake_file_t *f) {
 }
 
 void shlim(struct fake_file_t *f, off_t lim) {
-    // Intentionally don't do anything here.
+    int off = f->rpos - f->rstart;
+    if (off > lim)
+        f->rpos = f->rstart + lim;
+
 }
 
 off_t shcnt(struct fake_file_t *f) {
