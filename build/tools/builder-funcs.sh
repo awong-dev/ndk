@@ -364,12 +364,8 @@ builder_shared_library ()
         echo "Cannot set both LLVM_VERSION and GCC_VERSION at the same time. Make up your mind!"
         exit 1
     fi
-    if [ -n "${LLVM_VERSION}" ]; then
-        _COMPILER_RUNTIME="-lcompiler_rt_shared"
-    fi
-    if [ -n "${GCC_VERSION}" ]; then
-        _COMPILER_RUNTIME="-lgcc"
-    fi
+    # Replace libgcc with compiler_rt in GCC build too.
+    _COMPILER_RUNTIME="-lcompiler_rt_shared"
 
     # Important: -lgcc must appear after objects and static libraries,
     #            but before shared libraries for Android. It doesn't hurt
