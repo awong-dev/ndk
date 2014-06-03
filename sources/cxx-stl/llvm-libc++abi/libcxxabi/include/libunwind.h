@@ -97,6 +97,7 @@ extern int unw_set_fpreg(unw_cursor_t *, unw_regnum_t, unw_fpreg_t)  LIBUNWIND_A
 extern int unw_resume(unw_cursor_t *) LIBUNWIND_AVAIL;
 
 #if __arm__
+/* Save VFP registers in FSTMX format (instead of FSTMD). */
 extern void unw_save_vfp_as_X(unw_cursor_t *) LIBUNWIND_AVAIL;
 #endif
 

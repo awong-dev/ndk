@@ -1309,13 +1309,13 @@ public:
   void      setIP(uint32_t value) { _registers.__pc = value; }
 
   void saveVFPAsX() {
-    assert(_save_vfp_using_X || !_saved_vfp_d0_d15);
-    _save_vfp_using_X = true;
+    assert(_use_X_for_vfp_save || !_saved_vfp_d0_d15);
+    _use_X_for_vfp_save = true;
   }
 
   void restoreSavedFloatRegisters() {
     if (_saved_vfp_d0_d15) {
-      if (_save_vfp_using_X)
+      if (_use_X_for_vfp_save)
         restoreVFPWithFLDMX(_vfp_d0_d15_pad);
       else
         restoreVFPWithFLDMD(_vfp_d0_d15_pad);
@@ -1351,12 +1351,14 @@ private:
   // ARM registers
   GPRs _registers;
 
-  // We save floating point registers lazily, because we can't know ahead of
+  // We save floating point registers lazily because we can't know ahead of
   // time which ones are used. See EHABI #4.7.
 
-  // Whether D0-D15 are saved in the FTSMX instead of FSTMD format. See EHABI
-  // #7.5.
-  bool _save_vfp_using_X;
+  // Whether D0-D15 are saved in the FTSMX instead of FSTMD format.
+  //
+  // See EHABI #7.5 that explains how matching instruction sequences for load
+  // and store need to be used to correctly restore the exact register bits.
+  bool _use_X_for_vfp_save;
   // Whether VFP D0-D15 are saved.
   bool _saved_vfp_d0_d15;
   // Whether VFPv3 D16-D31 are saved.
@@ -1376,7 +1378,7 @@ private:
 };
 
 inline Registers_arm::Registers_arm(const void *registers)
-  : _save_vfp_using_X(false),
+  : _use_X_for_vfp_save(false),
     _saved_vfp_d0_d15(false),
     _saved_vfp_d16_d31(false),
     _saved_iwmmx(false),
@@ -1392,7 +1394,7 @@ inline Registers_arm::Registers_arm(const void *registers)
 }
 
 inline Registers_arm::Registers_arm()
-  : _save_vfp_using_X(false),
+  : _use_X_for_vfp_save(false),
     _saved_vfp_d0_d15(false),
     _saved_vfp_d16_d31(false),
     _saved_iwmmx(false),
@@ -1636,7 +1638,7 @@ inline unw_fpreg_t Registers_arm::getFloatRegister(int regNum) {
   if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D15) {
     if (!_saved_vfp_d0_d15) {
       _saved_vfp_d0_d15 = true;
-      if (_save_vfp_using_X)
+      if (_use_X_for_vfp_save)
         saveVFPWithFSTMX(_vfp_d0_d15_pad);
       else
         saveVFPWithFSTMD(_vfp_d0_d15_pad);
@@ -1663,7 +1665,7 @@ inline void Registers_arm::setFloatRegister(int regNum, unw_fpreg_t value) {
   if (regNum >= UNW_ARM_D0 && regNum <= UNW_ARM_D15) {
     if (!_saved_vfp_d0_d15) {
       _saved_vfp_d0_d15 = true;
-      if (_save_vfp_using_X)
+      if (_use_X_for_vfp_save)
         saveVFPWithFSTMX(_vfp_d0_d15_pad);
       else
         saveVFPWithFSTMD(_vfp_d0_d15_pad);
