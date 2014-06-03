@@ -95,7 +95,7 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
       _Unwind_Reason_Code personalityResult =
           (*p)(_US_VIRTUAL_UNWIND_FRAME, exception_object, context);
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase1(ex_ojb=%p): personality result %d "
-                                 "start_ip %x ehtp %x additional %x\n",
+                                 "start_ip %x ehtp %p additional %x\n",
                                  exception_object, personalityResult,
                                  exception_object->pr_cache.fnstart,
                                  exception_object->pr_cache.ehtp,
