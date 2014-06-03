@@ -545,49 +545,36 @@ _Unwind_VRS_Result _Unwind_VRS_Set(
                        ValueAsBitPattern(representation, valuep));
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   switch (regclass) {
-    case _UVRSC_CORE: {
-      if (representation != _UVRSD_UINT32)
-        _LIBUNWIND_ABORT("Core register representation must be _UVRSD_UINT32.");
-      return unw_set_reg(cursor, regno, *((unw_word_t*)valuep)) == UNW_ESUCCESS ?
+    case _UVRSC_CORE:
+      if (representation != _UVRSD_UINT32 || regno > 15)
+        return _UVRSR_FAILED;
+      return unw_set_reg(cursor, UNW_ARM_R0 + regno, *(unw_word_t*)valuep) == UNW_ESUCCESS ?
           _UVRSR_OK : _UVRSR_FAILED;
-    }
-    // FIXME: Are these right? See 4.7 on lazy-saving
-    case _UVRSC_WMMXD:
     case _UVRSC_WMMXC:
-    case _UVRSC_VFP: {
-      unw_fpreg_t value;
-      switch (representation) {
-        case _UVRSD_VFPX:
-          // TODO(ajwong): What does this mean?
-          break;
-        case _UVRSD_UINT64: {
-          uint64_t tmp = *(uint64_t*)valuep;
-          memcpy(&value, &tmp, sizeof(tmp));
-          break;
-        }
-        case _UVRSD_FLOAT: {
-          float tmp = *(float*)valuep;
-          memcpy(&value, &tmp, sizeof(tmp));
-          break;
-        }
-        case _UVRSD_DOUBLE: {
-          double tmp = *(double*)valuep;
-          memcpy(&value, &tmp, sizeof(tmp));
-          break;
-        }
-        case _UVRSD_UINT32: {
-          uint32_t tmp = *(uint32_t*)valuep;
-          memcpy(&value, &tmp, sizeof(tmp));
-          break;
-        }
-        default:
-          _LIBUNWIND_ABORT("Invalid VFP data representation.");
-      }
-      return unw_set_fpreg(cursor, regno, value) == UNW_ESUCCESS ?
+      if (representation != _UVRSD_UINT32 || regno > 3)
+        return _UVRSR_FAILED;
+      return unw_set_reg(cursor, UNW_ARM_WC0 + regno, *(unw_word_t*)valuep) == UNW_ESUCCESS ?
           _UVRSR_OK : _UVRSR_FAILED;
-    }
+    case _UVRSC_VFP:
+      if (representation != _UVRSD_VFPX && representation != _UVRSD_DOUBLE)
+        return _UVRSR_FAILED;
+      if (representation == _UVRSD_VFPX) {
+        // Can only touch d0-15 with FSTMFDX.
+        if (regno > 15)
+          return _UVRSR_FAILED;
+        unw_save_vfp_as_X(cursor);
+      } else {
+        if (regno > 31)
+          return _UVRSR_FAILED;
+      }
+      return unw_set_fpreg(cursor, UNW_ARM_D0 + regno, *(unw_fpreg_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    case _UVRSC_WMMXD:
+      if (representation != _UVRSD_DOUBLE || regno > 31)
+        return _UVRSR_FAILED;
+      return unw_set_fpreg(cursor, UNW_ARM_WR0 + regno, *(unw_fpreg_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
   }
-  return _UVRSR_NOT_IMPLEMENTED;
 }
 
 static _Unwind_VRS_Result _Unwind_VRS_Get_Internal(
@@ -598,54 +585,36 @@ static _Unwind_VRS_Result _Unwind_VRS_Get_Internal(
     void *valuep) {
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   switch (regclass) {
-    case _UVRSC_CORE: {
-      if (representation != _UVRSD_UINT32)
-        _LIBUNWIND_ABORT("Core register representation must be _UVRSD_UINT32.");
-      return unw_get_reg(cursor, regno, (unw_word_t*)valuep) == UNW_ESUCCESS ?
-          _UVRSR_OK : _UVRSR_FAILED;
-    }
-    // FIXME: Are these right? See 4.7 on lazy-saving
-    case _UVRSC_WMMXD:
-    case _UVRSC_WMMXC:
-    case _UVRSC_VFP: {
-      unw_fpreg_t value;
-      if (unw_get_fpreg(cursor, regno, &value) != UNW_ESUCCESS)
+    case _UVRSC_CORE:
+      if (representation != _UVRSD_UINT32 || regno > 15)
         return _UVRSR_FAILED;
-      switch (representation) {
-        case _UVRSD_VFPX:
-          // TODO(ajwong): What does this mean?
-          break;
-        case _UVRSD_UINT64: {
-          uint64_t tmp;
-          memcpy(&tmp, &value, sizeof(tmp));
-          *(uint64_t*)valuep = tmp;
-          break;
-        }
-        case _UVRSD_FLOAT: {
-          float tmp;
-          memcpy(&tmp, &value, sizeof(tmp));
-          *(float*)valuep = tmp;
-          break;
-        }
-        case _UVRSD_DOUBLE: {
-          double tmp;
-          memcpy(&tmp, &value, sizeof(tmp));
-          *(double*)valuep = tmp;
-          break;
-        }
-        case _UVRSD_UINT32: {
-          uint32_t tmp;
-          memcpy(&tmp, &value, sizeof(tmp));
-          *(uint32_t*)valuep = tmp;
-          break;
-        }
-        default:
-          _LIBUNWIND_ABORT("Invalid VFP data representation.");
+      return unw_get_reg(cursor, UNW_ARM_R0 + regno, (unw_word_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    case _UVRSC_WMMXC:
+      if (representation != _UVRSD_UINT32 || regno > 3)
+        return _UVRSR_FAILED;
+      return unw_get_reg(cursor, UNW_ARM_WC0 + regno, (unw_word_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    case _UVRSC_VFP:
+      if (representation != _UVRSD_VFPX && representation != _UVRSD_DOUBLE)
+        return _UVRSR_FAILED;
+      if (representation == _UVRSD_VFPX) {
+        // Can only touch d0-15 with FSTMFDX.
+        if (regno > 15)
+          return _UVRSR_FAILED;
+        unw_save_vfp_as_X(cursor);
+      } else {
+        if (regno > 31)
+          return _UVRSR_FAILED;
       }
-      return _UVRSR_OK;
-    }
+      return unw_get_fpreg(cursor, UNW_ARM_D0 + regno, (unw_fpreg_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
+    case _UVRSC_WMMXD:
+      if (representation != _UVRSD_DOUBLE || regno > 31)
+        return _UVRSR_FAILED;
+      return unw_get_fpreg(cursor, UNW_ARM_WR0 + regno, (unw_fpreg_t*)valuep) == UNW_ESUCCESS ?
+          _UVRSR_OK : _UVRSR_FAILED;
   }
-  return _UVRSR_NOT_IMPLEMENTED;
 }
 
 _Unwind_VRS_Result _Unwind_VRS_Get(
@@ -672,40 +641,62 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
   _LIBUNWIND_TRACE_API("_Unwind_VRS_Pop(context=%p, regclass=%d, "
                        "discriminator=%d, representation=%d)\n",
                         context, regclass, discriminator, representation);
-  if (regclass != _UVRSC_CORE || representation != _UVRSD_UINT32) {
-    // TODO(piman): VFP, ...
-    _LIBUNWIND_ABORT("during phase1 personality function said it would "
-                     "stop here, but now if phase2 it did not stop here");
-    return _UVRSR_NOT_IMPLEMENTED;
-  }
-  bool do13 = false;
-  uint32_t reg13Value = 0;
-  uint32_t* sp;
-  if (_Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
-                      _UVRSD_UINT32, &sp) != _UVRSR_OK) {
-    return _UVRSR_FAILED;
-  }
-  for (int i = 0; i < 16; ++i) {
-    if (!(discriminator & (1<<i)))
-      continue;
-    uint32_t value = *sp++;
-    if (i == 13) {
-      reg13Value = value;
-      do13 = true;
-    } else {
-      if (_Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_R0 + i,
-                          _UVRSD_UINT32, &value) != _UVRSR_OK) {
+  switch (regclass) {
+    case _UVRSC_CORE:
+    case _UVRSC_WMMXC: {
+      if (representation != _UVRSD_UINT32)
+        return _UVRSR_FAILED;
+      // When popping SP from the stack, we don't want to override it from the
+      // computed new stack location. See EHABI #7.5.4 table 3.
+      bool poppedSP = false;
+      uint32_t* sp;
+      if (_Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
+                          _UVRSD_UINT32, &sp) != _UVRSR_OK) {
         return _UVRSR_FAILED;
       }
+      for (int i = 0; i < 16; ++i) {
+        if (!(discriminator & (1<<i)))
+          continue;
+        uint32_t value = *sp++;
+        if (regclass == _UVRSC_CORE && i == 13)
+          poppedSP = true;
+        if (_Unwind_VRS_Set(context, regclass, i,
+                            _UVRSD_UINT32, &value) != _UVRSR_OK) {
+          return _UVRSR_FAILED;
+        }
+      }
+      if (!poppedSP) {
+        return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
+                               _UVRSD_UINT32, &sp);
+      }
+      return _UVRSR_OK;
     }
-  }
-  if (do13) {
-    return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
-                           _UVRSD_UINT32, &reg13Value);
-  } else {
-    return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP,
-                        _UVRSD_UINT32, &sp);
-  }
+    case _UVRSC_VFP:
+    case _UVRSC_WMMXD: {
+      if (representation != _UVRSD_VFPX && representation != _UVRSD_DOUBLE)
+        return _UVRSR_FAILED;
+      uint32_t first = discriminator >> 16;
+      uint32_t count = discriminator & 0xffff;
+      uint32_t end = first+count;
+      uint32_t* sp;
+      if (_Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP,
+                          _UVRSD_UINT32, &sp) != _UVRSR_OK) {
+        return _UVRSR_FAILED;
+      }
+      // For _UVRSD_VFPX, we're assuming the data is stored in FSTMX "standard
+      // format 1", which is equivalent to FSTMD + a padding word.
+      for (uint32_t i = first; i < end; ++i) {
+        // SP is only 32-bit aligned so don't copy 64-bit at a time.
+        uint64_t value = *sp++;
+        value |= ((uint64_t)(*sp++)) << 32;
+        if (_Unwind_VRS_Set(context, regclass, i, representation, &value) != _UVRSR_OK)
+          return _UVRSR_FAILED;
+      }
+      if (representation == _UVRSD_VFPX)
+        ++sp;
+      return _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+    }
+  };
 }
 
 #else  // !LIBCXXABI_ARM_EHABI

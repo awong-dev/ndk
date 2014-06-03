@@ -62,7 +62,11 @@ typedef uint32_t unw_word_t;
 typedef uint64_t unw_word_t;
 #endif
 
+#if __arm__
+typedef uint64_t unw_fpreg_t;
+#else
 typedef double unw_fpreg_t;
+#endif
 
 struct unw_proc_info_t {
   unw_word_t  start_ip;         /* start address of function */
@@ -91,6 +95,12 @@ extern int unw_get_fpreg(unw_cursor_t *, unw_regnum_t, unw_fpreg_t *) LIBUNWIND_
 extern int unw_set_reg(unw_cursor_t *, unw_regnum_t, unw_word_t) LIBUNWIND_AVAIL;
 extern int unw_set_fpreg(unw_cursor_t *, unw_regnum_t, unw_fpreg_t)  LIBUNWIND_AVAIL;
 extern int unw_resume(unw_cursor_t *) LIBUNWIND_AVAIL;
+
+#if __arm__
+/* Save VFP registers in FSTMX format (instead of FSTMD). */
+extern void unw_save_vfp_as_X(unw_cursor_t *) LIBUNWIND_AVAIL;
+#endif
+
 
 extern const char *unw_regname(unw_cursor_t *, unw_regnum_t) LIBUNWIND_AVAIL;
 extern int unw_get_proc_info(unw_cursor_t *, unw_proc_info_t *) LIBUNWIND_AVAIL;
