@@ -4,6 +4,7 @@
     _Unwind_DeleteException;
     _Unwind_RaiseException;
     _Unwind_Resume;
+    _Unwind_Complete;
     _Unwind_VRS_Get;
     _Unwind_VRS_Pop;
     _Unwind_VRS_Set;
