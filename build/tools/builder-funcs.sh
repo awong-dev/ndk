@@ -374,8 +374,7 @@ builder_shared_library ()
     #   -Wl,-Bsymbolic-functions,--dynamic-list-cpp-new,--dyanmic-list-data,--dynamic-list-cpp-typeinfo \
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -shared \
-        $_BUILD_LDFLAGS_BEGIN_SO \
+        -Wl,-shared \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -Lsources/android/compiler-rt/libs/armeabi-v7a \
@@ -407,8 +406,7 @@ builder_nodefaultlibs_shared_library ()
 
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -shared \
-        $_BUILD_LDFLAGS_BEGIN_SO \
+        -Wl,-shared \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         $_BUILD_SHARED_LIBRARIES \
