@@ -432,7 +432,12 @@ _Unwind_RaiseException(_Unwind_Exception *exception_object) {
   return unwind_phase2(&uc, exception_object, false);
 }
 
-
+#if LIBCXXABI_ARM_EHABI
+_LIBUNWIND_EXPORT void _Unwind_Complete(_Unwind_Exception* exception_object) {
+  // This is to be called when exception handling completes to give us a chance
+  // to perform any housekeeping. EHABI #7.2. But we have nothing to do here.
+}
+#endif
 
 /// When _Unwind_RaiseException() is in phase2, it hands control
 /// to the personality function at each frame.  The personality

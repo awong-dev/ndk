@@ -178,6 +178,8 @@ typedef enum {
   _UVRSR_FAILED = 2
 } _Unwind_VRS_Result;
 
+extern void _Unwind_Complete(_Unwind_Exception* exception_object);
+
 extern _Unwind_VRS_Result _Unwind_VRS_Get(_Unwind_Context* context,
                                           _Unwind_VRS_RegClass regclass,
                                           uint32_t regno,
