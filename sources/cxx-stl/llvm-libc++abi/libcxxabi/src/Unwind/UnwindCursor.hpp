@@ -417,7 +417,7 @@ public:
 
 private:
 
-#if _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
+#if LIBCXXABI_ARM_EHABI
   bool getInfoFromEHABISection(pint_t pc, const UnwindInfoSections &sects);
 #endif
 
@@ -597,7 +597,7 @@ template <typename A, typename R> bool UnwindCursor<A, R>::isSignalFrame() {
   return _isSignalFrame;
 }
 
-#if _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
+#if LIBCXXABI_ARM_EHABI
 struct EHABIIndexEntry {
   uint32_t functionOffset;
   uint32_t data;
@@ -1186,7 +1186,7 @@ void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
     }
 #endif
 
-#if _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
+#if LIBCXXABI_ARM_EHABI
     // If there is ARM EHABI unwind info, look there next.
     if (sects.arm_section != 0 && this->getInfoFromEHABISection(pc, sects))
       return;
@@ -1270,12 +1270,12 @@ int UnwindCursor<A, R>::step() {
   result = this->stepWithCompactEncoding();
 #elif _LIBUNWIND_SUPPORT_DWARF_UNWIND
   result = this->stepWithDwarfFDE();
-#elif _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
+#elif LIBCXXABI_ARM_EHABI
   result = UNW_STEP_SUCCESS;
 #else
   #error Need _LIBUNWIND_SUPPORT_COMPACT_UNWIND or \
               _LIBUNWIND_SUPPORT_DWARF_UNWIND or \
-              _LIBUNWIND_SUPPORT_ARM_EHABI_UNWIND
+              LIBCXXABI_ARM_EHABI
 #endif
 
   // update info based on new PC
