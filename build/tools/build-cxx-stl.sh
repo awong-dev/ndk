@@ -250,8 +250,10 @@ src/c_locale.c \
 src/cxa.c"
 
 # Determine Libc++ build parameters
+LINKER_SCRIPT=export_symbols.txt
 LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
 LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXABI=1 -std=c++11"
+LIBCXX_LDFLAGS=-Wl,--version-script,\$_BUILD_SRCDIR/$LINKER_SCRIPT
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
 libcxx/src/bind.cpp \
