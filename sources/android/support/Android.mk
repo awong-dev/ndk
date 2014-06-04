@@ -92,10 +92,6 @@ android_support_sources := \
     src/musl-math/frexp.c \
     src/musl-math/frexpf.c \
     src/musl-math/frexpl.c \
-    src/musl-math/scalbln.c \
-    src/musl-math/scalblnf.c \
-    src/musl-math/scalblnl.c \
-    src/musl-math/scalbnl.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
     src/musl-multibyte/mblen.c \
@@ -125,6 +121,16 @@ android_support_sources := \
     src/wcstox/shgetc.c \
     src/wcstox/wcstol.c \
     src/wcstox/wcstod.c \
+
+# Replaces broken implementations in x86 libm.so
+ifeq (x86,$(TARGET_ARCH_ABI))
+android_support_sources := \
+    src/musl-math/scalbln.c \
+    src/musl-math/scalblnf.c \
+    src/musl-math/scalblnl.c \
+    src/musl-math/scalbnl.c \
+
+endif
 
 # This is only available as a static library for now.
 include $(CLEAR_VARS)
