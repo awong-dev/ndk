@@ -567,7 +567,7 @@ if [ "$ARCH_LIB" != "$ARCH" ]; then
     cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/lib
 fi
 
-dump "Copying libstdc++ headers and libraries..."
+dump "Copying c++ runtime headers and libraries..."
 
 GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
@@ -646,6 +646,10 @@ copy_stl_libs () {
             cp -p "$GNUSTL_LIBS/$ABI_SRC_DIR/libgnustl_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         libcxx|libc++)
+            # Since we're cleaning up libc++, might as well remove the hack that renames the library to libstdc++.a
+            # since that's just confusing. This means the libc++ standalong toolchain will have  differnet link
+            # line from stdlport and gnustl, but hey, that's okay. The previous hack didn't work right for
+            # shard libraries anyways.
             if [ "$ARCH" = "${ARCH%%64*}" ]; then
                 copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
             fi
