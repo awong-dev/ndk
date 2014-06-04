@@ -356,9 +356,9 @@ adb_shell "mkdir -p $TARGET_PATH"
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
   if [ "$WITH_COMPILER_RT" = "yes" ]; then
-    LIBS="-nodefaultlibs -lc++_static -latomic -ldl -lc $LIBM -lcompiler_rt_static"
+    LIBS="-nodefaultlibs -lc++_static -latomic -ldl $LIBM -lc -lcompiler_rt_static"
   else
-    LIBS="-nodefaultlibs -latomic -ldl -lc $LIBM"
+    LIBS="-nodefaultlibs -latomic -ldl $LIBM -lc"
   fi
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
@@ -372,9 +372,9 @@ else
       echo "ERROR: Can't push shared libcompiler_rt to target device!"
       exit 1
     fi
-    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl -lc $LIBM -lcompiler_rt_shared"
+    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl $LIBM -lc -lcompiler_rt_shared"
   else
-    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl -lc $LIBM"
+    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl $LIBM -lc"
   fi
 fi
 
