@@ -23,7 +23,7 @@
 #define LIBUNWIND_UNAVAIL
 #endif
 
-// TODO(danakj): This is also in cxxabi.h, can we consolidate?
+// TODO(danakj): This is also in cxxabi.h and libunwind.h, can we consolidate?
 #if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
     !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
 #define LIBCXXABI_ARM_EHABI 1
