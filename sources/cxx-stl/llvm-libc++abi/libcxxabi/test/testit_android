@@ -200,6 +200,7 @@ fi
 TOOLCHAIN_CFLAGS=
 TOOLCHAIN_LDFLAGS=
 THUMB_MODE="-mthumb"
+LIBM="-lm"
 if [ -z "$TOOLCHAIN_PREFIX" ]; then
   # Compute
   case $TARGET_ABI in
@@ -216,7 +217,8 @@ if [ -z "$TOOLCHAIN_PREFIX" ]; then
     armeabi-v7a-hard)
       TOOLCHAIN_PREFIX=arm-linux-androideabi
       TOOLCHAIN_CFLAGS="-march=armv7-a $THUMB_MODE -mfpu=vfpv3-d16 -mhard-float -D_NDK_MATH_NO_SOFTFP=1"
-      TOOLCHAIN_LDFLAGS="-march=armv7-a $THUMB_MODE -Wl,--fix-cortex-a8 -Wl,--no-warn-mismatch -lm_hard"
+      TOOLCHAIN_LDFLAGS="-march=armv7-a $THUMB_MODE -Wl,--fix-cortex-a8 -Wl,--no-warn-mismatch"
+      LIBM="-lm_hard"
       ;;
     x86)
       TOOLCHAIN_PREFIX=i686-linux-android
@@ -354,9 +356,9 @@ adb_shell "mkdir -p $TARGET_PATH"
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
   if [ "$WITH_COMPILER_RT" = "yes" ]; then
-    LIBS="-nodefaultlibs -lc++_static -lcompiler_rt_static -latomic -ldl -lc -lm"
+    LIBS="-nodefaultlibs -lc++_static -lcompiler_rt_static -latomic -ldl -lc $LIBM"
   else
-    LIBS="-nodefaultlibs -latomic -ldl -lc -lm"
+    LIBS="-nodefaultlibs -latomic -ldl -lc $LIBM"
   fi
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
@@ -370,9 +372,9 @@ else
       echo "ERROR: Can't push shared libcompiler_rt to target device!"
       exit 1
     fi
-    LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
+    LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc $LIBM"
   else
-    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl -lc -lm"
+    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl -lc $LIBM"
   fi
 fi
 
