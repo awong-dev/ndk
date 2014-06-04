@@ -206,7 +206,7 @@ inline
 float
 as_float( const string& func, const string& s, size_t* idx )
 {
-    return as_float_helper<float>( func, s, idx, strtof );
+    return as_float_helper<float>( func, s, idx, strtod );
 }
 
 template<>
@@ -230,7 +230,7 @@ inline
 float
 as_float( const string& func, const wstring& s, size_t* idx )
 {
-    return as_float_helper<float>( func, s, idx, wcstof );
+    return as_float_helper<float>( func, s, idx, wcstod );
 }
 
 template<>
