@@ -18,18 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if LIBCXXABI_ARM_EHABI
-#if __LINUX__
- // Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
- typedef long unsigned int *_Unwind_Ptr;
- extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
- _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
-     __gnu_Unwind_Find_exidx;
-#else
- #include <link.h>
-#endif
-#endif  // LIBCXXABI_ARM_EHABI
-
 #if !_LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
 #endif
@@ -45,6 +33,18 @@ namespace libunwind {
 #include "config.h"
 #include "dwarf2.h"
 #include "Registers.hpp"
+
+#if LIBCXXABI_ARM_EHABI
+#if __LINUX__
+ // Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
+ typedef long unsigned int *_Unwind_Ptr;
+ extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
+ _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
+     __gnu_Unwind_Find_exidx;
+#else
+ #include <link.h>
+#endif
+#endif  // LIBCXXABI_ARM_EHABI
 
 #if LIBCXXABI_ARM_EHABI && _LIBUNWIND_IS_BAREMETAL
 // When statically linked on bare-metal, the symbols for the EH table are looked
