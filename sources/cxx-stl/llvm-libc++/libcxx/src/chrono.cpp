@@ -123,7 +123,7 @@ steady_clock::now() _NOEXCEPT
     return time_point(seconds(tp.tv_sec) + nanoseconds(tp.tv_nsec));
 #else
 #warning According to unistd.h, there is no monotonic clock on this system so \
-         so we're falling back to std::system_clock (which may not be \
+         we're falling back to std::system_clock (which may not be \
          monotonic, and therefore may not be conforming).
     return time_point(system_clock::now().time_since_epoch());
 #endif
