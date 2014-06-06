@@ -836,13 +836,19 @@ template <class _T1, class _T2> struct _LIBCPP_TYPE_VIS_ONLY is_convertible
 
 namespace __is_convertible_imp
 {
-template <class _Tp> char  __test(_Tp);
-template <class _Tp> __two __test(...);
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
 template <class _Tp> _Tp&& __source();
 #else
 template <class _Tp> typename remove_reference<_Tp>::type& __source();
 #endif
+
+template <class _Tf, class _Tt> struct __convert_helper {
+  __convert_helper() : _t(__source<_Tf>()) {}
+  _Tt _t;
+};
+
+template <class _Tf, class _Tt> char  __test(__convert_helper<_Tf, _Tt>*);
+template <class _Tf, class _Tt> __two __test(...);
 
 template <class _Tp, bool _IsArray =    is_array<_Tp>::value,
                      bool _IsFunction = is_function<_Tp>::value,
@@ -872,9 +878,9 @@ template <class _T1, class _T2,
 struct __is_convertible
     : public integral_constant<bool,
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
-        sizeof(__is_convertible_imp::__test<_T2>(__is_convertible_imp::__source<_T1>())) == 1
+        sizeof(__is_convertible_imp::__test<_T1,_T2>(NULL)) == 1
 #else
-        sizeof(__is_convertible_imp::__test<_T2>(__is_convertible_imp::__source<_T1>())) == 1
+        sizeof(__is_convertible_imp::__test<_T1,_T2>(NULL) == 1
          && !(!is_function<_T1>::value && !is_reference<_T1>::value && is_reference<_T2>::value
               && (!is_const<typename remove_reference<_T2>::type>::value
                   || is_volatile<typename remove_reference<_T2>::type>::value)
