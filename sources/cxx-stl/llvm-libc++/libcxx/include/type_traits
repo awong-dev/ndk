@@ -953,7 +953,7 @@ template <class _T1, class _T2> struct _LIBCPP_TYPE_VIS_ONLY is_convertible
 
 // is_empty
 
-#if __has_feature(is_empty)
+#if __has_feature(is_empty) || (_GNUC_VER >= 407)
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_empty
@@ -2571,7 +2571,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_trivially_move_constructibl
 
 // is_trivially_assignable
 
-#if __has_feature(is_trivially_constructible)
+#if __has_feature(is_trivially_assignable)
 
 template <class _Tp, class _Arg>
 struct is_trivially_assignable
@@ -2579,7 +2579,7 @@ struct is_trivially_assignable
 {
 };
 
-#else  // !__has_feature(is_trivially_constructible)
+#else  // !__has_feature(is_trivially_assignable)
 
 template <class _Tp, class _Arg>
 struct is_trivially_assignable
@@ -2605,7 +2605,7 @@ struct is_trivially_assignable<_Tp&, _Tp&&>
 
 #endif  // _LIBCPP_HAS_NO_RVALUE_REFERENCES
 
-#endif  // !__has_feature(is_trivially_constructible)
+#endif  // !__has_feature(is_trivially_assignable)
 
 // is_trivially_copy_assignable
 
@@ -2656,7 +2656,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible
 
 #ifndef _LIBCPP_HAS_NO_VARIADICS
 
-#if __has_feature(cxx_noexcept)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
 
 template <bool, class _Tp, class... _Args> struct __libcpp_is_nothrow_constructible;
 
@@ -2818,7 +2818,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_move_constructible
 
 // is_nothrow_assignable
 
-#if __has_feature(cxx_noexcept)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
 
 template <bool, class _Tp, class _Arg> struct __libcpp_is_nothrow_assignable;
 
@@ -2904,7 +2904,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_move_assignable
 
 // is_nothrow_destructible
 
-#if __has_feature(cxx_noexcept)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
 
 template <bool, class _Tp> struct __libcpp_is_nothrow_destructible;
 
@@ -2977,6 +2977,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_pod
 #endif  // _LIBCPP_HAS_TYPE_TRAITS
 
 // is_literal_type;
+// TODO(ajwong): Abstract to _LIBCPP_IS_LITERAL
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_literal_type
 #if __has_feature(is_literal)
@@ -2990,7 +2991,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_literal_type
 // is_standard_layout;
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_standard_layout
-#if __has_feature(is_standard_layout)
+#if __has_feature(is_standard_layout) || (_GNUC_VER >= 407)
     : public integral_constant<bool, __is_standard_layout(_Tp)>
 #else
     : integral_constant<bool, is_scalar<typename remove_all_extents<_Tp>::type>::value>
@@ -3010,7 +3011,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_trivially_copyable
 // is_trivial;
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_trivial
-#if __has_feature(is_trivial)
+#if __has_feature(is_trivial) || (_GNUC_VER >= 407)
     : public integral_constant<bool, __is_trivial(_Tp)>
 #else
     : integral_constant<bool, is_trivially_copyable<_Tp>::value &&
@@ -3340,7 +3341,7 @@ struct __is_swappable
 {
 };
 
-#if __has_feature(cxx_noexcept)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
 
 template <bool, class _Tp>
 struct __is_nothrow_swappable_imp
