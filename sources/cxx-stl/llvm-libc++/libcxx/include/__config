@@ -371,6 +371,12 @@ namespace std {
 
 #define _LIBCPP_NORETURN __attribute__((noreturn))
 
+// __underlying_type was added to GCC 4.7. Without it, std::underlying_type
+// cannot be correctly implemented.
+#if _GNUC_VER >= 407
+#define _LIBCXX_UNDERLYING_TYPE(T) __underlying_type(T)
+#endif
+
 #if !__EXCEPTIONS
 #define _LIBCPP_NO_EXCEPTIONS
 #endif
