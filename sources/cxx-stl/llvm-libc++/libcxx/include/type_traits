@@ -924,7 +924,7 @@ template <class _T1>            struct __is_convertible<_T1, _T1*const volatile,
 // Per N2255 on is_convertible, void -> !void is not convertible.
 template <class _T1, class _T2> struct __is_convertible<_T1, _T2, 3, 0> : public false_type {};
 
-// Per N2255 on is_convertible, * -> function is array is not converitble.
+// Per N2255 on is_convertible, * -> array is not converitble.
 template <class _T1, class _T2> struct __is_convertible<_T1, _T2, 0, 1> : public false_type {};
 template <class _T1, class _T2> struct __is_convertible<_T1, _T2, 1, 1> : public false_type {};
 template <class _T1, class _T2> struct __is_convertible<_T1, _T2, 2, 1> : public false_type {};
