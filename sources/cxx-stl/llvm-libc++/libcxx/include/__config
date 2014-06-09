@@ -350,6 +350,10 @@ typedef __char32_t char32_t;
 #  define _LIBCPP_UNDERLYING_TYPE(T) __underlying_type(T)
 #endif
 
+#if __has_feature(is_literal)
+#  define _LIBCPP_IS_LITERAL(T) __is_literal(T)
+#endif
+
 // Inline namespaces are available in Clang regardless of C++ dialect.
 #define _LIBCPP_BEGIN_NAMESPACE_STD namespace std {inline namespace _LIBCPP_NAMESPACE {
 #define _LIBCPP_END_NAMESPACE_STD  } }
@@ -371,10 +375,9 @@ namespace std {
 
 #define _LIBCPP_NORETURN __attribute__((noreturn))
 
-// __underlying_type was added to GCC 4.7. Without it, std::underlying_type
-// cannot be correctly implemented.
 #if _GNUC_VER >= 407
 #define _LIBCPP_UNDERLYING_TYPE(T) __underlying_type(T)
+#define _LIBCPP_IS_LITERAL(T) __is_literal_type(T)
 #endif
 
 #if !__EXCEPTIONS
