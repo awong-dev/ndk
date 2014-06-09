@@ -382,7 +382,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_reference<_Tp&&> : public t
 
 // is_union
 
-#if __has_feature(is_union) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(is_union) || defined(_LIBCPP_HAS_TYPE_TRAITS)
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_union
     : public integral_constant<bool, __is_union(_Tp)> {};
@@ -397,7 +397,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_union
 
 // is_class
 
-#if __has_feature(is_class) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(is_class) || defined(_LIBCPP_HAS_TYPE_TRAITS)
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_class
     : public integral_constant<bool, __is_class(_Tp)> {};
@@ -484,7 +484,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_member_object_pointer
 
 // is_enum
 
-#if __has_feature(is_enum) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(is_enum) || defined(_LIBCPP_HAS_TYPE_TRAITS)
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_enum
     : public integral_constant<bool, __is_enum(_Tp)> {};
@@ -797,7 +797,7 @@ template <class _Bp, class _Dp>
 struct _LIBCPP_TYPE_VIS_ONLY is_base_of
     : public integral_constant<bool, __is_base_of(_Bp, _Dp)> {};
 
-#else  // __has_feature(is_base_of)
+#else  // _LIBCPP_HAS_IS_BASE_OF
 
 namespace __is_base_of_imp
 {
@@ -822,7 +822,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_base_of
     : public integral_constant<bool, is_class<_Bp>::value &&
                                      sizeof(__is_base_of_imp::__test<_Bp, _Dp>(0)) == 2> {};
 
-#endif  // __has_feature(is_base_of)
+#endif  // _LIBCPP_HAS_IS_BASE_OF
 
 // is_convertible
 
@@ -1004,7 +1004,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_polymorphic
 
 // has_virtual_destructor
 
-#if __has_feature(has_virtual_destructor) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_virtual_destructor) || defined(_LIBCPP_HAS_TYPE_TRAITS)
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY has_virtual_destructor
     : public integral_constant<bool, __has_virtual_destructor(_Tp)> {};
@@ -2442,7 +2442,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_trivially_constructible
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_trivially_constructible<_Tp>
-#if __has_feature(has_trivial_constructor) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_trivial_constructor) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_trivial_constructor(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2627,7 +2627,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_trivially_move_assignable
 
 // is_trivially_destructible
 
-#if __has_feature(has_trivial_destructor) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_trivial_destructor) || defined(_LIBCPP_HAS_TYPE_TRAITS)
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_trivially_destructible
     : public integral_constant<bool, __has_trivial_destructor(_Tp)> {};
@@ -2694,7 +2694,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp>
-#if __has_feature(has_nothrow_constructor) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_constructor) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_constructor(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2708,7 +2708,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp&&>
 #else
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp>
 #endif
-#if __has_feature(has_nothrow_copy) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_copy) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_copy(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2718,7 +2718,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp>
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, const _Tp&>
-#if __has_feature(has_nothrow_copy) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_copy) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_copy(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2728,7 +2728,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, const _Tp&>
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp&>
-#if __has_feature(has_nothrow_copy) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_copy) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_copy(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2750,7 +2750,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, __is_construct::__nat,
                                                        __is_construct::__nat>
-#if __has_feature(has_nothrow_constructor) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_constructor) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_constructor(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2761,7 +2761,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, __is_construct::__nat
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp,
                                                        __is_construct::__nat>
-#if __has_feature(has_nothrow_copy) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_copy) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_copy(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2772,7 +2772,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp,
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, const _Tp&,
                                                        __is_construct::__nat>
-#if __has_feature(has_nothrow_copy) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_copy) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_copy(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2783,7 +2783,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, const _Tp&,
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible<_Tp, _Tp&,
                                                        __is_construct::__nat>
-#if __has_feature(has_nothrow_copy) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_copy) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_copy(_Tp)>
 #else
     : integral_constant<bool, is_scalar<_Tp>::value>
@@ -2848,7 +2848,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable<_Tp&, _Tp>
-#if __has_feature(has_nothrow_assign) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_assign) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_assign(_Tp)> {};
 #else
     : integral_constant<bool, is_scalar<_Tp>::value> {};
@@ -2856,7 +2856,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable<_Tp&, _Tp>
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable<_Tp&, _Tp&>
-#if __has_feature(has_nothrow_assign) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_assign) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_assign(_Tp)> {};
 #else
     : integral_constant<bool, is_scalar<_Tp>::value> {};
@@ -2864,7 +2864,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable<_Tp&, _Tp&>
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable<_Tp&, const _Tp&>
-#if __has_feature(has_nothrow_assign) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_assign) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_assign(_Tp)> {};
 #else
     : integral_constant<bool, is_scalar<_Tp>::value> {};
@@ -2874,7 +2874,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_assignable<_Tp&, const _Tp&>
 
 template <class _Tp>
 struct is_nothrow_assignable<_Tp&, _Tp&&>
-#if __has_feature(has_nothrow_assign) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(has_nothrow_assign) || defined(_LIBCPP_HAS_TYPE_TRAITS)
     : integral_constant<bool, __has_nothrow_assign(_Tp)> {};
 #else
     : integral_constant<bool, is_scalar<_Tp>::value> {};
@@ -2961,7 +2961,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_destructible
 
 // is_pod
 
-#if __has_feature(is_pod) || (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#if __has_feature(is_pod) || defined(_LIBCPP_HAS_TYPE_TRAITS)
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_pod
     : public integral_constant<bool, __is_pod(_Tp)> {};
@@ -3371,19 +3371,19 @@ struct __is_nothrow_swappable
 
 #endif  // __has_feature(cxx_noexcept)
 
-#ifdef _LIBCXX_UNDERLYING_TYPE
+#ifdef _LIBCPP_UNDERLYING_TYPE
 
 template <class _Tp>
 struct underlying_type
 {
-    typedef _LIBCXX_UNDERLYING_TYPE(_Tp) type;
+    typedef _LIBCPP_UNDERLYING_TYPE(_Tp) type;
 };
 
 #if _LIBCPP_STD_VER > 11
 template <class _Tp> using underlying_type_t = typename underlying_type<_Tp>::type;
 #endif
 
-#else  // _LIBCXX_UNDERLYING_TYPE
+#else  // _LIBCPP_UNDERLYING_TYPE
 
 template <class _Tp, bool _Support = false>
 struct underlying_type
@@ -3393,7 +3393,7 @@ struct underlying_type
                             "libc++ does not know how to use it.");
 };
 
-#endif // _LIBCXX_UNDERLYING_TYPE
+#endif // _LIBCPP_UNDERLYING_TYPE
 
 #ifndef _LIBCPP_HAS_NO_ADVANCED_SFINAE
 
