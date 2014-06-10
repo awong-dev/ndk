@@ -559,13 +559,14 @@ template <typename T> T __create();
 
 template <typename __Tp, typename __Td,
           typename = decltype(__Tp()->__a_value = __create<__Td>())>
-char __test(int);
+char __test_atomic_assignable(int);
 template <typename T, typename U>
-__two __test(...);
+__two __test_atomic_assignable(...);
 
 template <typename __Tp, typename __Td>
 struct __can_assign {
-  static const bool value = sizeof(__test<__Tp, __Td>(1)) == sizeof(char);
+  static const bool value =
+      sizeof(__test_atomic_assignable<__Tp, __Td>(1)) == sizeof(char);
 };
 
 static inline int __to_gcc_order(memory_order __order) {
