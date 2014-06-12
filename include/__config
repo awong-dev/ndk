@@ -368,7 +368,14 @@ namespace std {
 #endif
 
 #define _LIBCPP_HAS_NO_TEMPLATE_ALIASES
+
+// constexpr was added to GCC in 4.6.
+#if _GNUC_VER < 406
 #define _LIBCPP_HAS_NO_CONSTEXPR
+// Can only use constexpr in c++11 mode.
+#elif !defined(__GXX_EXPERIMENTAL_CXX0X__) && __cplusplus < 201103L
+#define _LIBCPP_HAS_NO_CONSTEXPR
+#endif
 
 #define _NOEXCEPT throw()
 #define _NOEXCEPT_(x)
@@ -543,10 +550,18 @@ template <unsigned> struct __static_assert_check {};
 #define __has_feature(__x) 0
 #endif
 
+#ifndef __has_builtin
+#define __has_builtin(__x) 0
+#endif
+
 #if __has_feature(cxx_explicit_conversions) || defined(__IBMCPP__)
 #   define _LIBCPP_EXPLICIT explicit
 #else
 #   define _LIBCPP_EXPLICIT
+#endif
+
+#if !__has_builtin(__builtin_operator_new) || !__has_builtin(__builtin_operator_delete)
+#   define _LIBCPP_HAS_NO_BUILTIN_OPERATOR_NEW_DELETE
 #endif
 
 #ifdef _LIBCPP_HAS_NO_STRONG_ENUMS
@@ -608,8 +623,10 @@ template <unsigned> struct __static_assert_check {};
 #ifndef _LIBCPP_STD_VER
 #  if  __cplusplus <= 201103L
 #    define _LIBCPP_STD_VER 11
+#  elif __cplusplus <= 201402L
+#    define _LIBCPP_STD_VER 14
 #  else
-#    define _LIBCPP_STD_VER 13  // current year, or date of c++14 ratification
+#    define _LIBCPP_STD_VER 15  // current year, or date of c++17 ratification
 #  endif
 #endif  // _LIBCPP_STD_VER
 
