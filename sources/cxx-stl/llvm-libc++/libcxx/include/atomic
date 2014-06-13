@@ -602,13 +602,15 @@ typename enable_if<
     !__gcc_atomic::__can_assign<volatile _Atomic(_Tp)*, _Tp>::value &&
      __gcc_atomic::__can_assign<         _Atomic(_Tp)*, _Tp>::value>::type
 __c11_atomic_init(volatile _Atomic(_Tp)* __a,  _Tp __val) {
-  // Clang's built-in is able to handle assigning to a volatile _Atomic(_Tp)
-  // even if _Tp is a class type w/o a volatile assignment operator. Gcc does
-  // not provide an equivalent built-in. Casting away the volatile simulates
-  // this behavior and feels reasonable safe because 
-  //   (a) __c11_atomic_init does not provide any synchronization guarantees.
-  //   (b) entering this function likely forces an ordering constraint.
-  const_cast<_Atomic(_Tp)*>(__a)->__a_value = __val;
+  // [atomics.types.generic]p1 guarantees _Tp is trivially copyable. Because
+  // the default operator= in an object is not volatile, a byte-by-byte copy
+  // is required.
+  volatile char* to = reinterpret_cast<volatile char*>(&__a->__a_value);
+  volatile char* end = to + sizeof(_Tp);
+  char* from = reinterpret_cast<char*>(&__val);
+  while (to != end) {
+    *to++ = *from++;
+  }
 }
 
 template <typename _Tp>
