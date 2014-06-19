@@ -976,7 +976,8 @@ __gxx_personality_v0
             else
             {
                 // No, do the scan again to reload the results.
-                scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+                scan_eh_tab(results, actions, native_exception, unwind_exception, context,
+                            (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
                 // Phase 1 told us we would find a handler.  Now in Phase 2 we
                 //   didn't find a handler.  The eh table should not be changing!
                 if (results.reason != _URC_HANDLER_FOUND)
@@ -989,7 +990,8 @@ __gxx_personality_v0
         // Either we didn't do a phase 1 search (due to forced unwinding), or
         //   phase 1 reported no catching-handlers.
         // Search for a (non-catching) cleanup
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context);
+        scan_eh_tab(results, actions, native_exception, unwind_exception, context,
+                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found a non-catching handler.  Jump to it:

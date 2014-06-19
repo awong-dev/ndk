@@ -498,7 +498,9 @@ private:
     }
     return false;
   }
+#endif // _LIBUNWIND_SUPPORT_COMPACT_UNWIND
 
+#if _LIBUNWIND_SUPPORT_DWARF_UNWIND
   compact_unwind_encoding_t dwarfEncoding() const {
     R dummy;
     return dwarfEncoding(dummy);
@@ -519,7 +521,7 @@ private:
   compact_unwind_encoding_t dwarfEncoding(Registers_arm64 &) const {
     return UNWIND_ARM64_MODE_DWARF;
   }
-#endif // _LIBUNWIND_SUPPORT_COMPACT_UNWIND
+#endif // _LIBUNWIND_SUPPORT_DWARF_UNWIND
 
 
   A               &_addressSpace;
