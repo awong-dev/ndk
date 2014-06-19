@@ -162,6 +162,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
     // _Unwind_RaiseException or _Unwind_Resume).
     //
     // Resume only ever makes sense for 1 frame.
+#if LIBCXXABI_ARM_EHABI
     _Unwind_State state =
         resume ? _US_UNWIND_FRAME_RESUME : _US_UNWIND_FRAME_STARTING;
     if (resume && frame_count == 1) {
@@ -175,6 +176,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
       unw_set_reg(&cursor2, UNW_REG_IP, exception_object->unwinder_cache.reserved2);
       resume = false;
     }
+#endif  // LIBCXXABI_ARM_EHABI
     int stepResult = unw_step(&cursor2);
     if (stepResult == 0) {
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p): unw_step() reached "
