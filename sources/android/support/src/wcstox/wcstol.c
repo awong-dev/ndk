@@ -11,7 +11,7 @@ static unsigned long long wcstox(const wchar_t * restrict s,
                                  unsigned long long lim)
 {
     struct fake_file_t f;
-    const wchar_t *t = s;
+    wchar_t *t = (wchar_t *)s;
     while (iswspace(*t)) t++;
     shinit_wcstring(&f, t);
     unsigned long long y = __intscan(&f, base, 1, lim);
