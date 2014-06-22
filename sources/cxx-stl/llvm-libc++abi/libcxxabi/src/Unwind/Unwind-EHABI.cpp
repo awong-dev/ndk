@@ -210,7 +210,7 @@ uint32_t RegisterRange(uint8_t start, uint8_t count_minus_one) {
 
 } // end anonymous namespace
 
-extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
+_Unwind_Reason_Code _Unwind_VRS_Interpret(
     _Unwind_Context* context,
     uint32_t* data,
     size_t offset,
