@@ -95,7 +95,8 @@ _Unwind_Reason_Code ProcessDescriptors(
     }
 
     // See # 9.2 table for decoding the kind of descriptor. It's a 2-bit value.
-    Descriptor::Kind kind = static_cast<Descriptor::Kind>((length & 0x1) | ((offset & 0x1) << 1));
+    Descriptor::Kind kind =
+        static_cast<Descriptor::Kind>((length & 0x1) | ((offset & 0x1) << 1));
 
     // Clear off flag from last bit.
     length &= ~1;
@@ -131,9 +132,10 @@ _Unwind_Reason_Code ProcessDescriptors(
           } else {
             void* matched_object;
             /*
-            if (__cxxabiv1::__cxa_type_match(ucbp,
-                                             reinterpret_cast<const std::type_info*>(landing_pad),
-                                             is_reference_type, &matched_object) != __cxxabiv1::ctm_failed)
+            if (__cxxabiv1::__cxa_type_match(
+                    ucbp, reinterpret_cast<const std::type_info *>(landing_pad),
+                    is_reference_type,
+                    &matched_object) != __cxxabiv1::ctm_failed)
                 return _URC_HANDLER_FOUND;
                 */
             _LIBUNWIND_ABORT("Type matching not implemented");
@@ -159,7 +161,8 @@ _Unwind_Reason_Code unwindOneFrame(
   uint32_t* unwindingData = ucbp->pr_cache.ehtp;
   uint32_t unwindInfo = *unwindingData;
   assert((unwindInfo & 0xf0000000) == 0x80000000 && "Must be a compact entry");
-  Descriptor::Format format = static_cast<Descriptor::Format>((unwindInfo & 0x0f000000) >> 24);
+  Descriptor::Format format =
+      static_cast<Descriptor::Format>((unwindInfo & 0x0f000000) >> 24);
   size_t len = 0;
   size_t startOffset = 0;
   switch (format) {
@@ -226,7 +229,8 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
         case 0x80: {
           if (offset >= len)
             return _URC_FAILURE;
-          uint16_t registers = ((byte & 0x0f) << 12) | (getByte(data, offset++) << 4);
+          uint16_t registers =
+              ((byte & 0x0f) << 12) | (getByte(data, offset++) << 4);
           if (!registers)
             return _URC_FAILURE;
           if (registers & (1<<15))
@@ -280,14 +284,17 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
                 shift += 7;
               }
               uint32_t sp;
-              _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+              _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                              &sp);
               sp += 0x204 + (addend << 2);
-              _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
+              _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32,
+                              &sp);
               break;
             }
             case 0xb3: {
               uint8_t v = getByte(data, offset++);
-              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(v >> 4, v & 0x0f), _UVRSD_VFPX);
+              _Unwind_VRS_Pop(context, _UVRSC_VFP,
+                              RegisterRange(v >> 4, v & 0x0f), _UVRSD_VFPX);
               break;
             }
             case 0xb4:
@@ -296,7 +303,8 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
             case 0xb7:
               return _URC_FAILURE;
             default:
-              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(8, byte & 0x07), _UVRSD_VFPX);
+              _Unwind_VRS_Pop(context, _UVRSC_VFP,
+                              RegisterRange(8, byte & 0x07), _UVRSD_VFPX);
               break;
           }
           break;
@@ -309,7 +317,8 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
             case 0xc3:
             case 0xc4:
             case 0xc5:
-              _Unwind_VRS_Pop(context, _UVRSC_WMMXD, RegisterRange(10, byte & 0x7), _UVRSD_DOUBLE);
+              _Unwind_VRS_Pop(context, _UVRSC_WMMXD,
+                              RegisterRange(10, byte & 0x7), _UVRSD_DOUBLE);
               break;
             case 0xc6: {
               uint8_t v = getByte(data, offset++);
@@ -317,7 +326,9 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
               uint8_t count_minus_one = v & 0xf;
               if (start + count_minus_one >= 16)
                 return _URC_FAILURE;
-              _Unwind_VRS_Pop(context, _UVRSC_WMMXD, RegisterRange(start, count_minus_one), _UVRSD_DOUBLE);
+              _Unwind_VRS_Pop(context, _UVRSC_WMMXD,
+                              RegisterRange(start, count_minus_one),
+                              _UVRSD_DOUBLE);
               break;
             }
             case 0xc7: {
@@ -334,7 +345,9 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
               uint8_t count_minus_one = v & 0xf;
               if (start + count_minus_one >= 32)
                 return _URC_FAILURE;
-              _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(start, count_minus_one), _UVRSD_DOUBLE);
+              _Unwind_VRS_Pop(context, _UVRSC_VFP,
+                              RegisterRange(start, count_minus_one),
+                              _UVRSD_DOUBLE);
               break;
             }
             default:
@@ -345,7 +358,8 @@ extern "C" _Unwind_Reason_Code _Unwind_VRS_Interpret(
         case 0xd0: {
           if (byte & 0x08)
             return _URC_FAILURE;
-          _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(8, byte & 0x7), _UVRSD_DOUBLE);
+          _Unwind_VRS_Pop(context, _UVRSC_VFP, RegisterRange(8, byte & 0x7),
+                          _UVRSD_DOUBLE);
           break;
         }
         default:
