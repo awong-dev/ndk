@@ -187,6 +187,14 @@ if [ -n "$LLVM_VERSION" ]; then
   if version_ge "$LLVM_VERSION" "3.4" ]; then
     COMMON_CFLAGS="${COMMON_CFLAGS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
   fi
+  # Fires many times in musl, and musl isn't interested in adding parens.
+  # Having a warning-free build seems more important than keeping these warnings
+  # on.
+  COMMON_CFLAGS="$COMMON_CFLAGS -Wno-dangling-else"
+  COMMON_CFLAGS="$COMMON_CFLAGS -Wno-bitwise-op-parentheses"
+  COMMON_CFLAGS="$COMMON_CFLAGS -Wno-logical-op-parentheses"
+  COMMON_CFLAGS="$COMMON_CFLAGS -Wno-shift-op-parentheses"
+  COMMON_CFLAGS="$COMMON_CFLAGS -Wno-string-plus-int"
 fi
 
 if [ "$WITH_DEBUG_INFO" ]; then
