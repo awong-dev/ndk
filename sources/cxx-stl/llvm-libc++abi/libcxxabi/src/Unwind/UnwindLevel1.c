@@ -26,12 +26,6 @@
 
 static _Unwind_Reason_Code
 unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
-  // EHABI #7.3 discusses preserving the VRS in a "temporary VRS" during
-  // phase 1 and then restoring it to the "primary VRS" for phase 2. The
-  // effect is phase 2 doesn't see any of the VRS manipulations from phase 1.
-  // In this implementation, the phases don't share the VRS backing store.
-  // Instead, they are passed the original |uc| and they create a new VRS
-  // from scratch thus achieving the same effect.
   unw_cursor_t cursor1;
   unw_init_local(&cursor1, uc);
 
@@ -87,10 +81,9 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
       _LIBUNWIND_TRACE_UNWINDING(
           "unwind_phase1(ex_ojb=%p): calling personality function %p\n",
           exception_object, p);
-      struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor1);
       _Unwind_Reason_Code personalityResult =
           (*p)(1, _UA_SEARCH_PHASE, exception_object->exception_class,
-               exception_object, context);
+               exception_object, (struct _Unwind_Context *)(&cursor1));
       switch (personalityResult) {
       case _URC_HANDLER_FOUND:
         // found a catch clause or locals that need destructing in this frame
@@ -124,20 +117,16 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
 
 
 static _Unwind_Reason_Code
-unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resume) {
-  // See comment at the start of unwind_phase1 regarding VRS integrity.
+unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object) {
   unw_cursor_t cursor2;
   unw_init_local(&cursor2, uc);
 
   _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p)\n", exception_object);
-  int frame_count = 0;
 
   // Walk each frame until we reach where search phase said to stop.
   while (true) {
     // Ask libuwind to get next frame (skip over first which is
-    // _Unwind_RaiseException or _Unwind_Resume).
-    //
-    // Resume only ever makes sense for 1 frame.
+    // _Unwind_RaiseException).
     int stepResult = unw_step(&cursor2);
     if (stepResult == 0) {
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p): unw_step() reached "
@@ -181,7 +170,6 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
     if (frameInfo.handler != 0) {
       __personality_routine p =
           (__personality_routine)(long)(frameInfo.handler);
-      struct _Unwind_Context *context = (struct _Unwind_Context *)(&cursor2);
       _Unwind_Action action = _UA_CLEANUP_PHASE;
       if (sp == exception_object->private_2) {
         // Tell personality this was the frame it marked in phase 1.
@@ -189,7 +177,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
       }
        _Unwind_Reason_Code personalityResult =
           (*p)(1, action, exception_object->exception_class, exception_object,
-               context);
+               (struct _Unwind_Context *)(&cursor2));
       switch (personalityResult) {
       case _URC_CONTINUE_UNWIND:
         // Continue unwinding
@@ -228,7 +216,6 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object, bool resum
         return _URC_FATAL_PHASE2_ERROR;
       }
     }
-    frame_count++;
   }
 
   // Clean up phase did not resume at the frame that the search phase
@@ -356,8 +343,10 @@ _Unwind_RaiseException(_Unwind_Exception *exception_object) {
     return phase1;
 
   // phase 2: the clean up phase
-  return unwind_phase2(&uc, exception_object, false);
+  return unwind_phase2(&uc, exception_object);
 }
+
+
 
 /// When _Unwind_RaiseException() is in phase2, it hands control
 /// to the personality function at each frame.  The personality
@@ -381,7 +370,7 @@ _Unwind_Resume(_Unwind_Exception *exception_object) {
                          (_Unwind_Stop_Fn) exception_object->private_1,
                          (void *)exception_object->private_2);
   else
-    unwind_phase2(&uc, exception_object, true);
+    unwind_phase2(&uc, exception_object);
 
   // Clients assume _Unwind_Resume() does not return, so all we can do is abort.
   _LIBUNWIND_ABORT("_Unwind_Resume() can't return");
@@ -427,6 +416,7 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
   }
   return result;
 }
+
 
 
 /// Called by personality handler during phase 2 to get register values.
@@ -477,6 +467,7 @@ _LIBUNWIND_EXPORT void _Unwind_SetIP(struct _Unwind_Context *context,
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   unw_set_reg(cursor, UNW_REG_IP, new_value);
 }
+
 
 /// Called by personality handler during phase 2 to find the start of the
 /// function.
