@@ -22,7 +22,7 @@
 #include "unwind.h"
 #include "config.h"
 
-#if _LIBUNWIND_BUILD_ZERO_COST_APIS
+#if _LIBUNWIND_BUILD_ZERO_COST_APIS && !LIBCXXABI_ARM_EHABI
 
 static _Unwind_Reason_Code
 unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
@@ -787,4 +787,4 @@ _Unwind_DeleteException(_Unwind_Exception *exception_object) {
                                            exception_object);
 }
 
-#endif // _LIBUNWIND_BUILD_ZERO_COST_APIS
+#endif // _LIBUNWIND_BUILD_ZERO_COST_APIS && !LIBCXXABI_ARM_EHABI
