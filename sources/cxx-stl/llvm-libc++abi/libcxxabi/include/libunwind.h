@@ -69,11 +69,6 @@ typedef uint32_t unw_word_t;
 typedef uint64_t unw_fpreg_t;
 #else
 typedef uint64_t unw_word_t;
-#endif
-
-#if __arm__
-typedef uint64_t unw_fpreg_t;
-#else
 typedef double unw_fpreg_t;
 #endif
 

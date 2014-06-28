@@ -83,6 +83,7 @@
   #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 0
   #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     defined(__mips__)
   #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+  #define _LIBUNWIND_IS_BAREMETAL           0
 #endif
 
 
