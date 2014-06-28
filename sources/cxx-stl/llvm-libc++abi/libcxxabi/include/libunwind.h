@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// TODO(danakj): This is also in unwind.h and cxxabi.h, can we consolidate?
+// FIXME: This is also in unwind.h and cxxabi.h, can we consolidate?
 #if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
     !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
 #define LIBCXXABI_ARM_EHABI 1
@@ -64,8 +64,9 @@ typedef struct unw_cursor_t unw_cursor_t;
 typedef struct unw_addr_space *unw_addr_space_t;
 
 typedef int unw_regnum_t;
-#if __arm__
+#if LIBCXXABI_ARM_EHABI
 typedef uint32_t unw_word_t;
+typedef uint64_t unw_fpreg_t;
 #else
 typedef uint64_t unw_word_t;
 #endif

@@ -30,7 +30,7 @@ namespace {
 // signinficant byte.
 uint8_t getByte(uint32_t* data, size_t offset) {
   uint8_t* byteData = reinterpret_cast<uint8_t*>(data);
-  return byteData[(offset & ~0x03) + (3 - (offset&0x03))];
+  return byteData[(offset & ~(size_t)0x03) + (3 - (offset & (size_t)0x03))];
 }
 
 const char* getNextWord(const char* data, uint32_t* out) {
@@ -73,10 +73,15 @@ _Unwind_Reason_Code ProcessDescriptors(
     struct _Unwind_Context* context,
     Descriptor::Format format,
     const char* descriptorStart,
-    int flags) {
+    uint32_t flags) {
+
   // EHT is inlined in the index using compact form. No descriptors. #5
   if (flags & 0x1)
     return _URC_CONTINUE_UNWIND;
+
+  // TODO: We should check the state here, and determine whether we need to
+  // perform phase1 or phase2 unwinding.
+  (void)state;
 
   const char* descriptor = descriptorStart;
   uint32_t descriptorWord;
@@ -102,8 +107,8 @@ _Unwind_Reason_Code ProcessDescriptors(
         static_cast<Descriptor::Kind>((length & 0x1) | ((offset & 0x1) << 1));
 
     // Clear off flag from last bit.
-    length &= ~1;
-    offset &= ~1;
+    length &= ~1u;
+    offset &= ~1u;
     uintptr_t scopeStart = ucbp->pr_cache.fnstart + offset;
     uintptr_t scopeEnd = scopeStart + length;
     uintptr_t pc = _Unwind_GetIP(context);
@@ -126,15 +131,15 @@ _Unwind_Reason_Code ProcessDescriptors(
         if (isInScope) {
           // TODO(ajwong): This is only phase1 compatible logic. Implement
           // phase2.
-          bool is_reference_type = landing_pad & 0x80000000;
           landing_pad = signExtendPrel31(landing_pad & ~0x80000000);
           if (landing_pad == 0xffffffff) {
             return _URC_HANDLER_FOUND;
           } else if (landing_pad == 0xfffffffe ) {
             return _URC_FAILURE;
           } else {
-            void* matched_object;
             /*
+            bool is_reference_type = landing_pad & 0x80000000;
+            void* matched_object;
             if (__cxxabiv1::__cxa_type_match(
                     ucbp, reinterpret_cast<const std::type_info *>(landing_pad),
                     is_reference_type,
@@ -205,7 +210,7 @@ uint32_t RegisterMask(uint8_t start, uint8_t count_minus_one) {
 // Generates mask discriminator for _Unwind_VRS_Pop, e.g. for _UVRSC_VFP /
 // _UVRSD_DOUBLE.
 uint32_t RegisterRange(uint8_t start, uint8_t count_minus_one) {
-  return (start << 16) | (count_minus_one + 1);
+  return ((uint32_t)start << 16) | ((uint32_t)count_minus_one + 1);
 }
 
 } // end anonymous namespace
@@ -223,20 +228,21 @@ _Unwind_Reason_Code _Unwind_VRS_Interpret(
       uint32_t sp;
       _Unwind_VRS_Get(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
       if (byte & 0x40)
-        sp -= ((byte & 0x3f) << 2) + 4;
+        sp -= (((uint32_t)byte & 0x3f) << 2) + 4;
       else
-        sp += (byte << 2) + 4;
+        sp += ((uint32_t)byte << 2) + 4;
       _Unwind_VRS_Set(context, _UVRSC_CORE, UNW_ARM_SP, _UVRSD_UINT32, &sp);
     } else {
       switch (byte & 0xf0) {
         case 0x80: {
           if (offset >= len)
             return _URC_FAILURE;
-          uint16_t registers =
-              ((byte & 0x0f) << 12) | (getByte(data, offset++) << 4);
+          uint32_t registers =
+              (((uint32_t)byte & 0x0f) << 12) |
+              (((uint32_t)getByte(data, offset++)) << 4);
           if (!registers)
             return _URC_FAILURE;
-          if (registers & (1<<15))
+          if (registers & (1 << 15))
             wrotePC = true;
           _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
           break;
@@ -255,7 +261,7 @@ _Unwind_Reason_Code _Unwind_VRS_Interpret(
         case 0xa0: {
           uint32_t registers = RegisterMask(4, byte & 0x07);
           if (byte & 0x08)
-            registers |= 1<<14;
+            registers |= 1 << 14;
           _Unwind_VRS_Pop(context, _UVRSC_CORE, registers, _UVRSD_UINT32);
           break;
         }
@@ -430,7 +436,6 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
 
     // See if frame has code to run (has personality routine).
     unw_proc_info_t frameInfo;
-    unw_word_t sp;
     if (unw_get_proc_info(&cursor1, &frameInfo) != UNW_ESUCCESS) {
       _LIBUNWIND_TRACE_UNWINDING("unwind_phase1(ex_ojb=%p): unw_get_proc_info "
                             "failed => _URC_FATAL_PHASE1_ERROR\n",
@@ -675,6 +680,7 @@ _Unwind_RaiseException(_Unwind_Exception *exception_object) {
 _LIBUNWIND_EXPORT void _Unwind_Complete(_Unwind_Exception* exception_object) {
   // This is to be called when exception handling completes to give us a chance
   // to perform any housekeeping. EHABI #7.2. But we have nothing to do here.
+  (void)exception_object;
 }
 
 /// When _Unwind_RaiseException() is in phase2, it hands control
@@ -754,15 +760,15 @@ _Unwind_VRS_Result _Unwind_VRS_Set(
     case _UVRSC_CORE:
       if (representation != _UVRSD_UINT32 || regno > 15)
         return _UVRSR_FAILED;
-      return unw_set_reg(cursor, UNW_ARM_R0 + regno, *(unw_word_t *)valuep) ==
-                     UNW_ESUCCESS
+      return unw_set_reg(cursor, (unw_regnum_t)(UNW_ARM_R0 + regno),
+                         *(unw_word_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
     case _UVRSC_WMMXC:
       if (representation != _UVRSD_UINT32 || regno > 3)
         return _UVRSR_FAILED;
-      return unw_set_reg(cursor, UNW_ARM_WC0 + regno, *(unw_word_t *)valuep) ==
-                     UNW_ESUCCESS
+      return unw_set_reg(cursor, (unw_regnum_t)(UNW_ARM_WC0 + regno),
+                         *(unw_word_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
     case _UVRSC_VFP:
@@ -777,14 +783,14 @@ _Unwind_VRS_Result _Unwind_VRS_Set(
         if (regno > 31)
           return _UVRSR_FAILED;
       }
-      return unw_set_fpreg(cursor, UNW_ARM_D0 + regno,
+      return unw_set_fpreg(cursor, (unw_regnum_t)(UNW_ARM_D0 + regno),
                            *(unw_fpreg_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
     case _UVRSC_WMMXD:
       if (representation != _UVRSD_DOUBLE || regno > 31)
         return _UVRSR_FAILED;
-      return unw_set_fpreg(cursor, UNW_ARM_WR0 + regno,
+      return unw_set_fpreg(cursor, (unw_regnum_t)(UNW_ARM_WR0 + regno),
                            *(unw_fpreg_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
@@ -802,15 +808,15 @@ static _Unwind_VRS_Result _Unwind_VRS_Get_Internal(
     case _UVRSC_CORE:
       if (representation != _UVRSD_UINT32 || regno > 15)
         return _UVRSR_FAILED;
-      return unw_get_reg(cursor, UNW_ARM_R0 + regno, (unw_word_t *)valuep) ==
-                     UNW_ESUCCESS
+      return unw_get_reg(cursor, (unw_regnum_t)(UNW_ARM_R0 + regno),
+                         (unw_word_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
     case _UVRSC_WMMXC:
       if (representation != _UVRSD_UINT32 || regno > 3)
         return _UVRSR_FAILED;
-      return unw_get_reg(cursor, UNW_ARM_WC0 + regno, (unw_word_t *)valuep) ==
-                     UNW_ESUCCESS
+      return unw_get_reg(cursor, (unw_regnum_t)(UNW_ARM_WC0 + regno),
+                         (unw_word_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
     case _UVRSC_VFP:
@@ -825,14 +831,14 @@ static _Unwind_VRS_Result _Unwind_VRS_Get_Internal(
         if (regno > 31)
           return _UVRSR_FAILED;
       }
-      return unw_get_fpreg(cursor, UNW_ARM_D0 + regno, (unw_fpreg_t *)valuep) ==
-                     UNW_ESUCCESS
+      return unw_get_fpreg(cursor, (unw_regnum_t)(UNW_ARM_D0 + regno),
+                           (unw_fpreg_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
     case _UVRSC_WMMXD:
       if (representation != _UVRSD_DOUBLE || regno > 31)
         return _UVRSR_FAILED;
-      return unw_get_fpreg(cursor, UNW_ARM_WR0 + regno,
+      return unw_get_fpreg(cursor, (unw_regnum_t)(UNW_ARM_WR0 + regno),
                            (unw_fpreg_t *)valuep) == UNW_ESUCCESS
                  ? _UVRSR_OK
                  : _UVRSR_FAILED;
@@ -876,8 +882,8 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
                           _UVRSD_UINT32, &sp) != _UVRSR_OK) {
         return _UVRSR_FAILED;
       }
-      for (int i = 0; i < 16; ++i) {
-        if (!(discriminator & (1<<i)))
+      for (uint32_t i = 0; i < 16; ++i) {
+        if (!(discriminator & (1 << i)))
           continue;
         uint32_t value = *sp++;
         if (regclass == _UVRSC_CORE && i == 13)

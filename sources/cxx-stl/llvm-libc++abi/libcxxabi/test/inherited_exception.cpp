@@ -6,6 +6,24 @@
 // Source Licenses. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
+//
+// This test case checks specifically the cases under C++ ABI 15.3.1, and 15.3.2
+//
+//  C++ ABI 15.3:
+//  A handler is a match for an exception object of type E if
+//  /  *  The handler is of type cv T or cv T& and E and T are the same type   \
+//  |     (ignoring the top-level cv-qualifiers), or                           |
+//  |  *  the handler is of type cv T or cv T& and T is an unambiguous base    |
+//  \     class of E, or                                                       /
+//     *  the handler is of type cv1 T* cv2 and E is a pointer type that can
+//        be converted to the type of the handler by either or both of
+//          o  a standard pointer conversion (4.10 [conv.ptr]) not involving
+//             conversions to private or protected or ambiguous classes
+//          o  a qualification conversion
+//     *  the handler is a pointer or pointer to member type and E is
+//        std::nullptr_t
+//
+//===----------------------------------------------------------------------===//
 
 #include <assert.h>
 

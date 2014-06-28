@@ -23,7 +23,7 @@
 #define LIBUNWIND_UNAVAIL
 #endif
 
-// TODO(danakj): This is also in cxxabi.h and libunwind.h, can we consolidate?
+// FIXME: This is also in cxxabi.h and libunwind.h, can we consolidate?
 #if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
     !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
 #define LIBCXXABI_ARM_EHABI 1
@@ -43,7 +43,7 @@ typedef enum {
   _URC_INSTALL_CONTEXT = 7,
   _URC_CONTINUE_UNWIND = 8,
 #if LIBCXXABI_ARM_EHABI
-  _URC_FAILURE = 9,
+  _URC_FAILURE = 9
 #endif
 } _Unwind_Reason_Code;
 
@@ -73,6 +73,7 @@ typedef struct _Unwind_Control_Block _Unwind_Exception; /* Alias */
 struct _Unwind_Control_Block {
   uint64_t exception_class;
   void (*exception_cleanup)(_Unwind_Reason_Code, _Unwind_Control_Block*);
+
   /* Unwinder cache, private fields for the unwinder's use */
   struct {
     uint32_t reserved1; /* init reserved1 to 0, then don't touch */
@@ -81,20 +82,23 @@ struct _Unwind_Control_Block {
     uint32_t reserved4;
     uint32_t reserved5;
   } unwinder_cache;
+
   /* Propagation barrier cache (valid after phase 1): */
   struct {
     uint32_t sp;
     uint32_t bitpattern[5];
   } barrier_cache;
+
   /* Cleanup cache (preserved over cleanup): */
   struct {
     uint32_t bitpattern[4];
   } cleanup_cache;
+
   /* Pr cache (for pr's benefit): */
   struct {
     uint32_t fnstart; /* function start address */
     _Unwind_EHT_Header* ehtp; /* pointer to EHT entry header word */
-    uint32_t additional; /* additional data */
+    uint32_t additional;
     uint32_t reserved1;
   } pr_cache;
 
@@ -189,17 +193,24 @@ typedef enum {
 
 extern void _Unwind_Complete(_Unwind_Exception* exception_object);
 
-extern _Unwind_VRS_Result _Unwind_VRS_Get(_Unwind_Context* context,
-                                          _Unwind_VRS_RegClass regclass,
-                                          uint32_t regno,
-                                          _Unwind_VRS_DataRepresentation representation,
-                                          void *valuep);
+extern _Unwind_VRS_Result
+_Unwind_VRS_Get(_Unwind_Context *context, _Unwind_VRS_RegClass regclass,
+                uint32_t regno, _Unwind_VRS_DataRepresentation representation,
+                void *valuep);
 
-extern _Unwind_VRS_Result _Unwind_VRS_Set(_Unwind_Context* context,
-                                          _Unwind_VRS_RegClass regclass,
-                                          uint32_t regno,
-                                          _Unwind_VRS_DataRepresentation representation,
-                                          void *valuep);
+extern _Unwind_VRS_Result
+_Unwind_VRS_Set(_Unwind_Context *context, _Unwind_VRS_RegClass regclass,
+                uint32_t regno, _Unwind_VRS_DataRepresentation representation,
+                void *valuep);
+
+extern _Unwind_VRS_Result
+_Unwind_VRS_Pop(_Unwind_Context *context, _Unwind_VRS_RegClass regclass,
+                uint32_t discriminator,
+                _Unwind_VRS_DataRepresentation representation);
+
+extern _Unwind_Reason_Code _Unwind_VRS_Interpret(_Unwind_Context *context,
+                                                 uint32_t *data, size_t offset,
+                                                 size_t len);
 
 extern _Unwind_VRS_Result _Unwind_VRS_Pop(_Unwind_Context *context,
                                           _Unwind_VRS_RegClass regclass,
@@ -293,9 +304,9 @@ extern uintptr_t _Unwind_GetCFA(struct _Unwind_Context *);
 
 
 // _Unwind_GetIPInfo is a gcc extension that can be called from within a
-// personality handler.  Similar to _Unwind_GetIP() but also returns in 
-// *ipBefore a non-zero value if the instruction pointer is at or before the 
-// instruction causing the unwind. Normally, in a function call, the IP returned 
+// personality handler.  Similar to _Unwind_GetIP() but also returns in
+// *ipBefore a non-zero value if the instruction pointer is at or before the
+// instruction causing the unwind. Normally, in a function call, the IP returned
 // is the return address which is after the call instruction and may be past the
 // end of the function containing the call instruction.
 extern uintptr_t _Unwind_GetIPInfo(struct _Unwind_Context *context,

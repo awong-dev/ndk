@@ -202,8 +202,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object) {
           unw_get_reg(&cursor2, UNW_REG_SP, &sp);
           _LIBUNWIND_TRACE_UNWINDING("unwind_phase2(ex_ojb=%p): re-entering  "
                                      "user code with ip=0x%llX, sp=0x%llX\n",
-                                     exception_object, (long long)pc,
-                                     (long long)sp);
+                                     exception_object, pc, sp);
         }
 
         unw_resume(&cursor2);
