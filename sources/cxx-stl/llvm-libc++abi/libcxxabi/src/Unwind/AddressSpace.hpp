@@ -352,7 +352,7 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
   info.arm_section = (uintptr_t) dl_unwind_find_exidx(
       (_Unwind_Ptr) targetAddr, &length);
   info.arm_section_length = (uintptr_t)length;
-#endif _LIBUNWIND_IS_BAREMETAL
+#endif // _LIBUNWIND_IS_BAREMETAL
   _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %X length %x\n",
                              info.arm_section, info.arm_section_length);
   if (info.arm_section && info.arm_section_length)
