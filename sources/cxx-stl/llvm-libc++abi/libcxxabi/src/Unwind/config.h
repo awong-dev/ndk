@@ -14,10 +14,6 @@
 #ifndef LIBUNWIND_CONFIG_H
 #define LIBUNWIND_CONFIG_H
 
-#ifndef NDEBUG
-#include <stdio.h> // for logging
-#endif
-
 #include <assert.h>
 #include <stdio.h>
 
