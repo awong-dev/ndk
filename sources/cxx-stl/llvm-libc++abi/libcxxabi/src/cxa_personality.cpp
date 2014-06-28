@@ -322,7 +322,8 @@ static const void* read_target2_value(const void* ptr)
 #if LIBCXXABI_BARE_METAL
     return reinterpret_cast<const void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
 #else
-    return *reinterpret_cast<const void**>(reinterpret_cast<uintptr_t>(ptr) + offset);
+    return *reinterpret_cast<const void **>(reinterpret_cast<uintptr_t>(ptr) +
+                                            offset);
 #endif
 }
 
@@ -341,7 +342,8 @@ get_shim_type_info(uint64_t ttypeIndex, const uint8_t* classInfo,
     (void)ttypeEncoding;
 
     const uint8_t* ttypePtr = classInfo - ttypeIndex * sizeof(uintptr_t);
-    return reinterpret_cast<const __shim_type_info*>(read_target2_value(ttypePtr));
+    return reinterpret_cast<const __shim_type_info *>(
+        read_target2_value(ttypePtr));
 }
 #else // !LIBCXXABI_ARM_EHABI
 static
@@ -531,12 +533,10 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
         _UA_CLEANUP_PHASE && !_UA_HANDLER_FRAME
 */
 
-static
-void
-scan_eh_tab(scan_results& results, _Unwind_Action actions, bool native_exception,
-            _Unwind_Exception* unwind_exception, _Unwind_Context* context,
-            const uint8_t* lsda)
-{
+static void scan_eh_tab(scan_results &results, _Unwind_Action actions,
+                        bool native_exception,
+                        _Unwind_Exception *unwind_exception,
+                        _Unwind_Context *context, const uint8_t *lsda) {
     // Initialize results to found nothing but an error
     results.ttypeIndex = 0;
     results.actionRecord = 0;
@@ -934,8 +934,9 @@ __gxx_personality_v0
     {
         // Phase 1 search:  All we're looking for in phase 1 is a handler that
         //   halts unwinding
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context, 
-                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
+        scan_eh_tab(
+            results, actions, native_exception, unwind_exception, context,
+            (const uint8_t *)_Unwind_GetLanguageSpecificData(context));
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found one.  Can we cache the results somewhere to optimize phase 2?
@@ -976,8 +977,10 @@ __gxx_personality_v0
             else
             {
                 // No, do the scan again to reload the results.
-                scan_eh_tab(results, actions, native_exception, unwind_exception, context,
-                            (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
+                scan_eh_tab(
+                    results, actions, native_exception,
+                    unwind_exception, context,
+                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
                 // Phase 1 told us we would find a handler.  Now in Phase 2 we
                 //   didn't find a handler.  The eh table should not be changing!
                 if (results.reason != _URC_HANDLER_FOUND)
@@ -990,8 +993,9 @@ __gxx_personality_v0
         // Either we didn't do a phase 1 search (due to forced unwinding), or
         //   phase 1 reported no catching-handlers.
         // Search for a (non-catching) cleanup
-        scan_eh_tab(results, actions, native_exception, unwind_exception, context,
-                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
+        scan_eh_tab(
+            results, actions, native_exception, unwind_exception, context,
+            (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found a non-catching handler.  Jump to it:
@@ -1085,22 +1089,20 @@ __gxx_personality_v0(_Unwind_State state,
     size_t NDataWords = N + 1;
 #endif
 
-    // TODO(ajwong): The "Copy the address" comment was in upstream...do we actually need this in arm?
-    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
+    const uint8_t *lsda =
+        (const uint8_t *)_Unwind_GetLanguageSpecificData(context);
 
-    const uint8_t *lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(context);
-
-
-    // TODO(ajwong): _Unwind_GetLanguageSpecificData() doesn't work.
-    // Copy the address of _Unwind_Control_Block to r12 so that _Unwind_GetLanguageSpecificData()
-    // and _Unwind_GetRegionStart() can return correct address.
+    // Copy the address of _Unwind_Control_Block to r12 so that
+    // _Unwind_GetLanguageSpecificData() and _Unwind_GetRegionStart() can
+    // return correct address.
     _Unwind_SetGR(context, REG_UCB, reinterpret_cast<uint32_t>(unwind_exception));
 
     scan_results results;
     switch (state) {
     case _US_VIRTUAL_UNWIND_FRAME:
         // Phase 1 search:  All we're looking for in phase 1 is a handler that halts unwinding
-        scan_eh_tab(results, _UA_SEARCH_PHASE, native_exception, unwind_exception, context, lsda);
+        scan_eh_tab(results, _UA_SEARCH_PHASE, native_exception,
+                    unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             unwind_exception->barrier_cache.sp = _Unwind_GetGR(context, REG_SP);
@@ -1141,7 +1143,8 @@ __gxx_personality_v0(_Unwind_State state,
         // Either we didn't do a phase 1 search (due to forced unwinding), or
         //  phase 1 reported no catching-handlers.
         // Search for a (non-catching) cleanup
-        scan_eh_tab(results, _UA_CLEANUP_PHASE, native_exception, unwind_exception, context, lsda);
+        scan_eh_tab(results, _UA_CLEANUP_PHASE, native_exception,
+                    unwind_exception, context, lsda);
         if (results.reason == _URC_HANDLER_FOUND)
         {
             // Found a non-catching handler

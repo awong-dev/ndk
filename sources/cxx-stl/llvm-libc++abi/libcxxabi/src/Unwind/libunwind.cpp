@@ -55,7 +55,7 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
 #elif __arm64__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm64>(
                                  context, LocalAddressSpace::sThisAddressSpace);
-#elif __arm__
+#elif LIBCXXABI_ARM_EHABI
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm>(
                                  context, LocalAddressSpace::sThisAddressSpace);
 #endif
@@ -168,8 +168,8 @@ _LIBUNWIND_EXPORT int unw_get_reg(unw_cursor_t *cursor, unw_regnum_t regNum,
 /// Set value of specified register at cursor position in stack frame.
 _LIBUNWIND_EXPORT int unw_set_reg(unw_cursor_t *cursor, unw_regnum_t regNum,
                                   unw_word_t value) {
-  _LIBUNWIND_TRACE_API("unw_set_reg(cursor=%p, regNum=%d, value=0x%lX)\n",
-                       cursor, regNum, (long)value);
+  _LIBUNWIND_TRACE_API("unw_set_reg(cursor=%p, regNum=%d, value=0x%llX)\n",
+                       cursor, regNum, (long long)value);
   typedef LocalAddressSpace::pint_t pint_t;
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->validReg(regNum)) {
@@ -201,10 +201,12 @@ _LIBUNWIND_EXPORT int unw_get_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
 /// Set value of specified float register at cursor position in stack frame.
 _LIBUNWIND_EXPORT int unw_set_fpreg(unw_cursor_t *cursor, unw_regnum_t regNum,
                                     unw_fpreg_t value) {
-#if __arm__
-  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%llx)\n", cursor, regNum, value);
+#if LIBCXXABI_ARM_EHABI
+  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%llX)\n",
+                       cursor, regNum, value);
 #else
-  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%g)\n", cursor, regNum, value);
+  _LIBUNWIND_TRACE_API("unw_set_fpreg(cursor=%p, regNum=%d, value=%g)\n",
+                       cursor, regNum, value);
 #endif
   AbstractUnwindCursor *co = (AbstractUnwindCursor *)cursor;
   if (co->validFloatReg(regNum)) {

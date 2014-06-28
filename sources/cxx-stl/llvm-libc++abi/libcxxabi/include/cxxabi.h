@@ -21,7 +21,7 @@
 #define _LIBCPPABI_VERSION 1001
 #define LIBCXXABI_NORETURN  __attribute__((noreturn))
 
-// TODO(danakj): This is also in unwind.h and libunwind.h, can we consolidate?
+// FIXME: This is also in unwind.h and libunwind.h, can we consolidate?
 #if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
     !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
 #define LIBCXXABI_ARM_EHABI 1
