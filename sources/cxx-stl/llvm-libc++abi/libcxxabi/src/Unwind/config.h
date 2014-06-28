@@ -53,15 +53,15 @@
   #define _LIBUNWIND_ABORT(msg) __assert_rtn(__func__, __FILE__, __LINE__, msg)
 
   #if FOR_DYLD
-    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND   1
-    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     0
-    #define _LIBUNWIND_SUPPORT_DWARF_INDEX      0
-    #define _LIBUNWIND_IS_BAREMETAL             0
+    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
+    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   0
+    #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+    #define _LIBUNWIND_IS_BAREMETAL           0
   #else
-    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND   1
-    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     1
-    #define _LIBUNWIND_SUPPORT_DWARF_INDEX      0
-    #define _LIBUNWIND_IS_BAREMETAL             0
+    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
+    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   1
+    #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
+    #define _LIBUNWIND_IS_BAREMETAL           0
   #endif
 
 #else

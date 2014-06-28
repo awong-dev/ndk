@@ -69,8 +69,8 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
       _LIBUNWIND_TRACE_UNWINDING(
           "unwind_phase1(ex_ojb=%p): pc=0x%llX, start_ip=0x%llX, func=%s, "
           "lsda=0x%llX, personality=0x%llX\n",
-          exception_object, (long long)pc, (long long)frameInfo.start_ip, functionName,
-          (long long)frameInfo.lsda, (long long)frameInfo.handler);
+          exception_object, pc, frameInfo.start_ip, functionName,
+          frameInfo.lsda, frameInfo.handler);
     }
 
     // If there is a personality routine, ask it if it will want to stop at
@@ -125,6 +125,7 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object) {
 
   // Walk each frame until we reach where search phase said to stop.
   while (true) {
+
     // Ask libuwind to get next frame (skip over first which is
     // _Unwind_RaiseException).
     int stepResult = unw_step(&cursor2);
@@ -161,9 +162,8 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object) {
       _LIBUNWIND_TRACE_UNWINDING(
           "unwind_phase2(ex_ojb=%p): start_ip=0x%llX, func=%s, sp=0x%llX, "
           "lsda=0x%llX, personality=0x%llX\n",
-          exception_object, (long long)frameInfo.start_ip, functionName,
-          (long long)sp, (long long)frameInfo.lsda,
-          (long long)frameInfo.handler);
+          exception_object, frameInfo.start_ip, functionName, sp,
+          frameInfo.lsda, frameInfo.handler);
     }
 
     // If there is a personality routine, tell it we are unwinding.
@@ -204,7 +204,6 @@ unwind_phase2(unw_context_t *uc, _Unwind_Exception *exception_object) {
                                      "user code with ip=0x%llX, sp=0x%llX\n",
                                      exception_object, pc, sp);
         }
-
         unw_resume(&cursor2);
         // unw_resume() only returns if there was an error.
         return _URC_FATAL_PHASE2_ERROR;
@@ -407,11 +406,10 @@ _Unwind_GetLanguageSpecificData(struct _Unwind_Context *context) {
   if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
     result = (uintptr_t)frameInfo.lsda;
   _LIBUNWIND_TRACE_API("_Unwind_GetLanguageSpecificData(context=%p)"
-                       "=> 0x%llx\n", context, (long long)result);
+                             "=> 0x%lX\n", context, result);
   if (result != 0) {
     if (*((uint8_t *)result) != 0xFF)
-      _LIBUNWIND_DEBUG_LOG("lsda at 0x%llx does not start with 0xFF\n",
-                           (long long)result);
+      _LIBUNWIND_DEBUG_LOG("lsda at 0x%lX does not start with 0xFF\n", result);
   }
   return result;
 }
@@ -477,8 +475,8 @@ _Unwind_GetRegionStart(struct _Unwind_Context *context) {
   uintptr_t result = 0;
   if (unw_get_proc_info(cursor, &frameInfo) == UNW_ESUCCESS)
     result = (uintptr_t)frameInfo.start_ip;
-  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%llX\n",
-                             context, (long long)result);
+  _LIBUNWIND_TRACE_API("_Unwind_GetRegionStart(context=%p) => 0x%lX\n",
+                             context, result);
   return result;
 }
 
