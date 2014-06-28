@@ -134,13 +134,6 @@ struct _Unwind_Exception {
 #endif
 };
 
-typedef _Unwind_Reason_Code (*__personality_routine)
-      (int version,
-       _Unwind_Action actions,
-       uint64_t exceptionClass,
-       _Unwind_Exception* exceptionObject,
-       struct _Unwind_Context* context);
-
 typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn)
         (int version,
          _Unwind_Action actions,
@@ -148,6 +141,13 @@ typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn)
          struct _Unwind_Exception *exceptionObject,
          struct _Unwind_Context *context,
          void *stop_parameter );
+
+typedef _Unwind_Reason_Code (*__personality_routine)
+      (int version,
+       _Unwind_Action actions,
+       uint64_t exceptionClass,
+       _Unwind_Exception* exceptionObject,
+       struct _Unwind_Context* context);
 
 #endif
 
@@ -212,19 +212,6 @@ extern _Unwind_Reason_Code _Unwind_VRS_Interpret(_Unwind_Context *context,
                                                  uint32_t *data, size_t offset,
                                                  size_t len);
 
-extern _Unwind_VRS_Result _Unwind_VRS_Pop(_Unwind_Context *context,
-                                          _Unwind_VRS_RegClass regclass,
-                                          uint32_t discriminator,
-                                          _Unwind_VRS_DataRepresentation representation);
-
-// TODO(ajwong): This is not part of the EHABI. Decide if the name is right.
-extern _Unwind_Reason_Code _Unwind_VRS_Interpret(_Unwind_Context* context,
-                                                 uint32_t* data,
-                                                 size_t offset,
-                                                 size_t len);
-
-// TODO(ajwong) Should these {Set,Get}/{GR,IP} be removed in favor of
-// VRS_Get/VRS_Set? Is the thumb bit inference in SetIP correct?
 static inline uintptr_t _Unwind_GetGR(struct _Unwind_Context* context,
                                       int index) {
   uintptr_t value = 0;
@@ -248,13 +235,13 @@ static inline void _Unwind_SetIP(struct _Unwind_Context* context,
   uintptr_t thumb_bit = _Unwind_GetGR(context, 15) & ((uintptr_t)0x1);
   _Unwind_SetGR(context, 15, new_value | thumb_bit);
 }
-#else // LIBCXXABI_ARM_EHABI
+#else
 extern uintptr_t _Unwind_GetGR(struct _Unwind_Context *context, int index);
 extern void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                           uintptr_t new_value);
 extern uintptr_t _Unwind_GetIP(struct _Unwind_Context *context);
 extern void _Unwind_SetIP(struct _Unwind_Context *, uintptr_t new_value);
-#endif // LIBCXXABI_ARM_EHABI
+#endif
 
 extern uintptr_t _Unwind_GetRegionStart(struct _Unwind_Context *context);
 extern uintptr_t
@@ -263,11 +250,11 @@ extern uintptr_t
 extern _Unwind_Reason_Code
     _Unwind_SjLj_ForcedUnwind(_Unwind_Exception *exception_object,
                               _Unwind_Stop_Fn stop, void *stop_parameter);
-#else // !__USING_SJLJ_EXCEPTIONS__
+#else
 extern _Unwind_Reason_Code
     _Unwind_ForcedUnwind(_Unwind_Exception *exception_object,
                          _Unwind_Stop_Fn stop, void *stop_parameter);
-#endif // !__USING_SJLJ_EXCEPTIONS__
+#endif
 
 #if __USING_SJLJ_EXCEPTIONS__
 typedef struct _Unwind_FunctionContext *_Unwind_FunctionContext_t;
